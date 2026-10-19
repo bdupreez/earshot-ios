@@ -7,7 +7,7 @@ struct ToolsView: View {
             Text("The useful little things.").font(.title2.weight(.bold))
             ToolLink(title: "Connection", detail: "Discover headphones and inspect your audio route", icon: "dot.radiowaves.left.and.right") { ConnectionView() }
             ToolLink(title: "Microphone check", detail: "Record, listen, and check the actual input", icon: "mic") { MicrophoneView() }
-            ToolLink(title: "Protocol lab", detail: "Read-only BMAP queries and connection report", icon: "flask") { LabView() }
+            ToolLink(title: "Protocol lab", detail: "Capability reads, experimental Print console and reports", icon: "flask") { LabView() }
             ToolLink(title: "iOS compatibility", detail: "What works here, and what needs hardware", icon: "checkmark.shield") { CompatibilityView() }
             InfoNote(text: "Earshot for iOS is an experimental AI-assisted port. Simulator success validates the app and virtual controls; physical headphone compatibility remains unverified.")
         }.navigationTitle("Tools")
@@ -89,13 +89,13 @@ struct LabView: View {
     let queries: [(String, UInt8, UInt8)] = [("Protocol version [0.1]",0,1), ("Product [0.3]",0,3), ("Battery [2.2]",2,2), ("EQ [1.7]",1,7), ("Mode capabilities [31.2]",31,2), ("Current mode [31.3]",31,3)]
     var body: some View {
         Page {
-            InfoNote(text: "Read-only queries. Firmware update, authentication, reset, factory defaults and destructive commands are blocked in the transport.")
+            InfoNote(text: "The queries below are read-only. The separate Print console requires explicit experimental consent. Firmware update, authentication, reset, factory defaults and destructive commands are blocked in the transport.")
             Panel(title: "Query headphones") {
                 Picker("Function", selection: $query) { ForEach(queries.indices, id: \.self) { Text(queries[$0].0).tag($0) } }
                 Button("Send GET") { let q = queries[query]; store.send(BmapPacket(block: q.1, function: q.2, operation: .get)) }.buttonStyle(.borderedProminent).disabled(!store.bluetooth.isConnected || store.saved.demo)
                 if store.saved.demo { Text("Demo mode does not send Bluetooth packets.").font(.caption).foregroundStyle(.secondary) }
             }
-            NavigationLink("Read-only capability scan") { ProtocolLabView(bluetooth: store.bluetooth) }
+            NavigationLink("Capability scan and console") { ProtocolLabView(bluetooth: store.bluetooth) }
             Panel(title: "Connection report") {
                 ShareLink(item: store.report) { Label("Share connection report", systemImage: "square.and.arrow.up") }
                 Text(store.report).font(.system(.caption, design: .monospaced)).textSelection(.enabled)

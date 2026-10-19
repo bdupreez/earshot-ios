@@ -26,6 +26,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     var onPacket: ((BmapPacket) -> Void)?
     var connectedDeviceID: UUID? { selected?.identifier }
     let protocolScanner = BmapProtocolScanner()
+    let printConsole = BosePrintConsole()
 
     static let service = CBUUID(string: "FEBE")
     static let psmCharacteristic = CBUUID(string: "089CA084-6721-4419-9003-5E14D5AB587D")
@@ -329,6 +330,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     private func closeChannel() {
         isConnected = false
         protocolScanner.cancel()
+        printConsole.cancel(reason: "The headphone control channel disconnected. Collection stopped; no response is simulated.")
         timeout?.invalidate(); timeout = nil
         writeTimer?.invalidate(); writeTimer = nil
         livenessTimer?.invalidate(); livenessTimer = nil
@@ -380,7 +382,9 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
         for packet in packets {
             guard packet.operation.isDeviceResponse else { continue }
             liveness.received(at: Date())
-            appendLog("← \(packetLog(packet))")
+            // Idle firmware console floods must not fill generic diagnostics or reach AppStore.
+            // Explicit console collection has its own bounded, user-visible transcript.
+            if packet.block != 22 || printConsole.isRunning { appendLog("← \(packetLog(packet))") }
             if !isConnected {
                 guard packet.answersLivenessProbe else { continue }
                 isConnected = true
@@ -402,6 +406,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
                     Task { @MainActor in self?.checkLiveness() }
                 }
             }
+            if packet.block == 22 { printConsole.receive(packet); continue }
             protocolScanner.receive(packet)
             onPacket?(packet)
         }
@@ -425,7 +430,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     private func packetLog(_ packet: BmapPacket) -> String {
         // Paired-source names/addresses, custom names, serials, keys and mode names must not
         // be copied into a diagnostics report. Keep the address and frame length for debugging.
-        let privatePayload = packet.block == 4 || packet.block == 18
+        let privatePayload = packet.block == 4 || packet.block == 18 || packet.block == 22
             || packet.address == BmapAddress(1, 2) || packet.address == BmapAddress(31, 6)
             || packet.block == 0 && [7, 9, 12].contains(packet.function)
         return privatePayload ? "\(packet.address) \(packet.operation) <\(packet.payload.count) bytes redacted>" : packet.description

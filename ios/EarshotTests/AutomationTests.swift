@@ -228,6 +228,18 @@ final class AutomationTests: XCTestCase {
         XCTAssertTrue(expected.enabled, "The device's no-toggle flag must preserve its actual ANC state.")
     }
 
+    @MainActor func testInformationalStartRefusalDoesNotFailAnUnrelatedHardwareMutation() {
+        let f = fixture(); defer { f.defaults.removePersistentDomain(forName: f.suite) }
+        f.store.trackSentRequest(BoseCommands.checkLEAudioPreference)
+        f.store.receive(BmapPacket(block: 4, function: 19, operation: .error, payload: Data([5])))
+        XCTAssertEqual(f.store.commandFailureVersion, 0)
+        XCTAssertNil(f.store.message)
+        f.store.trackSentRequest(BoseCommands.selectMode(index: 1))
+        f.store.receive(BmapPacket(block: 31, function: 3, operation: .error, payload: Data([5])))
+        XCTAssertEqual(f.store.commandFailureVersion, 1, "A real mutation refusal must still fail its waiting rule.")
+        XCTAssertNotNil(f.store.message)
+    }
+
     @MainActor private func fixture() -> (store: AppStore, defaults: UserDefaults, suite: String) {
         let suite = "EarshotAutomationTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!

@@ -32,7 +32,7 @@ struct DeviceControlsView: View {
             shortcutSection
             voiceSection
             pairedSection
-            if !store.saved.demo { Section("Diagnostics") { NavigationLink("Read-only protocol scan") { ProtocolLabView(bluetooth: store.bluetooth) } } }
+            if !store.saved.demo { Section("Diagnostics") { NavigationLink("Protocol diagnostics") { ProtocolLabView(bluetooth: store.bluetooth) } } }
             if !store.deviceRequestStatus.isEmpty { Section("Latest device request") { Text(store.deviceRequestStatus).font(.footnote).accessibilityIdentifier("deviceRequestStatus") } }
             powerSection
         }

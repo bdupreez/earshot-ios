@@ -100,7 +100,10 @@ struct SoundView: View {
     private var preampPanel: some View {
         Panel(title: "Gain and protection") {
             Toggle("Automatic headroom", isOn: Binding(get: { store.saved.audioOptions.automaticHeadroom }, set: { store.saved.audioOptions.automaticHeadroom = $0; store.applyAudio() }))
-            Text(String(format: "Applied preamp: %.1f dB", store.effectiveAudioPreamp)).font(.caption).foregroundStyle(.secondary)
+            Text(String(format: "Configured preamp: %.1f dB", store.effectiveAudioPreamp)).font(.caption).foregroundStyle(.secondary)
+            if !store.saved.proEnabled {
+                Text("Pro EQ is off. Filters, gain and protection are bypassed.").font(.caption).foregroundStyle(.secondary)
+            }
             if !store.saved.audioOptions.automaticHeadroom {
                 Slider(value: Binding(get: { store.saved.audioOptions.manualPreampDb }, set: { store.saved.audioOptions.manualPreampDb = $0; store.applyAudio() }), in: -30...0, step: 0.1).accessibilityLabel("Manual preamp")
                 Button("Use preset preamp") { store.saved.audioOptions.manualPreampDb = store.preset.preampDb; store.applyAudio() }

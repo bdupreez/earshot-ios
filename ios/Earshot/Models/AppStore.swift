@@ -329,11 +329,18 @@ import Combine
     func send(_ packet: BmapPacket) {
         do {
             try bluetooth.send(packet)
-            if packet.operation == .setGet && packet.address != BmapAddress(9, 2)
-                || packet.operation == .start && !(packet.address == BmapAddress(31, 6) && packet.payload.isEmpty) {
-                pendingWrites.insert(packet.address)
-            }
+            trackSentRequest(packet)
         } catch { commandFailureVersion += 1; message = error.localizedDescription }
+    }
+    func trackSentRequest(_ packet: BmapPacket) {
+        // These documented START operations read information. Their refusal must
+        // not abort an unrelated rule as though a hardware mutation had failed.
+        let informationalStart = packet.payload.isEmpty &&
+            [BmapAddress(31, 1), BmapAddress(31, 6), BmapAddress(4, 19)].contains(packet.address)
+        if packet.operation == .setGet && packet.address != BmapAddress(9, 2)
+            || packet.operation == .start && !informationalStart {
+            pendingWrites.insert(packet.address)
+        }
     }
     func receive(_ p: BmapPacket) {
         guard !saved.demo else { return }

@@ -97,3 +97,12 @@ Added unit coverage includes Wi-Fi join/SSID matching, initialization without pe
 `ios/TestResults/FeatureGapUnitsFinal.xcresult` reports **125 passed, 0 failed, 0 skipped** on the same iPhone17Pro/iOS26.4.1 simulator, with local ad hoc signing and xcodebuild exit0. Export: [feature-gap-units-final.json](ios-test-results/feature-gap-units-final.json). All13 unit classes ran, including actual native finish/replay and hardware-idle checks, waveform/preamp consistency, dirty-draft preservation, direct noise step/toggle semantics, read-only status/profile layouts, recovery export after clean relaunch, product identity precedence and Wi-Fi opt-out protection.
 
 The expanded22-scenario XCUITest suite is running at this checkpoint. No UI acceptance claim is inferred from the unit result. Public-API code is implemented, but physical Bluetooth/SSID/signed system-surface validation is still pending.
+
+
+## Expanded UI diagnostic history
+
+The first complete expanded UI run, `FeatureGapUIInitial.xcresult`, finished with **17 passed, 5 failed, 0 skipped** (all12 baseline cases passed). New flows confirmed multi-action rules, source confirmations, actual player seek/progress/A-B/stop, weekday/reminder persistence and permission-free demo Wi-Fi navigation. Five harness failures required repair before acceptance: a center tap left a text-field suffix, full-screen scrolls oscillated past controls or virtualized rows, and top-anchored confirmation popovers covered the background navigation title used to cancel them.
+
+The exported accessibility hierarchy showed actual saved names `Morning cans· 2nd Gen` and `Morning librarycurve`, confirming that blind prefix deletion did not replace the full input. The repaired harness uses native text selection and verifies the exact fixture. It normalizes UIKit’s placeholder value for an empty field, uses bounded drags and cancels through the observed native popover dismissal region. `FeatureGapFocused.xcresult` contains135 passing unit tests and an intentionally interrupted UI diagnostic attempt after that placeholder behavior was identified. These diagnostic bundles are not final acceptance evidence; no failed tests have been skipped or marked expected failures.
+
+The simulator script now builds for testing with local signing, installs the app and explicitly grants Simulator microphone access before test execution. This makes the real recorder flow reproducible; first-install consent and physical headset routing remain separate acceptance items.

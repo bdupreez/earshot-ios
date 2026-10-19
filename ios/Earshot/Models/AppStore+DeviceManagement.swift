@@ -2,7 +2,7 @@
 import Foundation
 
 enum PendingDeviceOperation: Equatable {
-    case name(String), pairing(Bool), language(UInt8), latency(Int), source(Data, BoseSourceAction)
+    case name(String), pairing(Bool), language(UInt8), latency(Int), source(Data, BoseSourceAction), diagnostic(BmapAddress)
     var address: BmapAddress {
         switch self {
         case .name: return BmapAddress(1, 2)
@@ -10,6 +10,7 @@ enum PendingDeviceOperation: Equatable {
         case .language: return BmapAddress(1, 3)
         case .latency: return BmapAddress(5, 7)
         case .source(_, let action): return BmapAddress(4, action.rawValue)
+        case .diagnostic(let address): return address
         }
     }
 }
@@ -25,8 +26,8 @@ enum PendingDeviceOperation: Equatable {
             return
         }
         guard connected, !saved.demo, !profile.unsupported else { message = "Connect real compatible headphones to query their LE preference."; return }
+        beginDeviceOperation(.diagnostic(BmapAddress(4, 19)))
         send(BoseCommands.checkLEAudioPreference)
-        deviceRequestStatus = "Requested headphone LE preference; waiting for a report."
     }
 
     func refreshRoutingSupport() {
@@ -38,8 +39,8 @@ enum PendingDeviceOperation: Equatable {
         guard connected, !saved.demo, !profile.unsupported else { message = "Connect real compatible headphones to read routing support."; return }
         // An empty routing table can return error 4, then change when a source
         // starts streaming. An explicit refresh must retry that informational GET.
+        beginDeviceOperation(.diagnostic(BmapAddress(4, 12)))
         send(BoseCommands.readRoutingSupport)
-        deviceRequestStatus = "Requested current routing support; waiting for a report."
     }
 
     func renameHeadphones(_ name: String) {
@@ -133,6 +134,7 @@ enum PendingDeviceOperation: Equatable {
         case .pairing(let enabled): confirmed = pairingMode == enabled
         case .latency(let value): confirmed = deviceLatencyValue == value
         case .language(let language): confirmed = voicePromptsState?.language == language
+        case .diagnostic: confirmed = true // Caller requires a fresh, valid report at the relevant address.
         case .source(let address, let action):
             switch action {
             case .connect: confirmed = pairedSources.first(where: { $0.address == address })?.connected == true

@@ -78,7 +78,7 @@ final class BmapProtocolScanner: ObservableObject {
 
 enum BmapDiagnostics {
     static func summary(_ packet: BmapPacket) -> String {
-        let redact = packet.block == 4 || packet.block == 18 || packet.address == BmapAddress(1, 2)
+        let redact = packet.block == 4 || packet.block == 18 || packet.block == 22 || packet.address == BmapAddress(1, 2)
             || packet.address == BmapAddress(31, 6) || packet.block == 0 && [7, 9, 12].contains(packet.function)
         return redact ? "\(packet.operation): \(packet.payload.count) bytes (private data redacted)" : packet.description
     }
