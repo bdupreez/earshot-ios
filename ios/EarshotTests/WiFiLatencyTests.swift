@@ -19,6 +19,28 @@ final class WiFiLatencyTests: XCTestCase {
         XCTAssertNil(BoseLatency.parse(Data([0, 0, 2])))
     }
 
+    @MainActor func testLatencyOriginalIsFirstValidReportForThisSessionOnly() throws {
+        let suite = "earshot.latency-session.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = AppStore(defaults: defaults, arguments: [])
+        store.receive(BmapPacket(block: 5, function: 7, operation: .status, payload: Data([0, 0, 2])))
+        XCTAssertNil(store.deviceLatencyOriginal)
+        store.receive(BmapPacket(block: 5, function: 7, operation: .status, payload: Data(hex: "0000020800d2")!))
+        store.receive(BmapPacket(block: 5, function: 7, operation: .status, payload: Data(hex: "0000020800e1")!))
+        XCTAssertEqual(store.deviceLatencyOriginal, 210)
+        XCTAssertEqual(store.deviceLatencyValue, 225)
+        store.setDemo(true)
+        store.updateLatency(230)
+        XCTAssertEqual(store.deviceLatencyOriginal, 210)
+        store.updateLatency(try XCTUnwrap(store.deviceLatencyOriginal))
+        XCTAssertEqual(store.deviceLatencyValue, 210)
+        store.setDemo(false)
+        XCTAssertNil(store.deviceLatencyOriginal)
+        store.receive(BmapPacket(block: 5, function: 7, operation: .status, payload: Data(hex: "0000020800f0")!))
+        XCTAssertEqual(store.deviceLatencyOriginal, 240, "A new session must not reset to a previous headphone's value.")
+    }
+
     func testForegroundSSIDRulesFireOncePerObservedJoin() {
         var joins = ForegroundWiFiJoinTracker()
         XCTAssertTrue(joins.observe("Home Wi-Fi"))

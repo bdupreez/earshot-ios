@@ -374,7 +374,22 @@ final class FeatureGapUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Device controls"].waitForExistence(timeout: 5))
         reveal(updated, direction: .towardTop)
         XCTAssertTrue(updated.exists)
-        screenshot("Experimental latency confirmation changed only the virtual reported value")
+        let reset = app.buttons["resetLatency"]
+        tap(reset)
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+        XCTAssertTrue(confirmation.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "simulate a value of 210")).firstMatch.exists)
+        confirmation.buttons["Cancel"].tap()
+        reveal(updated, direction: .towardTop)
+        XCTAssertTrue(updated.exists, "Cancelling reset must retain the current reported value.")
+        tap(reset)
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
+        confirmation.buttons["Simulate write"].tap()
+        let restored = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Reported latency,", "210")).firstMatch
+        reveal(restored, direction: .towardTop)
+        XCTAssertTrue(restored.exists)
+        reveal(reset)
+        XCTAssertFalse(reset.isEnabled)
+        screenshot("Experimental latency reset restored only the original virtual session value")
     }
 
     func testWiFiAccessIsDisabledInDemoAndNavigationDoesNotPrompt() throws {

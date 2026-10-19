@@ -4,6 +4,7 @@ import WidgetKit
 struct RootView: View {
     @EnvironmentObject var store: AppStore
     @Environment(\.scenePhase) private var phase
+    @StateObject private var releaseNotes = ReleaseNotesStore()
     let timer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
     var body: some View {
         TabView {
@@ -13,12 +14,21 @@ struct RootView: View {
             NavigationStack { ToolsView() }.tabItem { Label("Tools", systemImage: "wrench.and.screwdriver") }
             NavigationStack { SettingsView() }.tabItem { Label("Settings", systemImage: "gearshape") }
         }
-        .fullScreenCover(isPresented: $store.welcome) { WelcomeView().environmentObject(store) }
+        .fullScreenCover(isPresented: $store.welcome, onDismiss: checkReleaseNotes) { WelcomeView().environmentObject(store) }
+        .sheet(isPresented: $releaseNotes.isPresented, onDismiss: releaseNotes.presentationDismissed) {
+            NavigationStack { WhatsNewView(showsDoneButton: true) }
+        }
         .alert("Earshot", isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) { Button("OK") { store.message = nil } } message: { Text(store.message ?? "") }
+        .onAppear { checkReleaseNotes() }
+        .onChange(of: phase) { _, _ in checkReleaseNotes() }
+        .onChange(of: store.message) { _, _ in checkReleaseNotes() }
         .onReceive(timer) { _ in if phase == .active { store.checkSchedules() } }
         .onReceive(store.objectWillChange.debounce(for: .milliseconds(250), scheduler: RunLoop.main)) { _ in store.syncPlatformIntegrations() }
     }
 
+    private func checkReleaseNotes() {
+        releaseNotes.check(onboardingPresented: store.welcome, canPresent: phase == .active && store.message == nil)
+    }
 }
 
 struct WelcomeView: View {

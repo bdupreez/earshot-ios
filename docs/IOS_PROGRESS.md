@@ -80,6 +80,16 @@ Ported the original Home quick switcher as a native device-name button. Demo pro
 
 The final parity review also found upstream's configurable mode cycle and once-per-release What's new screen. Both are feasible and are being implemented before the complete combined acceptance run. Widget Gallery/Control Center manual UI checks are temporarily unavailable because the Mac is locked; automated Xcode Simulator tests continue. Nothing has been pushed to the original repository.
 
+## Checkpoint 9 — final feasible parity additions and 159-unit phase (19 October 2026)
+
+Completed the final user-facing gaps identified by comparing every upstream navigation/action flow. Added configurable mode cycling in Settings, widgets, Shortcuts and iOS 18+ Control Center. Foreground execution resolves each next slot using current device reports; distinct taps stay ordered, stale/empty cycles explain repair steps, and old stored settings/snapshots still decode. Eight Shortcuts actions are now provided. Added durable once-per-release notes that defer behind onboarding/errors and remain available in About, with original-author credits.
+
+Added device-reported Self Voice persistence, preserving level and remember flag independently; battery alert choices now include Off and 5–50% in 5% steps. The actual microphone player exposes elapsed/total progress. Experimental latency keeps the first valid report for the current connection; Reset to original uses the same range checks and separate experimental confirmation, and the baseline clears on connection changes.
+
+Ported selected-block and deep GET discovery alongside the documented scan. Plans are local until Start, pace one query at a time, distinguish replies/refusals/timeouts, bound results and stop on cancellation/inactivity/link loss. Firmware/authentication/Print blocks, destructive addresses and known START-only functions are excluded. The 3,897-query deep plan explicitly shows a worst-case 72-minute estimate; no physical scan or firmware compatibility is claimed.
+
+Regenerated the native project with 47 app files, 18 unit-test files, 6 UI-test files and 4 widget files. The reproducible script built the application/extension with installed Xcode and local signing, installed the actual Simulator app, granted test microphone access and completed **159 unit tests with 0 failures**. All 28 UI scenarios are now running in `FeatureGapAcceptance.xcresult`; this checkpoint does not claim their eventual outcome. No tests were skipped or marked expected failures. Global and subsystem documentation retain the original Earshot, MIT and research credits. Physical headphone/SSID/system-surface acceptance remains separate.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

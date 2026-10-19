@@ -118,3 +118,10 @@ These are preserved diagnostic results, not combined acceptance. No test is skip
 
 
 `PresetLifecycleFinal.xcresult` subsequently completed the entire preset UI lifecycle with **1 passed, 0 failed, 0 skipped**, and xcodebuild exit 0. It verifies exact names, save/edit/rename persistence, delete cancellation, confirmed deletion, and Flat fallback after relaunch. This focused result covers the repaired helper; full combined acceptance remains separate.
+
+
+## Final integrated feature build — UI phase in progress
+
+The reproducible `ios/scripts/test-simulator.sh` completed a native `build-for-testing` and its entire **159-unit-test phase with 0 failures** on iPhone 17 Pro / iOS 26.4.1. New coverage includes mode cycling and queue ordering, release-note version migration, sidetone persistence, session-original latency, and selected/deep GET diagnostics with real asynchronous cancellation/timeouts. The subsequent **28 UI scenarios are still running** in `FeatureGapAcceptance.xcresult` at this checkpoint. The final summary will be exported only after Xcode closes the bundle.
+
+Manual Widget Gallery and Control Center UI access was attempted through the installed Simulator app, but desktop computer use reported that the Mac is locked and could not unlock it. Automated Xcode Simulator testing continues; this is not evidence of system-surface interaction. The user was asked to unlock when convenient. Cross-process Widget/Siri/Shortcuts delivery remains unverified.

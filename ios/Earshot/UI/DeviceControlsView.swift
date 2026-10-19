@@ -127,6 +127,12 @@ struct DeviceControlsView: View {
                              ? "This will simulate a value of \(pendingLatency). No Bluetooth command is sent."
                              : "Send \(pendingLatency) in the range reported by these headphones. The upstream setter is unused and untested; this field may be a measurement rather than a setting. Its units and audible effect are unverified. Firmware may ignore or reject it. Earshot will wait for an actual device report.")
                     }
+                if let original = store.deviceLatencyOriginal, range.contains(original) {
+                    LabeledContent("Session original", value: "\(original) device units")
+                    Button("Reset to original") { pendingLatency = original; confirmLatency = true }
+                        .disabled(!canWriteLatency || current == original)
+                        .accessibilityIdentifier("resetLatency")
+                }
                 Text("Experimental: only the range reported by the headphones is offered. The raw value has no verified audible effect.")
                     .font(.caption).foregroundStyle(.secondary)
             }

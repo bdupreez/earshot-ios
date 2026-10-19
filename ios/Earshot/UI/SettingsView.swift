@@ -5,7 +5,11 @@ struct SettingsView: View {
     var body: some View {
         List {
             Section("On your headphones") {
-                Picker("Self Voice", selection: Binding(get: { store.saved.sidetone }, set: { store.updateSidetone($0) })) { Text("Off").tag(0); Text("Low").tag(3); Text("Medium").tag(2); Text("High").tag(1) }.disabled(!store.connected || !store.supports(1, 11))
+                Picker("Self Voice", selection: Binding(get: { store.saved.sidetone }, set: { store.updateSidetone($0) })) { Text("Off").tag(0); Text("Low").tag(3); Text("Medium").tag(2); Text("High").tag(1) }.disabled(!store.connected || !store.supports(1, 11) || store.sidetonePersist == nil)
+                if let persist = store.sidetonePersist {
+                    Toggle("Remember Self Voice setting", isOn: Binding(get: { persist }, set: { store.updateSidetonePersistence($0) }))
+                        .disabled(!store.connected || !store.supports(1, 11)).accessibilityIdentifier("sidetonePersistence")
+                }
                 settingToggle("Auto play / pause", key: "autoPause", value: store.saved.autoPause, function: 24)
                 settingToggle("Auto-answer calls", key: "autoAnswer", value: store.saved.autoAnswer, function: 27)
                 settingToggle("Multipoint", key: "multipoint", value: store.saved.multipoint, function: 10)
@@ -16,6 +20,7 @@ struct SettingsView: View {
             Section("Make it yours") {
                 NavigationLink { AutomationsView() } label: { Label("Automations", systemImage: "bolt") }
                 NavigationLink { PreferencesView() } label: { Label("App preferences", systemImage: "slider.horizontal.3") }
+                NavigationLink { ModeCycleView() } label: { Label("Mode cycle", systemImage: "arrow.triangle.2.circlepath") }.accessibilityIdentifier("openModeCycle")
             }
             Section("Device") {
                 NavigationLink { DeviceControlsView() } label: { Label("Device controls", systemImage: "headphones") }
@@ -51,7 +56,7 @@ struct PreferencesView: View {
                 Text("Reads only the Wi-Fi name while Earshot is open, after explicit opt-in and precise When In Use authorization. No GPS updates, background location or network-name uploads. Simulator cannot verify SSID access.").font(.caption).foregroundStyle(.secondary)
             }
             Section("Low battery alerts") {
-                Picker("Alert at", selection: $store.saved.batteryAlert) { Text("Off").tag(0); Text("10%").tag(10); Text("20%").tag(20); Text("30%").tag(30) }
+                Picker("Alert at", selection: $store.saved.batteryAlert) { Text("Off").tag(0); ForEach(Array(stride(from: 5, through: 50, by: 5)), id: \.self) { value in Text("\(value)%").tag(value) } }
                 Button("Allow notifications") { Task { await store.notifications.requestPermission(); store.notifications.syncRuleReminders(store.saved.demo ? [] : store.saved.rules); store.objectWillChange.send() } }
                 if let url = store.stateRecoveryURL { ShareLink("Export recovered settings", item: url) }
                 Text(store.notifications.status).font(.caption).foregroundStyle(.secondary)
@@ -68,6 +73,7 @@ struct AboutView: View {
                 Text("This fork uses AI assistance to explore a native iOS port of the original Android Earshot app. The original app, ideas, Kotlin implementation, protocol research, and existing documentation belong to their respective authors. This port does not claim that work as its own.")
                 Link("Original Earshot — HellzYeahh & contributors", destination: URL(string: "https://github.com/HellzYeahh/earshot")!)
                 Link("AI-assisted iOS fork — bdupreez/earshot-ios", destination: URL(string: "https://github.com/bdupreez/earshot-ios")!)
+                NavigationLink("What’s new") { WhatsNewView() }.accessibilityIdentifier("openReleaseNotes")
             }
             Panel(title: "Standing on their work") {
                 Link("bosectl — aaronsb (MIT)", destination: URL(string: "https://github.com/aaronsb/bosectl")!)

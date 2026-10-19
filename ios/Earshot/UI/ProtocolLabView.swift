@@ -11,6 +11,9 @@ struct ProtocolLabView: View {
     @State private var experimentalEnabled = false
     @State private var confirmExperimental = false
     @State private var validation: String?
+    @State private var scanScope: BmapScanScope = .documented
+    @State private var selectedBlocks: Set<Int> = [1, 2, 31]
+    @State private var maximumFunction = 40
 
     init(bluetooth: HeadphoneBluetooth) {
         self.bluetooth = bluetooth
@@ -20,17 +23,7 @@ struct ProtocolLabView: View {
 
     var body: some View {
         List {
-            Section {
-                Text("Reads documented, non-sensitive BMAP settings and status. It sends GET requests only; no firmware or authentication functions are scanned.").font(.footnote)
-                Button("Start read-only scan") { scanner.start { packet in try bluetooth.send(packet) } }
-                    .disabled(!bluetooth.isConnected || scanner.isScanning || console.isRunning)
-                if scanner.isScanning {
-                    ProgressView(value: Double(scanner.completed), total: Double(BmapProtocolScanner.addresses.count))
-                    Button("Cancel scan", role: .cancel) { scanner.cancel() }
-                }
-                if !bluetooth.isConnected { Text("Connect to a verified headphone control channel first.").font(.caption).foregroundStyle(.secondary) }
-                Text("\(scanner.completed) / \(BmapProtocolScanner.addresses.count) queries completed").font(.caption)
-            }
+            scanSection
             consoleSection
             Section("Device responses") {
                 ForEach(scanner.results) { result in
@@ -51,8 +44,58 @@ struct ProtocolLabView: View {
         .navigationTitle("Protocol diagnostics").navigationBarTitleDisplayMode(.inline)
         .onDisappear { stopDiagnostics() }
         .onChange(of: scenePhase) { _, phase in if phase != .active { stopDiagnostics() } }
-        .onChange(of: bluetooth.isConnected) { _, connected in if !connected { experimentalEnabled = false; console.cancel() } }
+        .onChange(of: bluetooth.isConnected) { _, connected in if !connected { stopDiagnostics() } }
         .onChange(of: command) { _, _ in validation = nil }
+    }
+
+    private var scanPlan: BmapScanPlan {
+        switch scanScope {
+        case .documented: return .documented
+        case .selected: return .selected(blocks: selectedBlocks, maximumFunction: maximumFunction)
+        case .deep: return .deep
+        }
+    }
+
+    private var scanSection: some View {
+        let plan = scanPlan
+        return Section("Read-only discovery") {
+            Picker("Scan plan", selection: $scanScope) {
+                ForEach(BmapScanScope.allCases) { scope in Text(scope.rawValue).tag(scope) }
+            }.accessibilityIdentifier("scanPlan")
+                .disabled(scanner.isScanning || console.isRunning)
+            if scanScope == .selected {
+                DisclosureGroup("Function blocks") {
+                    ForEach(BmapScanPlan.selectableBlocks, id: \.id) { block in
+                        Toggle("\(block.id) · \(block.name)", isOn: Binding(
+                            get: { selectedBlocks.contains(block.id) },
+                            set: { if $0 { selectedBlocks.insert(block.id) } else { selectedBlocks.remove(block.id) } }))
+                        .accessibilityIdentifier("scanBlock.\(block.id)")
+                    }
+                }.disabled(scanner.isScanning || console.isRunning)
+                Stepper("Functions 0–\(maximumFunction)", value: $maximumFunction, in: 0...63)
+                    .accessibilityIdentifier("scanMaximumFunction")
+                    .accessibilityValue("0–\(maximumFunction)")
+                    .disabled(scanner.isScanning || console.isRunning)
+            }
+            Text("\(plan.addresses.count) planned GET queries").font(.caption).accessibilityIdentifier("scanPlannedCount")
+            Text("Firmware, authentication and Print blocks, destructive addresses and known START-only functions are excluded. Choosing a plan sends nothing.").font(.caption).foregroundStyle(.secondary)
+            if scanScope != .documented {
+                Text("Discovery queries unknown functions; unsupported errors and timeouts are expected. Results may contain device information, so review them before sharing.").font(.caption).foregroundStyle(.secondary)
+                Text("Allow up to \(plan.maximumEstimatedMinutes) minutes if every query times out. Keep Earshot open; leaving this screen, backgrounding or disconnecting cancels the scan.")
+                    .font(.caption).foregroundStyle(.secondary).accessibilityIdentifier("scanEstimate")
+            }
+            Button("Start read-only scan") {
+                scanner.start(plan: plan, mayContinue: { scenePhase == .active && bluetooth.isConnected }) { packet in try bluetooth.send(packet) }
+            }.disabled(!bluetooth.isConnected || scanner.isScanning || console.isRunning || plan.addresses.isEmpty)
+                .accessibilityIdentifier("startReadOnlyScan")
+            if scanner.isScanning {
+                ProgressView(value: Double(scanner.completed), total: Double(max(1, scanner.total)))
+                Button("Cancel scan", role: .cancel) { scanner.cancel() }
+            }
+            if !bluetooth.isConnected { Text("Connect to a verified headphone control channel first. Demo and Simulator send no scan queries.").font(.caption).foregroundStyle(.secondary) }
+            Text("\(scanner.completed) / \(scanner.total) queries completed").font(.caption).accessibilityIdentifier("scanProgress")
+            Text(scanner.status).font(.caption).accessibilityIdentifier("scanStatus")
+        }
     }
 
     private var consoleSection: some View {

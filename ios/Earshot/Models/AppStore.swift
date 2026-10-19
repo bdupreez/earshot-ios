@@ -14,6 +14,7 @@ import Combine
     @Published var sourceCommandSupport: Set<BoseSourceAction> = []
     @Published var deviceRequestStatus = ""
     @Published var deviceStatus = BoseDeviceStatus()
+    @Published private(set) var sidetonePersist: Bool?
     @Published private(set) var cncState: BoseCNCState?
     @Published var stateRecoveryURL: URL?
     var pendingDeviceOperation: PendingDeviceOperation?
@@ -45,6 +46,7 @@ import Combine
     @Published var deviceLatency = "Not reported"
     @Published var deviceLatencyRange: ClosedRange<Int>?
     @Published var deviceLatencyValue: Int?
+    @Published var deviceLatencyOriginal: Int?
     @Published var audioSource = "Not reported"
     @Published var pairedSources: [BosePairedSource] = []
     @Published private(set) var buttonShortcut: BoseButtonShortcut?
@@ -200,6 +202,7 @@ import Combine
         if saved.demo { hydrateDemo() }
     }
     private func hydrateDemo() {
+        sidetonePersist = sidetonePersist ?? true
         if saved.modes.isEmpty {
             saved.modes = profile.presets.enumerated().map { ListeningMode(id: $0.offset, name: $0.element, builtIn: true, favorite: true, noise: .init(level: $0.offset == 1 ? 0 : 10, spatial: $0.offset >= 2 ? 1 : 0)) }
             saved.modes += (0..<profile.customCount).map { ListeningMode(id: profile.presets.count + $0, name: "Custom \($0 + 1)", builtIn: false, configured: false) }
@@ -213,7 +216,7 @@ import Combine
         battery = 82; batteries = profile.earbuds ? ["Left": 82, "Right": 78, "Case": 64] : [:]; firmware = "10.12.12 · simulated"
         deviceVolumeMaximum = 31; deviceVolume = 18; playbackStatus = "Paused · simulated"
         playbackActions = [0, 1, 2, 3, 4]; leAudio = !profile.legacy
-        deviceLatencyRange = 100...400; deviceLatencyValue = 210
+        deviceLatencyRange = 100...400; deviceLatencyValue = 210; deviceLatencyOriginal = 210
         deviceLatency = "210 (reported units; simulated)"; audioSource = "Bluetooth · simulated"
         if profile.earbuds {
             battery = 78
@@ -266,9 +269,20 @@ import Combine
         }
     }
     func updateSidetone(_ value: Int) {
-        guard (0...3).contains(value) else { return }
+        guard connected, !profile.unsupported, (0...3).contains(value) else { return }
         if saved.demo { saved.sidetone = value }
-        else if supports(1, 11), !profile.unsupported { do { send(try BoseCommands.setSidetone(level: UInt8(value))) } catch { message = error.localizedDescription } }
+        else if supports(1, 11) {
+            guard let persist = sidetonePersist else { message = "Refresh the Self Voice report before changing its setting."; return }
+            do { send(try BoseCommands.setSidetone(level: UInt8(value), persist: persist)) } catch { message = error.localizedDescription }
+        }
+    }
+    func updateSidetonePersistence(_ persist: Bool) {
+        guard connected, !profile.unsupported, supports(1, 11), sidetonePersist != nil, (0...3).contains(saved.sidetone) else {
+            message = "Read the current Self Voice level and persistence flag before changing them."
+            return
+        }
+        if saved.demo { sidetonePersist = persist }
+        else { do { send(try BoseCommands.setSidetone(level: UInt8(saved.sidetone), persist: persist)) } catch { message = error.localizedDescription } }
     }
     func updateAutoOff(_ value: Int) {
         if saved.demo { saved.autoOff = value }
@@ -450,7 +464,7 @@ import Combine
         case (1, 10):
             if let value = BoseParsers.multipoint(p.payload) { saved.multipoint = value; valid = true }
         case (1, 11):
-            if data.count >= 2, data[1] <= 3 { saved.sidetone = Int(data[1]); valid = true }
+            if data.count >= 2, data[1] <= 3 { sidetonePersist = data[0] & 1 != 0; saved.sidetone = Int(data[1]); valid = true }
         case (1, 24): if let flag = data.first, flag <= 1 { saved.autoPause = flag != 0; valid = true }
         case (1, 27): if let flag = data.first, flag <= 1 { saved.autoAnswer = flag != 0; valid = true }
         case (1, 34): if let state = BoseParsers.touchControls(p.payload) { saved.touchControls = state; valid = true }
@@ -469,6 +483,7 @@ import Combine
             }
         case (5, 7):
             if let latency = BoseLatency.parse(p.payload) {
+                if deviceLatencyOriginal == nil { deviceLatencyOriginal = latency.current }
                 deviceLatencyRange = latency.range; deviceLatencyValue = latency.current
                 deviceLatency = "\(latency.current) (range \(latency.range.lowerBound)…\(latency.range.upperBound); device units)"; valid = true
             } else if wasWrite { send(BoseCommands.get(BmapAddress(5, 7))) }
@@ -543,14 +558,14 @@ import Combine
         cancelRuleExecution(reason: "Cancelled — headphone link changed")
         deviceOperationTask?.cancel(); deviceOperationTask = nil; pendingDeviceOperation = nil
         deviceRequestStatus = ""; pairingMode = nil; voicePromptsState = nil; sourceCommandSupport = []
-        deviceStatus = BoseDeviceStatus(); cncState = nil
+        deviceStatus = BoseDeviceStatus(); cncState = nil; sidetonePersist = nil
         batteryMinutes = nil; batteryReadings = []; modelFacts = nil; reportedModeIDs = []
         liveFunctions = []; liveModes = [:]; modesCapabilities = nil; liveProfile = nil; voiceLanguage = nil
         liveDeviceName = "Bose headphones · identifying"; unavailableBlocks = []; refusedFunctions = []; pendingWrites = []
         eqRanges = [:]; favorites = []; favoriteTotal = 0; subscribed = false; lePreferenceRequested = false; connectionRulesPending = false
         charging = false; firedConnectionRuleIDs = []
         deviceVolume = 0; deviceVolumeMaximum = 0; playbackStatus = "Not reported"; playbackActions = []
-        leAudio = nil; deviceLatency = "Not reported"; deviceLatencyValue = nil; deviceLatencyRange = nil; audioSource = "Not reported"; pairedSources = []; buttonShortcut = nil
+        leAudio = nil; deviceLatency = "Not reported"; deviceLatencyValue = nil; deviceLatencyOriginal = nil; deviceLatencyRange = nil; audioSource = "Not reported"; pairedSources = []; buttonShortcut = nil
         if !saved.demo { battery = nil; batteries = [:]; saved.modes = []; firmware = "Not read" }
     }
     private func notifyBattery() {

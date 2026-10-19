@@ -26,3 +26,14 @@ struct EarshotAwareControl: ControlWidget {
         .description("Open Earshot and request Aware mode on supported connected headphones or the demo device.")
     }
 }
+
+@available(iOS 18.0, *)
+struct EarshotCycleControl: ControlWidget {
+    var body: some ControlWidgetConfiguration {
+        StaticControlConfiguration(kind: "EarshotCycleControl") {
+            ControlWidgetButton(action: OpenEarshotListeningIntent(target: .cycle)) { Label("Cycle modes", systemImage: "arrow.triangle.2.circlepath") }
+        }
+        .displayName("Earshot mode cycle")
+        .description("Open Earshot and advance through the configured cycle using current headphone reports. Configure modes in Earshot Settings.")
+    }
+}

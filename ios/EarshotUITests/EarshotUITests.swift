@@ -237,6 +237,20 @@ final class EarshotUITests: XCTestCase {
         XCTAssertLessThanOrEqual(duration, 8.5)
         playback.tap()
         XCTAssertTrue(app.buttons["Stop playback"].waitForExistence(timeout: 5))
+        let progress = app.progressIndicators["micPlaybackProgress"]
+        XCTAssertTrue(progress.waitForExistence(timeout: 5))
+        XCTAssertEqual(progress.label, "Recording playback progress")
+        let advanced = NSPredicate { _, _ in
+            guard let value = progress.value as? String,
+                  let elapsed = Double(value.components(separatedBy: " of ").first ?? "") else { return false }
+            return elapsed >= 0.7 && elapsed < duration
+        }
+        expectation(for: advanced, evaluatedWith: progress)
+        waitForExpectations(timeout: 4)
+        let reportedTime = (progress.value as? String ?? "").components(separatedBy: " of ")
+        XCTAssertEqual(reportedTime.count, 2)
+        let reportedTotal = Double(reportedTime.last?.replacingOccurrences(of: " seconds", with: "") ?? "") ?? 0
+        XCTAssertEqual(reportedTotal, duration, accuracy: 0.15)
         app.buttons["Stop playback"].tap()
         app.buttons["Delete"].tap()
         XCTAssertFalse(app.buttons["Play recording"].isEnabled)

@@ -47,12 +47,21 @@ struct EarshotRuleQuery: EntityQuery {
 }
 
 enum EarshotListeningDestination: String, AppEnum, Codable {
-    case quiet, aware
+    case quiet, aware, cycle
     static var typeDisplayRepresentation: TypeDisplayRepresentation = "Listening destination"
-    static var caseDisplayRepresentations: [Self: DisplayRepresentation] = [.quiet: "Quiet", .aware: "Aware"]
+    static var caseDisplayRepresentations: [Self: DisplayRepresentation] = [.quiet: "Quiet", .aware: "Aware", .cycle: "Cycle configured modes"]
     var requestPayload: EarshotCommandPayload {
-        .listeningRole(self == .quiet ? .quiet : .aware)
+        switch self { case .quiet: return .listeningRole(.quiet); case .aware: return .listeningRole(.aware); case .cycle: return .cycleModes }
     }
+}
+
+struct CycleListeningModeIntent: AppIntent {
+    static var title: LocalizedStringResource = "Cycle listening modes in Earshot"
+    static var description = IntentDescription("Open Earshot and advance through your configured mode cycle using current device reports. Choose cycle modes in Earshot Settings. Device support is required.")
+    static var openAppWhenRun = true
+    @available(iOS 26.0, *) static var supportedModes: IntentModes { .foreground }
+    static var authenticationPolicy: IntentAuthenticationPolicy { .requiresAuthentication }
+    func perform() async throws -> some IntentResult { try EarshotShared.request(.cycleModes); return .result() }
 }
 
 /// Control Center must use the public OpenIntent contract to open the containing
@@ -153,6 +162,7 @@ struct EarshotShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(intent: QuietModeIntent(), phrases: ["Use Quiet mode in \(.applicationName)"], shortTitle: "Quiet mode", systemImageName: "moon")
         AppShortcut(intent: AwareModeIntent(), phrases: ["Use Aware mode in \(.applicationName)"], shortTitle: "Aware mode", systemImageName: "sun.max")
+        AppShortcut(intent: CycleListeningModeIntent(), phrases: ["Cycle listening modes in \(.applicationName)"], shortTitle: "Cycle modes", systemImageName: "arrow.triangle.2.circlepath")
         AppShortcut(intent: SetListeningModeIntent(), phrases: ["Set listening mode in \(.applicationName)"], shortTitle: "Listening mode", systemImageName: "waveform")
         AppShortcut(intent: SetNoiseLevelIntent(), phrases: ["Set cancellation level in \(.applicationName)"], shortTitle: "Cancellation level", systemImageName: "speaker.wave.2")
         AppShortcut(intent: SetHardwareEQIntent(), phrases: ["Set headphone EQ in \(.applicationName)"], shortTitle: "Headphone EQ", systemImageName: "slider.horizontal.3")

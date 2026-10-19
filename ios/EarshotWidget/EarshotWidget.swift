@@ -69,10 +69,19 @@ struct EarshotWidgetView: View {
             }.font(.system(size: 9)).lineLimit(1)
                 .foregroundStyle(stale ? Color(red: 0.50, green: 0.24, blue: 0.05) : Color(red: 0.22, green: 0.34, blue: 0.31))
             Spacer(minLength: 0)
+            if family != .systemSmall {
+                Text(stale ? "Open app to refresh cycle" : snapshot?.cycleNextModeName.map { "Cycle snapshot next: \($0)" } ?? "Configure Mode cycle in Earshot")
+                    .font(.caption2).lineLimit(1).foregroundStyle(.secondary)
+            }
             HStack(spacing: 8) {
-                Button(intent: OpenEarshotListeningIntent(target: .quiet)) { Label("Quiet", systemImage: "moon").font(.caption2.weight(.semibold)) }
-                Spacer(minLength: 0)
-                Button(intent: OpenEarshotListeningIntent(target: .aware)) { Label("Aware", systemImage: "sun.max").font(.caption2.weight(.semibold)) }
+                if family != .systemSmall {
+                    Button(intent: OpenEarshotListeningIntent(target: .quiet)) { Label("Quiet", systemImage: "moon").font(.caption2.weight(.semibold)) }
+                    Spacer(minLength: 0)
+                    Button(intent: OpenEarshotListeningIntent(target: .aware)) { Label("Aware", systemImage: "sun.max").font(.caption2.weight(.semibold)) }
+                    Spacer(minLength: 0)
+                }
+                Button(intent: OpenEarshotListeningIntent(target: .cycle)) { Label("Cycle", systemImage: "arrow.triangle.2.circlepath").font(.caption2.weight(.semibold)) }
+                    .accessibilityLabel("Cycle configured listening modes")
             }.buttonStyle(.plain)
         }
         .foregroundStyle(Color(red: 0.04, green: 0.18, blue: 0.16))
@@ -98,6 +107,7 @@ struct EarshotWidget: Widget {
         if #available(iOS 18.0, *) {
             EarshotQuietControl()
             EarshotAwareControl()
+            EarshotCycleControl()
         }
     }
 }

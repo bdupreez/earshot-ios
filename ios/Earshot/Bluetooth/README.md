@@ -28,11 +28,15 @@ LE Audio support/preference, connection availability and paired-source profiles.
 remain hidden. These reports do not establish iOS microphone permission, the negotiated audio
 codec or an iPhone's active LE Audio transport.
 
-Protocol diagnostics offers a foreground GET-only scan of a fixed upstream address list. It does
-not probe firmware, authentication, guessed opcodes or START-only functions. Each request waits
-up to one second for a matching STATUS/ERROR/RESULT. Ordinary transport logs and shared scan
-results redact paired-source, authentication and Print blocks plus designated name/serial/mode
-fields. This is targeted protocol redaction rather than a guarantee about unknown payloads.
+Protocol diagnostics offers foreground GET-only discovery using documented addresses, selected
+blocks/functions or the upstream 0...63 deep grid. Firmware/authentication/Print blocks,
+destructive addresses and known START-only functions are excluded. Deep discovery contains 3,897
+queries and can take up to 72 minutes when every response times out. Selection sends nothing;
+a verified control link is required. Queries run one at a time with a one-second response deadline
+and 100 ms pacing; cancellation, inactivity or link loss stops further requests. GET echoes do not
+count as replies. Results and response text are bounded. Ordinary transport logs and scan results
+redact known paired-source, name, serial, MAC, aggregate-settings and Print fields. This is targeted
+redaction rather than a guarantee about unknown discovery payloads.
 
 The separate experimental Print console implements only upstream `bind`, `unbind`, `verbosity`
 and `output` packet shapes. Opening the page sends nothing; local validation sends nothing.
@@ -75,3 +79,5 @@ Protocol attribution: the original Earshot contributors' Kotlin protocol catalog
 [bosectl](https://github.com/aaronsb/bosectl), and the MIT-licensed
 [Quiet Rebellion](https://github.com/MadEyez/quietrebellion). Their repository notices remain in
 `docs/reference/`.
+
+Sidetone writes preserve the device-reported remember-after-restart flag when changing level, and preserve level when changing that flag. Latency retains the first valid report for the current connection; resetting it uses the same separately confirmed experimental write and does not claim a measured acoustic effect. Both state paths clear on link changes.

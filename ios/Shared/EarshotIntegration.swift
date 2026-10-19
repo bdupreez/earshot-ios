@@ -8,6 +8,7 @@ enum EarshotListeningRole: String, Codable, Sendable { case quiet, aware }
 enum EarshotCommandPayload: Codable, Equatable, Sendable {
     case listeningMode(index: Int)
     case listeningRole(EarshotListeningRole)
+    case cycleModes
     case noiseLevel(Double)
     case hardwareEQ(bass: Double, mid: Double, treble: Double)
     case localPreset(id: String)
@@ -17,7 +18,7 @@ enum EarshotCommandPayload: Codable, Equatable, Sendable {
         switch self {
         case .listeningMode(let index):
             guard (0...254).contains(index) else { throw EarshotIntegrationError.invalidCommand }
-        case .listeningRole: break
+        case .listeningRole, .cycleModes: break
         case .noiseLevel(let level):
             guard level.isFinite, (0...10).contains(level) else { throw EarshotIntegrationError.invalidCommand }
         case .hardwareEQ(let bass, let mid, let treble):
@@ -34,8 +35,11 @@ enum EarshotCommandPayload: Codable, Equatable, Sendable {
         case .hardwareEQ: return "hardwareEQ"
         case .localPreset: return "localPreset"
         case .runRule: return nil // Separate rule invocations retain their order.
+        case .cycleModes: return nil // Each tap advances once after the previous live report.
         }
     }
+
+    fileprivate var coalescesRepeatedValues: Bool { if case .cycleModes = self { return false }; return true }
 }
 
 struct EarshotCommandEnvelope: Codable, Equatable, Sendable, Identifiable {
@@ -84,7 +88,7 @@ struct EarshotCommandQueue: Sendable {
         return try transaction { state in
             prune(&state, now: now)
             if state.consumed.contains(id) { return nil }
-            if let existing = state.pending.first(where: { $0.id == id || ($0.payload == payload && now.timeIntervalSince($0.createdAt) < 2) }) { return existing }
+            if let existing = state.pending.first(where: { $0.id == id || (payload.coalescesRepeatedValues && $0.payload == payload && now.timeIntervalSince($0.createdAt) < 2) }) { return existing }
             if let key = payload.replacementKey { state.pending.removeAll { $0.payload.replacementKey == key } }
             guard state.pending.count < Self.maximumCount else { throw EarshotIntegrationError.queueFull }
             let envelope = EarshotCommandEnvelope(id: id, createdAt: now, expiresAt: now.addingTimeInterval(Self.lifetime), payload: payload)
@@ -156,6 +160,35 @@ struct EarshotCatalogItem: Codable, Equatable, Sendable, Identifiable {
     let name: String
 }
 
+/// Pure ordering from upstream Earshot TileCycle.kt by HellzYeahh and contributors (MIT).
+/// The foreground executor additionally requires current configured device reports.
+struct EarshotCycleMode: Equatable, Sendable {
+    let id: Int
+    let configured: Bool
+    let favorite: Bool
+}
+
+enum EarshotModeCycle {
+    static func canonical(_ indices: [Int]) -> [Int] { Set(indices.filter { (0...254).contains($0) }).sorted() }
+
+    static func order(preferred: [Int], modes: [EarshotCycleMode]) -> [Int] {
+        let usable = Set(modes.filter { $0.configured && (0...254).contains($0.id) }.map(\.id))
+        var seen = Set<Int>()
+        let selected = preferred.filter { (0...254).contains($0) && seen.insert($0).inserted && (modes.isEmpty || usable.contains($0)) }
+        if !selected.isEmpty { return selected }
+        let favorites = canonical(modes.filter { $0.configured && $0.favorite }.map(\.id))
+        if !favorites.isEmpty { return favorites }
+        let presets = [0, 1, 2].filter { modes.isEmpty || usable.contains($0) }
+        return presets.isEmpty ? usable.sorted() : presets
+    }
+
+    static func next(current: Int?, order: [Int]) -> Int? {
+        guard !order.isEmpty else { return nil }
+        guard let current, let index = order.firstIndex(of: current) else { return order.first }
+        return order[(index + 1) % order.count]
+    }
+}
+
 struct EarshotIntentCatalog: Codable, Equatable, Sendable {
     var modes: [EarshotCatalogItem] = []
     var presets: [EarshotCatalogItem] = []
@@ -181,6 +214,9 @@ struct EarshotWidgetSnapshot: Codable, Equatable, Sendable {
     let profileName: String
     let modeName: String
     var batteries: [EarshotWidgetBattery] = []
+    // Optional additions decode older snapshots without inventing a configured cycle.
+    var cycleNextModeName: String?
+    var cycleStatus: String?
 
     func isStale(at date: Date) -> Bool { date.timeIntervalSince(updatedAt) >= 300 || updatedAt > date.addingTimeInterval(60) }
     var visibleBatteries: [EarshotWidgetBattery] { Array(batteries.prefix(4)) }

@@ -86,13 +86,14 @@ struct SavedAppState: Codable {
     var audioOptions = AudioPlaybackOptions()
     var demoDeviceNames: [String: String] = [:]
     var demoVoiceLanguage: UInt8 = 1
+    var modeCycleModes: [Int] = []
     var recoveredItemCount = 0
 
     init() {}
     // Synthesized Codable ignores property defaults when keys are absent. Decode
     // each key with its default so upgrades preserve presets, settings and rules.
     private enum CodingKeys: String, CodingKey {
-        case demo, profileID, modes, currentMode, noise, eq, sidetone, autoPause, autoAnswer, multipoint, voicePrompts, touchControls, autoOff, theme, proEnabled, presetID, customPresets, boost, batteryAlert, rules, audioOptions, demoDeviceNames, demoVoiceLanguage
+        case demo, profileID, modes, currentMode, noise, eq, sidetone, autoPause, autoAnswer, multipoint, voicePrompts, touchControls, autoOff, theme, proEnabled, presetID, customPresets, boost, batteryAlert, rules, audioOptions, demoDeviceNames, demoVoiceLanguage, modeCycleModes
     }
     init(from decoder: Decoder) throws {
         self.init()
@@ -124,6 +125,7 @@ struct SavedAppState: Codable {
         audioOptions = try values.decodeIfPresent(AudioPlaybackOptions.self, forKey: .audioOptions) ?? audioOptions
         demoDeviceNames = try values.decodeIfPresent([String: String].self, forKey: .demoDeviceNames) ?? demoDeviceNames
         demoVoiceLanguage = try values.decodeIfPresent(UInt8.self, forKey: .demoVoiceLanguage) ?? demoVoiceLanguage
+        modeCycleModes = try values.decodeIfPresent([Int].self, forKey: .modeCycleModes) ?? []
     }
 
 }

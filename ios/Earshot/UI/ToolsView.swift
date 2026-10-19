@@ -74,12 +74,31 @@ struct MicrophoneControls: View {
                 Text(mic.status).font(.headline)
                 ProgressView(value: Double(mic.level)).tint(.earshot).accessibilityLabel("Microphone input level")
                 HStack { Text("\(String(format: "%.1f", mic.duration)) seconds").monospacedDigit(); Spacer(); Text("8 second maximum").foregroundStyle(.secondary) }.font(.caption)
+                if mic.hasRecording && !mic.isRecording {
+                    VStack(spacing: 6) {
+                        ProgressView(value: mic.playbackPosition, total: max(mic.duration, 0.001))
+                            .tint(.earshot)
+                            .accessibilityIdentifier("micPlaybackProgress")
+                            .accessibilityLabel("Recording playback progress")
+                            .accessibilityValue(String(format: "%.1f of %.1f seconds", mic.playbackPosition, mic.duration))
+                        HStack {
+                            Text(playbackTime(mic.playbackPosition))
+                            Spacer()
+                            Text(playbackTime(mic.duration))
+                        }.font(.caption.monospacedDigit()).foregroundStyle(.secondary).accessibilityHidden(true)
+                    }
+                }
                 Button { if mic.isRecording { mic.stopRecording() } else { audio.stop(); Task { await mic.startRecording() } } } label: { Label(mic.isRecording ? "Stop recording" : "Record microphone", systemImage: mic.isRecording ? "stop.fill" : "record.circle").frame(maxWidth: .infinity).padding(6) }.buttonStyle(.borderedProminent).accessibilityIdentifier("recordMic")
                 HStack { Button(mic.isPlaying ? "Stop playback" : "Play recording") { if mic.isPlaying { mic.stopPlayback() } else { audio.stop(); mic.play() } }.disabled(!mic.hasRecording || mic.isRecording); Spacer(); Button("Delete", role: .destructive) { mic.deleteRecording() }.disabled(!mic.hasRecording || mic.isRecording) }
             }
             InfoNote(text: mic.routeDescription, icon: "ear")
             Text("The app requests a Bluetooth headset microphone when available, then shows the actual route. Recordings stay in the local app cache until deleted. iOS does not allow this app to process cellular or other apps’ call audio.").font(.footnote).foregroundStyle(.secondary)
         }.onDisappear { mic.stopRecording(); mic.stopPlayback() }
+    }
+
+    private func playbackTime(_ seconds: TimeInterval) -> String {
+        let wholeSeconds = Int(max(0, seconds).rounded(.down))
+        return String(format: "%d:%02d", wholeSeconds / 60, wholeSeconds % 60)
     }
 }
 
