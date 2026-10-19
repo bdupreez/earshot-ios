@@ -105,6 +105,11 @@ final class MicRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AV
         duration = max(recorder?.currentTime ?? 0, duration)
         recorder?.stop()
         recorder = nil
+        // The delegate may arrive after the recorder clock has advanced past its stop point.
+        // The finalized file is authoritative (observed 7.96 s audio with an 8.8 s live clock).
+        if let file = try? AVAudioFile(forReading: recordingURL), file.processingFormat.sampleRate > 0 {
+            duration = Double(file.length) / file.processingFormat.sampleRate
+        }
         isRecording = false
         level = 0
         timer?.invalidate()

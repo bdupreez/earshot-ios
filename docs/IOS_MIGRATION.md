@@ -55,6 +55,7 @@ Status meanings: **Native** is implemented for local iOS behavior; **Partial** h
 | Virtual Bose model selection | Partial | Swift model profiles drive a simulated UI; this is not the Android virtual peripheral protocol test harness. |
 | BLE discovery and BMAP over LE L2CAP | Hardware pending | Real Core Bluetooth scan, PSM lookup and streams need iPhone/headphones validation. |
 | Bluetooth Classic RFCOMM channel probing | Blocked | No arbitrary RFCOMM socket API for this iOS application; no supported MFi integration. |
+| Automatic reconnect and background state restoration | Outstanding | Bluetooth background capability is declared; Android's reconnect manager and iOS preservation/restoration are not fully delivered. |
 | Battery and firmware | Hardware pending | Parse/report received device information; sample demo battery is explicitly simulated. |
 | Bud/case battery and remaining minutes | Partial | Demo per-part display exists; full hardware reporting must be verified separately. |
 | Model/product identification and capability adaptation | Partial | Demo profiles and received-function gating; Android's full runtime capability/quirk matrix is not completely ported. |
@@ -62,7 +63,7 @@ Status meanings: **Native** is implemented for local iOS behavior; **Partial** h
 | ANC, noise level, Wind Block, spatial modes | Hardware pending | Live settings, direct-noise and editable custom-slot fallback command paths; per-model firmware quirks still require acceptance tests. |
 | Custom mode editing/favourites/reset | Hardware pending | Demo editing/persistence plus writes gated by device-reported capabilities and complete slot layouts; physical validation remains outstanding. |
 | Hardware three-band EQ | Hardware pending | Uses BMAP values; do not infer audible results from simulator sliders. |
-| Graphic/parametric EQ, presets and AutoEq import | Partial | Native editor/model/import and local playback processing; Android's cross-app effects are unavailable. |
+| Graphic/parametric EQ, presets and AutoEq import | Partial | Native editing, save/import/export and local playback processing. Preset deletion UI remains outstanding; Android's cross-app effects are unavailable. |
 | Systemwide/per-app Pro EQ, external-app profiles | Blocked | The app cannot intercept other apps' audio sessions. |
 | Volume boost and limiter | Partial | Local audio graph with a compressor followed by a peak limiter; native render checks cover sustained overload and audible output. No system or call boost. |
 | Playback transport/headset volume | Hardware pending | Device-control panel uses reported volume ranges and playback action masks; writes wait for device reports. Simulator controls are explicitly simulated. |
@@ -73,13 +74,14 @@ Status meanings: **Native** is implemented for local iOS behavior; **Partial** h
 | Call-volume boost, negotiated call codec | Blocked | Cannot change another app's call gain or inspect its private Bluetooth negotiation. |
 | Real microphone record/meter/play/delete | Native | AVAudioRecorder/AVAudioPlayer, explicit permission, actual route, local cache, interruptions stop capture. |
 | Sidetone | Hardware pending | Device setting; audible effect depends on firmware and use case. |
-| Auto-pause, auto-answer, multipoint, prompts, touch, standby | Partial | Command/read support varies; UI must gate unsupported functions and show firmware errors. |
+| Auto-pause, auto-answer, multipoint, prompts, touch, standby | Partial | Capability-gated read/write controls; voice-prompt language is preserved but its selection UI remains outstanding. Physical effects require validation. |
 | Paired-source list and information | Hardware pending | Reads the headphone-reported list and device names; this is separate from iOS system audio pairing. |
 | Headphone source routing, pairing mode and rename | Outstanding | Android repository has a larger command surface. This build also offers the system output picker, which does not replace headphone multipoint source-routing commands. |
 | Power off and shortcut-button mapping | Hardware pending | Power confirmation and shortcut choices gated by reported device support. Physical effect remains unverified. |
 | Safe raw read/lab report | Partial | BMAP GET exploration/log sharing; not the Android full scan/Print console. |
 | Destructive firmware/auth/factory writes | Guarded | Remain disallowed; never advertise firmware updates in this port. |
 | On-connect/manual automation | Partial | Native stored rules; command completion must follow real device responses. |
+| Automation action combinations | Partial | Listening-mode actions are implemented. Android's multi-action rules with separate EQ-preset/noise actions are not fully ported. |
 | Day/time background schedule | Partial | Foreground schedule only; exact suspended execution unavailable. |
 | Wi-Fi/other-app foreground triggers | Outstanding/blocked | No built-in watchers; user-created Shortcuts is the replacement path. |
 | Low-battery notification | Hardware pending | Native permission/helper integrated with actual battery/charging reports and threshold recovery. No alerts from demo data; physical delivery remains unverified. |

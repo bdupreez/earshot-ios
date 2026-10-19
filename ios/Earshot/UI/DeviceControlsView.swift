@@ -34,6 +34,12 @@ struct DeviceControlsView: View {
                 if let enabled = store.leAudio {
                     Toggle("LE Audio", isOn: Binding(get: { enabled }, set: { nextLEAudio = $0; confirmLEAudio = true }))
                         .disabled(!store.connected || !store.supports(1, 37))
+                        // Give each device dialog its own control anchor, including
+                        // the popover placement required by iPad presentations.
+                        .confirmationDialog("Restart headphones to change LE Audio?", isPresented: $confirmLEAudio, titleVisibility: .visible) {
+                            Button("Change LE Audio and restart") { store.setLEAudio(nextLEAudio) }
+                            Button("Cancel", role: .cancel) {}
+                        } message: { Text(store.saved.demo ? "This changes only the simulated setting." : "Audio and Earshot will disconnect. Reconnect after the headphones restart.") }
                     Text("Changing LE Audio restarts the headphones and disconnects Earshot. Availability depends on the phone and firmware.").font(.caption).foregroundStyle(.secondary)
                 } else { Text("LE Audio setting has not been reported.").foregroundStyle(.secondary) }
             }
@@ -57,20 +63,16 @@ struct DeviceControlsView: View {
             Section {
                 Button("Power off headphones", role: .destructive) { confirmPower = true }
                     .disabled(!store.connected || !store.supports(7, 4))
+                    .confirmationDialog("Power off your headphones?", isPresented: $confirmPower, titleVisibility: .visible) {
+                        Button("Power off", role: .destructive) { store.powerOffHeadphones() }
+                        Button("Cancel", role: .cancel) {}
+                    } message: { Text("Turn the headphones back on using their physical power control.") }
                 Button("Refresh device reports") { store.refresh() }.disabled(!store.connected)
             }
         }
         .navigationTitle("Device controls").navigationBarTitleDisplayMode(.inline)
         .onAppear { volumeDraft = store.deviceVolume }
         .onChange(of: store.deviceVolume) { _, value in volumeDraft = value }
-        .confirmationDialog("Restart headphones to change LE Audio?", isPresented: $confirmLEAudio, titleVisibility: .visible) {
-            Button("Change LE Audio and restart") { store.setLEAudio(nextLEAudio) }
-            Button("Cancel", role: .cancel) {}
-        } message: { Text(store.saved.demo ? "This changes only the simulated setting." : "Audio and Earshot will disconnect. Reconnect after the headphones restart.") }
-        .confirmationDialog("Power off your headphones?", isPresented: $confirmPower, titleVisibility: .visible) {
-            Button("Power off", role: .destructive) { store.powerOffHeadphones() }
-            Button("Cancel", role: .cancel) {}
-        } message: { Text("Turn the headphones back on using their physical power control.") }
     }
 
     private func playbackButton(_ title: String, icon: String, action: Int) -> some View {

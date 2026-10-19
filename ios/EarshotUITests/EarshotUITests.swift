@@ -188,13 +188,21 @@ final class EarshotUITests: XCTestCase {
         let leAudio = app.switches["LE Audio"]
         reveal(leAudio)
         let prior = leAudio.value as? String
-        leAudio.tap()
-        XCTAssertTrue(app.buttons["Change LE Audio and restart"].waitForExistence(timeout: 5))
+        print("LE Audio switch frame: \(leAudio.frame)")
+        attachScreenshot("Device controls before requesting LE Audio")
+        tapSwitchKnob(leAudio)
+        XCTAssertTrue(app.buttons["Change LE Audio and restart"].waitForExistence(timeout: 5), app.debugDescription)
         app.buttons["Cancel"].tap()
         XCTAssertEqual(leAudio.value as? String, prior)
-        leAudio.tap()
+        tapSwitchKnob(leAudio)
         app.buttons["Change LE Audio and restart"].tap()
         XCTAssertNotEqual(leAudio.value as? String, prior)
+        let power = app.buttons["Power off headphones"]
+        reveal(power)
+        power.tap()
+        XCTAssertTrue(app.buttons["Power off"].waitForExistence(timeout: 5))
+        app.buttons["Cancel"].tap()
+        XCTAssertTrue(app.buttons["Power off"].waitForNonExistence(timeout: 5))
         attachScreenshot("Simulated device controls and confirmed LE Audio setting")
     }
 
@@ -281,6 +289,15 @@ final class EarshotUITests: XCTestCase {
         XCTAssertTrue(item.isHittable, "Dismiss the presented screen before switching tabs.")
         item.tap()
         if title == "Home" { XCTAssertTrue(app.navigationBars["earshot"].waitForExistence(timeout: 5), app.debugDescription) }
+    }
+
+    private func tapSwitchKnob(_ toggle: XCUIElement) {
+        let frame = toggle.frame
+        XCTAssertFalse(frame.isEmpty)
+        // SwiftUI may expose the label and toggle as one wide switch element. Its control
+        // is at the trailing edge; tap the knob rather than the row's empty center.
+        let point = CGVector(dx: frame.maxX - min(25, frame.width / 2), dy: frame.midY)
+        app.coordinate(withNormalizedOffset: .zero).withOffset(point).tap()
     }
 
     private func attachScreenshot(_ name: String) {

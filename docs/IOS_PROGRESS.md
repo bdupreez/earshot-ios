@@ -26,6 +26,14 @@ The focused microphone UI flow passed actual local recording, playback and delet
 
 Checkpoint 1 was pushed as [`2ee06d1`](https://github.com/bdupreez/earshot-ios/commit/2ee06d1) exclusively to the user's fork on `codex/native-ios-port`. No original/upstream repository changes or upstream PR were made.
 
+## Checkpoint 3 — UI acceptance fixes (19 October 2026)
+
+The complete iPhone UI run passed **10 of 12 flows**. It confirmed the automation List action fix, attribution, mode persistence, profile batteries, appearance, local playback, discovery limitations, sound/automation navigation and tools navigation. It exposed a recorder-duration discrepancy: the UI could show 8.8 seconds while the actual finalized AAC file contained 7.963 seconds. The recorder now reads duration from the finalized file. A fresh focused recording/playback/deletion test then passed with the approximately eight-second assertion retained.
+
+The remaining device-control flow has passed reported-volume changes and simulated playback. Its LE Audio confirmation test is still under investigation; no final acceptance claim is made at this checkpoint. Dialogs now have separate control anchors, including iPad popover placement, and the tests also check independent power-off cancellation. Next is confirming the exact switch hit target/dialog behavior, then a single combined final unit/UI run and iPad smoke checks.
+
+Checkpoint 2 was pushed as [`b4aa918`](https://github.com/bdupreez/earshot-ios/commit/b4aa918), again only to the user's fork. The final screenshots and authoritative acceptance summary will follow once the remaining flow is verified.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

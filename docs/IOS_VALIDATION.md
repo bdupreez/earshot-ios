@@ -33,6 +33,7 @@ Screenshot attachments are retained in the `.xcresult` bundles. Selected exporte
 - An asynchronous initial Bluetooth state event could clear restored demo device controls. The handler now keeps demo state, with a regression test that yields through the asynchronous callback.
 - Connection rules could run before a requested custom-mode frame arrived and falsely log a sent request. Rules now wait for their configured target mode, and unavailable manual/scheduled modes cannot log success.
 - Actual UI test video revealed that tapping Run now also opened the automation editor: SwiftUI List's automatic button style shared an action across sibling buttons. Separate borderless actions prevent the editor action from firing on a Run now tap.
+- A strict fresh-recording UI check found the live recorder clock could show 8.8 seconds for a finalized 7.963-second AAC clip. The display now uses the finalized file's frame count/sample rate. The fresh capture/play/delete check passed after this correction.
 
 Earlier failed/diagnostic `.xcresult` bundles are retained locally alongside the final runs. The final result paths below identify the authoritative outcomes.
 
