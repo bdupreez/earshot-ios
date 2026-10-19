@@ -90,6 +90,22 @@ Ported selected-block and deep GET discovery alongside the documented scan. Plan
 
 Regenerated the native project with 47 app files, 18 unit-test files, 6 UI-test files and 4 widget files. The reproducible script built the application/extension with installed Xcode and local signing, installed the actual Simulator app, granted test microphone access and completed **159 unit tests with 0 failures**. All 28 UI scenarios are now running in `FeatureGapAcceptance.xcresult`; this checkpoint does not claim their eventual outcome. No tests were skipped or marked expected failures. Global and subsystem documentation retain the original Earshot, MIT and research credits. Physical headphone/SSID/system-surface acceptance remains separate.
 
+## Checkpoint 10 — complete iPhone app-journey verification (19 October 2026)
+
+The complete broad script finished **184/187 passed**: all 159 units and 25 of 28 app UI journeys. Preserved three failures in its raw summary: deep-count localization/row visibility, the loaded-player hit target and Settings List scroll distance. Focused follow-ups passed **162/163**, leaving only the short Settings drag. The final native repair run then passed **161/161 with 0 failures, 0 skipped and xcodebuild exit 0** (all 159 units plus Wi-Fi and the final switcher).
+
+The explicit latest-result manifest now verifies **159 unit tests + 29 distinct app UI journeys**, all with a passing latest result. This aggregate is not presented as one green 188-test run. Added the independent sidetone/50% threshold UI case without permission prompts; retained all original assertions and failure history. Visual review corrected faint inherited tint in the demo-profile list, and the final switcher capture/test confirms readable native colours and persistence. Exported exact Xcode summaries and unaltered native captures with source-bundle provenance and original credits.
+
+Actual SpringBoard probing confirms installed Earshot Small/Medium widget options. It does not yet establish widget-action delivery; the next probe exercises rendering and a Cycle request. Expanded iPad acceptance remains next. Temporary system probes are excluded from app-journey counts and will not be committed as acceptance tests without an actual result.
+
+## Checkpoint 11 — actual small-widget action and expanded iPad run (19 October 2026)
+
+Actual SpringBoard diagnostics installed Earshot's small widget through the native icon-size menu. Its Cycle button opened Earshot and changed the simulated mode from Quiet to Aware. Replaced the temporary probe with a permanent repeatable `WidgetSystemUITests` journey that also handles an already-installed widget and explicitly asserts foreground activation without activating the app on its behalf. `WidgetSystemFinal.xcresult` passed **1/1, 0 failures, 0 skipped**, Xcode exit 0. The latest iPhone manifest now contains 159 unit, 29 app UI and one separate system UI identifier; temporary probes remain excluded.
+
+Preserved unaltered native captures and exact failed/passing summary exports, plus a per-identifier manifest that makes the multi-run result explicit. The widget README credits the original Earshot/AI-assisted attempt, explains app-process `OpenIntent` execution with primary Apple references, bounded queue history and signed-device limits. No medium-widget, Widget Gallery search, Control Center, Siri or physical-headphone acceptance is inferred from the small-widget result.
+
+Installed the final app on iPad Pro 11-inch (M5), granted test microphone access and started all 159 units plus 12 representative UI journeys. The **159-unit phase passed without failures**. The first iPad UI case found duplicate semantic Tools buttons in its floating top tabs; the selector was narrowed to the exact-label first match and is awaiting its focused rerun. The remaining iPad cases continue. Source app/widget builds and simulator operations remain serialized; pushes remain exclusive to the fork.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

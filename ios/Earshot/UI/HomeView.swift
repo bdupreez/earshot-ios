@@ -97,8 +97,8 @@ private struct HomeHeadphoneSwitcher: View {
                         HStack(spacing: 12) {
                             Image(systemName: profile.earbuds ? "earbuds" : "headphones").foregroundStyle(Color.earshot)
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(store.saved.demoDeviceNames[profile.id] ?? profile.name).foregroundStyle(.primary)
-                                Text("Simulated demo profile").font(.caption).foregroundStyle(.secondary)
+                                Text(store.saved.demoDeviceNames[profile.id] ?? profile.name).foregroundStyle(Color.primary)
+                                Text("Simulated demo profile").font(.caption).foregroundStyle(Color.secondary)
                             }
                             Spacer()
                             if store.saved.profileID == profile.id {
@@ -106,6 +106,7 @@ private struct HomeHeadphoneSwitcher: View {
                             }
                         }.frame(minHeight: 44)
                     }
+                    .buttonStyle(.plain)
                     .accessibilityIdentifier("switchDemo.\(profile.id)")
                     .accessibilityValue(store.saved.profileID == profile.id ? "Selected" : "Not selected")
                 }

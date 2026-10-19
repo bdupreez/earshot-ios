@@ -160,11 +160,11 @@ struct ShortcutsHelpView: View {
             if !store.shortcutStatus.isEmpty { Section("Latest request") { Text(store.shortcutStatus) } }
             if !store.shortcutLog.isEmpty { Section("Request history") { ForEach(Array(store.shortcutLog.prefix(10).enumerated()), id: \.offset) { _, text in Text(text).font(.caption) } } }
             Section("Available actions") {
-                Text("Quiet or Aware by the current device’s reported mode names; a specific listening mode; noise level; hardware bass/mid/treble EQ; an Earshot local-player preset; or a multi-action listening rule.")
+                Text("Quiet or Aware by the current device’s reported mode names; a specific listening mode; a configured mode cycle (choose slots in Settings → Mode cycle); noise level; hardware bass/mid/treble EQ; an Earshot local-player preset; or a multi-action listening rule.")
                 Text("Headphone actions require a verified connection and reported device support. Local EQ can be selected without headphones. Requests expire after two minutes and errors are shown inside Earshot.")
             }
             Section("Widgets and Control Center") {
-                Text("Add the Earshot widget from the Home Screen widget gallery. On iOS 18 or later, add Earshot’s Quiet and Aware controls to Control Center. These controls open Earshot to perform the request; the widget displays the last app snapshot and its age.")
+                Text("Add the Earshot widget from the Home Screen widget gallery. On iOS 18 or later, add Earshot’s Quiet, Aware and Cycle controls to Control Center. These controls open Earshot to perform the request; the widget displays the last app snapshot and its age.")
             }
         }.navigationTitle("Shortcuts & controls").navigationBarTitleDisplayMode(.inline)
     }

@@ -13,7 +13,7 @@ final class DeepScanUITests: XCTestCase {
         demo.tap()
         XCTAssertTrue(app.staticTexts["Demo device"].waitForExistence(timeout: 5))
         let tools = app.tabBars.buttons["Tools"]
-        (tools.exists ? tools : app.buttons["Tools"]).tap()
+        (tools.exists ? tools : app.buttons.matching(NSPredicate(format: "label == %@", "Tools")).firstMatch).tap()
         let lab = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Protocol lab")).firstMatch
         reveal(lab, in: app)
         lab.tap()
@@ -23,7 +23,7 @@ final class DeepScanUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Protocol diagnostics"].waitForExistence(timeout: 5))
         app.buttons["scanPlan"].tap()
         app.buttons["Selected blocks"].tap()
-        XCTAssertTrue(app.staticTexts["scanPlannedCount"].label.contains("121 planned GET queries"))
+        assertPlannedCount(121, in: app)
         let blocks = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Function blocks")).firstMatch
         blocks.tap()
         let audioModes = app.switches["scanBlock.31"]
@@ -31,12 +31,11 @@ final class DeepScanUITests: XCTestCase {
         let frame = audioModes.frame
         app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: frame.maxX - 25, dy: frame.midY)).tap()
         XCTAssertEqual(audioModes.value as? String, "0")
-        reveal(app.staticTexts["scanPlannedCount"], in: app)
-        XCTAssertTrue(app.staticTexts["scanPlannedCount"].label.contains("82 planned GET queries"))
+        assertPlannedCount(82, in: app)
         reveal(app.buttons["scanPlan"], in: app, towardTop: true)
         app.buttons["scanPlan"].tap()
         app.buttons["Deep GET discovery"].tap()
-        XCTAssertTrue(app.staticTexts["scanPlannedCount"].label.contains("3897 planned GET queries"))
+        assertPlannedCount(3897, in: app)
         let exclusions = app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Choosing a plan sends nothing.")).firstMatch
         reveal(exclusions, in: app)
         XCTAssertTrue(exclusions.label.contains("Firmware, authentication and Print"))
@@ -55,6 +54,20 @@ final class DeepScanUITests: XCTestCase {
         capture.name = "Deep GET scan planning stays local and offline in demo"
         capture.lifetime = .keepAlways
         add(capture)
+    }
+
+    private func assertPlannedCount(_ count: Int, in app: XCUIApplication) {
+        reveal(app.staticTexts["scanPlannedCount"], in: app)
+        // SwiftUI can localize integer interpolation with a grouping separator.
+        // Both labels represent the same exact count, rather than a substring match.
+        let expected = Set(["\(count) planned GET queries", "\(count.formatted(.number)) planned GET queries"])
+        let matches = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+            let row = app.staticTexts["scanPlannedCount"]
+            return row.exists && expected.contains(row.label)
+        }, object: nil)
+        let result = XCTWaiter.wait(for: [matches], timeout: 5)
+        XCTAssertEqual(result, .completed,
+                       "Expected exactly \(count) planned GET queries; actual row: \(app.staticTexts["scanPlannedCount"].debugDescription)\n\(app.debugDescription)")
     }
 
     private func reveal(_ element: XCUIElement, in app: XCUIApplication, towardTop: Bool = false) {

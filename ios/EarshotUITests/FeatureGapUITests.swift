@@ -395,7 +395,7 @@ final class FeatureGapUITests: XCTestCase {
     func testWiFiAccessIsDisabledInDemoAndNavigationDoesNotPrompt() throws {
         launchDemo()
         selectTab("Settings")
-        tap(button(startingWith: "App preferences"))
+        tap(button(startingWith: "App preferences"), direction: .towardBottom, minimumScroll: 140)
         XCTAssertTrue(app.navigationBars["App preferences"].waitForExistence(timeout: 5))
         let access = app.buttons["Allow Wi-Fi access"]
         reveal(access)
@@ -547,12 +547,12 @@ final class FeatureGapUITests: XCTestCase {
     private func named(startingWith prefix: String) -> XCUIElement { app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", prefix)).firstMatch }
     private func text(containing fragment: String) -> XCUIElement { app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", fragment)).firstMatch }
 
-    private func tap(_ element: XCUIElement, direction: ScrollDirection = .towardBottom) {
-        reveal(element, direction: direction)
+    private func tap(_ element: XCUIElement, direction: ScrollDirection = .towardBottom, minimumScroll: CGFloat = 36) {
+        reveal(element, direction: direction, minimumScroll: minimumScroll)
         element.tap()
     }
 
-    private func reveal(_ element: XCUIElement, direction: ScrollDirection = .towardBottom) {
+    private func reveal(_ element: XCUIElement, direction: ScrollDirection = .towardBottom, minimumScroll: CGFloat = 36) {
         var nextDirection = direction
         for _ in 0..<20 {
             let screen = app.frame
@@ -572,15 +572,15 @@ final class FeatureGapUITests: XCTestCase {
                 if element.isHittable, !frame.isEmpty, frame.minY >= top, frame.maxY <= bottom { return }
                 if !frame.isEmpty, frame.minY < top {
                     nextDirection = .towardTop
-                    distance = min(distance, max(36, top - frame.minY + 16))
+                    distance = min(distance, max(minimumScroll, top - frame.minY + 16))
                 } else if !frame.isEmpty, frame.maxY > bottom {
                     nextDirection = .towardBottom
-                    distance = min(distance, max(36, frame.maxY - bottom + 16))
+                    distance = min(distance, max(minimumScroll, frame.maxY - bottom + 16))
                 }
             }
             scrollSmallStep(nextDirection, distance: distance, top: top, bottom: bottom)
         }
-        XCTFail("Expected fully visible control: \(element)")
+        XCTFail("Expected fully visible control: \(element)\n\(app.debugDescription)")
     }
 
     private func scrollSmallStep(_ direction: ScrollDirection, distance: CGFloat, top: CGFloat, bottom: CGFloat) {

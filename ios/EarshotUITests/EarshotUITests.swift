@@ -137,14 +137,30 @@ final class EarshotUITests: XCTestCase {
         reveal(load)
         load.tap()
         let play = app.buttons["playAudio"]
-        XCTAssertTrue(play.isEnabled)
+        func playbackDiagnostics() -> String {
+            let tabs = app.tabBars.firstMatch
+            let tabFrame = tabs.exists ? String(describing: tabs.frame) : "No TabBar element"
+            return "Play frame: \(play.frame), label: \(play.label), enabled: \(play.isEnabled), hittable: \(play.isHittable); app frame: \(app.frame); tab bar: \(tabFrame)\n\(app.debugDescription)"
+        }
+        XCTAssertTrue(play.waitForExistence(timeout: 5), playbackDiagnostics())
+        // Loading the sample adds progress/seek controls and changes the player's height.
+        // Reveal Play after that layout change so the floating tab bar cannot intercept it.
+        reveal(play)
+        XCTAssertTrue(play.isEnabled, playbackDiagnostics())
+        XCTAssertTrue(play.isHittable, playbackDiagnostics())
         play.tap()
         let playing = NSPredicate(format: "label CONTAINS %@", "Pause")
-        expectation(for: playing, evaluatedWith: play)
-        waitForExpectations(timeout: 5)
+        let playingExpectation = XCTNSPredicateExpectation(predicate: playing, object: play)
+        guard XCTWaiter.wait(for: [playingExpectation], timeout: 5) == .completed else {
+            attachScreenshot("Audio playback failed to start — control layout and status")
+            XCTFail("Expected real playback to expose Pause. \(playbackDiagnostics())")
+            return
+        }
+        XCTAssertTrue(play.label.contains("Pause"), playbackDiagnostics())
         attachScreenshot("Real AVAudioEngine playback running")
+        reveal(play)
         play.tap()
-        XCTAssertTrue(play.label.contains("Play"))
+        XCTAssertTrue(play.label.contains("Play"), playbackDiagnostics())
     }
 
     func testAutomationRunsChosenMode() throws {
@@ -251,6 +267,7 @@ final class EarshotUITests: XCTestCase {
         XCTAssertEqual(reportedTime.count, 2)
         let reportedTotal = Double(reportedTime.last?.replacingOccurrences(of: " seconds", with: "") ?? "") ?? 0
         XCTAssertEqual(reportedTotal, duration, accuracy: 0.15)
+        attachScreenshot("Real microphone recording playback with actual elapsed and total progress")
         app.buttons["Stop playback"].tap()
         app.buttons["Delete"].tap()
         XCTAssertFalse(app.buttons["Play recording"].isEnabled)

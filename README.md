@@ -66,7 +66,7 @@ EARSHOT_SIMULATOR_ID=YOUR_SIMULATOR_UDID ios/scripts/test-simulator.sh
 
 **Baseline acceptance (before the feature-gap pass):** 53 tests passed (41 unit + 12 UI), with zero failures or skips on the installed iPhone 17 Pro simulator. See the validation report below for secondary-device checks and remaining limits.
 
-**Feature-gap checkpoint:** 159 native unit tests passed with zero failures/skips after adding preset lifecycle/seek, multi-action rules, reconnect/restoration, device management, richer widgets, Shortcuts/Control Center, reminders, Wi-Fi/latency models and actual Simulator App Group access. Final expanded UI acceptance is pending at this checkpoint; see the validation report for current scope.
+**Current feature-pass verification:** 159 native unit tests and 29 distinct app UI journeys have passing latest results across the documented installed-Xcode Simulator runs. The final repair run passed 161/161 with no failures or skips; earlier diagnostic failures remain recorded. [Per-case coverage and exact run outcomes](docs/IOS_VALIDATION.md) explain the aggregate rather than claiming a single 188-test green run. A separate actual small-widget test also passed: Cycle opened Earshot and applied the next demo mode. Expanded iPad checks are separate.
 
 Results and screenshot attachments are stored in ignored `ios/TestResults/*.xcresult` bundles. Open a result bundle in Xcode to inspect individual assertions, logs, and screenshots. See [the validation report](docs/IOS_VALIDATION.md) for actual outcomes, environment, and limitations. Simulator tests cannot validate a physical Bose Bluetooth connection, sound through headphones, hearing safety, or vendor firmware behaviour.
 
