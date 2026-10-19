@@ -18,6 +18,29 @@ struct BmapScanBlock: Identifiable {
     let name: String
 }
 
+/// BMAP has no transaction identifier. Diagnostic reads therefore cannot overlap
+/// mutations. Retain timed-out/cancelled read addresses for the normal eight-second
+/// control deadline, beginning at actual transmission rather than enqueue time.
+struct BmapDiagnosticReadIsolation {
+    static let lateReplyWindow: TimeInterval = 8
+    private(set) var queued: [UUID: BmapAddress] = [:]
+    private var transmittedUntil: [BmapAddress: Date] = [:]
+
+    mutating func enqueue(id: UUID, address: BmapAddress) { queued[id] = address }
+    mutating func discard(id: UUID) { queued.removeValue(forKey: id) }
+    mutating func transmitted(id: UUID, at now: Date = .now) {
+        guard let address = queued.removeValue(forKey: id) else { return }
+        transmittedUntil = transmittedUntil.filter { $0.value > now }
+        transmittedUntil[address] = now.addingTimeInterval(Self.lateReplyWindow)
+    }
+    func containsTransmitted(_ address: BmapAddress, at now: Date = .now) -> Bool {
+        transmittedUntil[address].map { $0 > now } ?? false
+    }
+    func blocksMutation(at address: BmapAddress, now: Date = .now) -> Bool {
+        queued.values.contains(address) || containsTransmitted(address, at: now)
+    }
+}
+
 /// AI-assisted port of upstream LabScreen's selected-block and 0...63 discovery plans (MIT).
 /// The native scanner retains its stricter exclusions, including the separate Print consent boundary.
 struct BmapScanPlan {
@@ -62,6 +85,9 @@ final class BmapProtocolScanner: ObservableObject {
     @Published private(set) var completed = 0
     @Published private(set) var total = 0
     @Published private(set) var status = "No scan has started."
+    var preflightError: (@MainActor () -> String?)?
+    var onCancel: (@MainActor () -> Void)?
+    private(set) var diagnosticReads = BmapDiagnosticReadIsolation()
     private var task: Task<Void, Never>?
     private var waiting: BmapAddress?
     private var reply: BmapPacket?
@@ -82,12 +108,14 @@ final class BmapProtocolScanner: ObservableObject {
         let queries = Array(plan.addresses.filter { BmapScanPlan.allows($0) && seen.insert($0).inserted }.prefix(4096))
         results = []; completed = 0; total = queries.count
         guard !queries.isEmpty, mayContinue() else { status = "No eligible GET queries can run in the foreground."; return }
+        if let error = preflightError?() { status = error; return }
         isScanning = true; status = "Waiting for actual device responses."
         task = Task { @MainActor [weak self] in
             guard let self else { return }
             defer {
                 if self.scanID == generation {
                     self.waiting = nil; self.reply = nil; self.isScanning = false; self.task = nil
+                    self.onCancel?() // Also discard unsent diagnostic frames after timeout/completion.
                     if self.completed == self.total { self.status = "Scan finished. Responses, refusals and timeouts are listed separately." }
                 }
             }
@@ -127,10 +155,31 @@ final class BmapProtocolScanner: ObservableObject {
         reply = packet
     }
 
+    func expectsDiagnosticRead(_ packet: BmapPacket) -> Bool {
+        isScanning && packet.operation == .get && packet.payload.isEmpty && packet.address == waiting
+    }
+    func queuedDiagnosticRead(id: UUID, address: BmapAddress) { diagnosticReads.enqueue(id: id, address: address) }
+    func transmittedDiagnosticRead(id: UUID, at now: Date = .now) { diagnosticReads.transmitted(id: id, at: now) }
+    func discardedDiagnosticRead(id: UUID) { diagnosticReads.discard(id: id) }
+    func resetDiagnosticConnection() { diagnosticReads = BmapDiagnosticReadIsolation() }
+
+    func isolatesDiagnosticError(_ packet: BmapPacket, at now: Date = .now) -> Bool {
+        packet.operation == .error && diagnosticReads.containsTransmitted(packet.address, at: now)
+    }
+    func mutationAccessError(for packet: BmapPacket, at now: Date = .now) -> String? {
+        guard packet.operation != .get else { return nil }
+        if isScanning { return "Stop the read-only scan before changing headphone settings or sending another command." }
+        if diagnosticReads.blocksMutation(at: packet.address, now: now) {
+            return "A diagnostic read at \(packet.address) is still settling. Wait up to eight seconds or reconnect before changing this setting."
+        }
+        return nil
+    }
+
     func cancel() {
         if isScanning { status = "Scan cancelled. Completed responses remain available." }
         scanID = UUID()
         task?.cancel(); task = nil; waiting = nil; reply = nil; isScanning = false
+        onCancel?()
     }
 }
 

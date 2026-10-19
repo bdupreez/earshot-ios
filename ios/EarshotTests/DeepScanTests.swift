@@ -83,6 +83,132 @@ final class DeepScanTests: XCTestCase {
         }
     }
 
+    func testDiagnosticCorrelationStartsAtActualTransmissionAndExpires() {
+        let address = BmapAddress(1, 24)
+        let start = Date(timeIntervalSince1970: 100)
+        let id = UUID()
+        var isolation = BmapDiagnosticReadIsolation()
+        isolation.enqueue(id: id, address: address)
+        XCTAssertTrue(isolation.blocksMutation(at: address, now: start.addingTimeInterval(30)))
+        XCTAssertFalse(isolation.containsTransmitted(address, at: start), "A queued read cannot claim an earlier device error.")
+        isolation.transmitted(id: id, at: start.addingTimeInterval(30))
+        XCTAssertTrue(isolation.containsTransmitted(address, at: start.addingTimeInterval(37.9)))
+        XCTAssertFalse(isolation.containsTransmitted(address, at: start.addingTimeInterval(38)))
+        XCTAssertFalse(isolation.blocksMutation(at: address, now: start.addingTimeInterval(38)))
+        XCTAssertFalse(isolation.blocksMutation(at: BmapAddress(1, 7), now: start.addingTimeInterval(31)))
+    }
+
+    func testCancellationDropsUnsentReadsButFinishesPartialFrameWithoutCorruptingWire() throws {
+        let first = BoseCommands.get(BmapAddress(1, 24))
+        let cancelled = BoseCommands.get(BmapAddress(2, 2))
+        let normal = BoseCommands.get(BmapAddress(0, 1))
+        let frames = try [
+            BmapOutgoingFrame(data: first.encode(), address: first.address, diagnosticID: UUID(), operation: .get),
+            BmapOutgoingFrame(data: cancelled.encode(), address: cancelled.address, diagnosticID: UUID(), operation: .get),
+            BmapOutgoingFrame(data: normal.encode(), address: normal.address, diagnosticID: nil, operation: .get)
+        ]
+        let retained = BmapOutgoingFrame.retainingAfterDiagnosticCancel(frames, partialWriteOffset: 2)
+        XCTAssertEqual(retained.map(\.address), [first.address, normal.address])
+        var buffer = BmapFrameBuffer()
+        let prefix = Data(frames[0].data.prefix(2))
+        let remainder = Data(retained[0].data.dropFirst(2)) + retained[1].data
+        XCTAssertEqual(buffer.feed(prefix + remainder), [first, normal])
+        XCTAssertEqual(BmapOutgoingFrame.retainingAfterDiagnosticCancel(frames, partialWriteOffset: 0).map(\.address), [normal.address])
+    }
+
+    @MainActor func testScanCannotStartWhileARealMutationIsAwaitingItsReply() {
+        let fixture = storeFixture(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        fixture.store.trackSentRequest(BoseCommands.setToggle(function: 24, enabled: true))
+        var sends = 0
+        let scanner = fixture.store.bluetooth.protocolScanner
+        scanner.start(plan: .selected(blocks: [1], maximumFunction: 24)) { _ in sends += 1 }
+        XCTAssertFalse(scanner.isScanning)
+        XCTAssertEqual(sends, 0)
+        XCTAssertTrue(scanner.status.contains("awaiting a report"))
+        fixture.store.receive(BmapPacket(block: 1, function: 24, operation: .error, payload: Data([8])))
+        XCTAssertEqual(fixture.store.commandFailureVersion, 1, "The actual mutation refusal must still fail its command.")
+    }
+
+    @MainActor func testScanErrorCannotPoisonSupportOrHideAnUnrelatedWriteFailure() throws {
+        let fixture = storeFixture(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let scanner = store.bluetooth.protocolScanner
+        let now = Date(timeIntervalSince1970: 100)
+        let id = UUID()
+        store.liveFunctions.insert("1.24")
+        scanner.queuedDiagnosticRead(id: id, address: BmapAddress(1, 24))
+        scanner.transmittedDiagnosticRead(id: id, at: now)
+        store.trackSentRequest(try BoseCommands.setEQ(band: 0, value: 2))
+        store.bluetooth.routeVerifiedResponse(BmapPacket(block: 1, function: 24, operation: .error, payload: Data([5])), at: now.addingTimeInterval(1))
+        XCTAssertTrue(store.supports(1, 24))
+        XCTAssertEqual(store.commandFailureVersion, 0)
+        store.bluetooth.routeVerifiedResponse(BmapPacket(block: 1, function: 7, operation: .error, payload: Data([8])), at: now.addingTimeInterval(1))
+        XCTAssertEqual(store.commandFailureVersion, 1, "Isolation is exact-address; a real different-address refusal must reach the store.")
+        store.bluetooth.routeVerifiedResponse(BmapPacket(block: 1, function: 24, operation: .error, payload: Data([4])), at: now.addingTimeInterval(9))
+        XCTAssertFalse(store.supports(1, 24), "Beyond the bounded window ordinary error handling resumes.")
+    }
+
+    @MainActor func testValidStatusPushStillUpdatesStoreDuringDiagnosticQuarantine() {
+        let fixture = storeFixture(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let id = UUID()
+        let now = Date(timeIntervalSince1970: 100)
+        store.saved.autoPause = false
+        store.bluetooth.protocolScanner.queuedDiagnosticRead(id: id, address: BmapAddress(1, 24))
+        store.bluetooth.protocolScanner.transmittedDiagnosticRead(id: id, at: now)
+        store.bluetooth.routeVerifiedResponse(BmapPacket(block: 1, function: 24, operation: .status, payload: Data([1])), at: now.addingTimeInterval(1))
+        XCTAssertTrue(store.saved.autoPause)
+        XCTAssertTrue(store.supports(1, 24))
+    }
+
+    @MainActor func testMutationGuardCoversActiveScanAndLateCancelledReadWithoutBlockingOtherAddresses() {
+        let scanner = BmapProtocolScanner()
+        scanner.start(plan: .selected(blocks: [1], maximumFunction: 24)) { _ in }
+        let mutation = BoseCommands.setToggle(function: 24, enabled: true)
+        XCTAssertTrue(scanner.mutationAccessError(for: mutation)?.contains("Stop the read-only scan") == true)
+        let id = UUID()
+        let now = Date(timeIntervalSince1970: 100)
+        scanner.queuedDiagnosticRead(id: id, address: mutation.address)
+        scanner.cancel()
+        XCTAssertNotNil(scanner.mutationAccessError(for: mutation, at: now), "A partial/queued read remains protected until actually transmitted or discarded.")
+        scanner.transmittedDiagnosticRead(id: id, at: now.addingTimeInterval(30))
+        XCTAssertNotNil(scanner.mutationAccessError(for: mutation, at: now.addingTimeInterval(37)))
+        XCTAssertNil(scanner.mutationAccessError(for: BoseCommands.setToggle(function: 27, enabled: true), at: now.addingTimeInterval(37)))
+        XCTAssertNil(scanner.mutationAccessError(for: mutation, at: now.addingTimeInterval(38)))
+        XCTAssertNil(scanner.mutationAccessError(for: BoseCommands.get(mutation.address), at: now.addingTimeInterval(37)))
+        scanner.resetDiagnosticConnection()
+        XCTAssertFalse(scanner.isolatesDiagnosticError(BmapPacket(block: 1, function: 24, operation: .error, payload: Data([5])), at: now.addingTimeInterval(31)))
+    }
+
+    @MainActor func testTimedOutScanCompletionDiscardsUnsentBackpressuredRead() async throws {
+        let scanner = BmapProtocolScanner()
+        var frames = [BmapOutgoingFrame]()
+        scanner.onCancel = {
+            let retained = BmapOutgoingFrame.retainingAfterDiagnosticCancel(frames, partialWriteOffset: 0)
+            let kept = Set(retained.compactMap(\.diagnosticID))
+            for id in frames.compactMap(\.diagnosticID) where !kept.contains(id) { scanner.discardedDiagnosticRead(id: id) }
+            frames = retained
+        }
+        scanner.start(plan: .selected(blocks: [40], maximumFunction: 0)) { packet in
+            let id = UUID()
+            scanner.queuedDiagnosticRead(id: id, address: packet.address)
+            frames.append(BmapOutgoingFrame(data: try packet.encode(), address: packet.address, diagnosticID: id, operation: .get))
+            // Simulate output backpressure: the frame has not been transmitted.
+        }
+        try await waitForCompletion(scanner)
+        XCTAssertEqual(scanner.completed, 1)
+        XCTAssertFalse(scanner.results[0].succeeded)
+        XCTAssertTrue(frames.isEmpty, "Finishing a timeout must discard unsent diagnostic traffic, just like explicit cancellation.")
+        XCTAssertTrue(scanner.diagnosticReads.queued.isEmpty)
+        XCTAssertNil(scanner.mutationAccessError(for: BmapPacket(block: 40, function: 0, operation: .setGet)))
+    }
+
+    @MainActor private func storeFixture() -> (store: AppStore, defaults: UserDefaults, suite: String) {
+        let suite = "EarshotDiagnosticIsolation.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        return (AppStore(defaults: defaults, arguments: []), defaults, suite)
+    }
+
     @MainActor private func waitForCompletion(_ scanner: BmapProtocolScanner) async throws {
         for _ in 0..<250 {
             if !scanner.isScanning { return }

@@ -554,50 +554,72 @@ final class FeatureGapUITests: XCTestCase {
 
     private func reveal(_ element: XCUIElement, direction: ScrollDirection = .towardBottom, minimumScroll: CGFloat = 36) {
         var nextDirection = direction
+        var lastViewport = CGRect.zero
         for _ in 0..<20 {
-            let screen = app.frame
-            var top = screen.minY + 20
-            var bottom = screen.maxY - 20
-            if let navigation = app.navigationBars.allElementsBoundByIndex.last(where: { $0.isHittable && !$0.frame.isEmpty }) { top = max(top, navigation.frame.maxY + 6) }
-            let bar = app.tabBars.firstMatch
-            if bar.exists, bar.isHittable {
-                if bar.frame.minY > screen.midY { bottom = min(bottom, bar.frame.minY - 12) }
-                else { top = max(top, bar.frame.maxY + 6) }
-            }
-            let keyboard = app.keyboards.firstMatch
-            if keyboard.exists, keyboard.isHittable { bottom = min(bottom, keyboard.frame.minY - 8) }
-            var distance = min(CGFloat(180), (bottom - top) * 0.35)
+            let viewport = foregroundScrollViewport()
+            lastViewport = viewport
+            var distance = min(CGFloat(180), viewport.height * 0.35)
             if element.exists {
                 let frame = element.frame
-                if element.isHittable, !frame.isEmpty, frame.minY >= top, frame.maxY <= bottom { return }
-                if !frame.isEmpty, frame.minY < top {
+                if element.isHittable, !frame.isEmpty, viewport.contains(frame) { return }
+                if !frame.isEmpty, frame.minY < viewport.minY {
                     nextDirection = .towardTop
-                    distance = min(distance, max(minimumScroll, top - frame.minY + 16))
-                } else if !frame.isEmpty, frame.maxY > bottom {
+                    distance = min(distance, max(minimumScroll, viewport.minY - frame.minY + 16))
+                } else if !frame.isEmpty, frame.maxY > viewport.maxY {
                     nextDirection = .towardBottom
-                    distance = min(distance, max(minimumScroll, frame.maxY - bottom + 16))
+                    distance = min(distance, max(minimumScroll, frame.maxY - viewport.maxY + 16))
                 }
             }
-            scrollSmallStep(nextDirection, distance: distance, top: top, bottom: bottom)
+            scrollSmallStep(nextDirection, distance: distance, viewport: viewport)
         }
-        XCTFail("Expected fully visible control: \(element)\n\(app.debugDescription)")
+        let targetFrame = element.exists ? String(describing: element.frame) : "not in the accessibility viewport"
+        XCTFail("Expected fully visible control: \(element); target frame: \(targetFrame); foreground scroll viewport: \(lastViewport)\n\(app.debugDescription)")
     }
 
-    private func scrollSmallStep(_ direction: ScrollDirection, distance: CGFloat, top: CGFloat, bottom: CGFloat) {
-        XCTAssertGreaterThan(bottom - top, 60, "A modal or keyboard leaves no usable scroll area.")
+    private func foregroundScrollViewport() -> CGRect {
         let screen = app.frame
-        let travel = min(max(36, distance), (bottom - top) * 0.45)
-        let middle = (top + bottom) / 2
+        let navigation = app.navigationBars.allElementsBoundByIndex.last { $0.isHittable && !$0.frame.isEmpty }
+        let containers = (app.scrollViews.allElementsBoundByIndex + app.collectionViews.allElementsBoundByIndex + app.tables.allElementsBoundByIndex)
+            .filter { !$0.frame.isEmpty && $0.frame.intersects(screen) }
+        // On iPad the foreground Form is a centered CollectionView. Its horizontal
+        // bounds match its own navigation bar, while the dimmed underlying list
+        // still has a full-window frame and must never receive our scroll gesture.
+        let matchingNavigation = containers.filter { container in
+            guard let navigation else { return false }
+            let frame = container.frame
+            let bar = navigation.frame
+            return abs(frame.minX - bar.minX) <= 2 && abs(frame.maxX - bar.maxX) <= 2 && frame.maxY > bar.maxY + 60
+        }
+        let foreground = matchingNavigation.last ?? containers.last(where: { $0.isHittable })
+        let bounds = foreground?.frame.intersection(screen) ?? screen
+        var top = max(screen.minY + 20, bounds.minY + 8)
+        var bottom = min(screen.maxY - 20, bounds.maxY - 8)
+        if let navigation { top = max(top, navigation.frame.maxY + 6) }
+        let bar = app.tabBars.firstMatch
+        if bar.exists, bar.isHittable, bar.frame.intersects(bounds) {
+            if bar.frame.minY > bounds.midY { bottom = min(bottom, bar.frame.minY - 12) }
+            else { top = max(top, bar.frame.maxY + 6) }
+        }
+        let keyboard = app.keyboards.firstMatch
+        if keyboard.exists, keyboard.isHittable, keyboard.frame.intersects(bounds) { bottom = min(bottom, keyboard.frame.minY - 8) }
+        return CGRect(x: bounds.minX, y: top, width: bounds.width, height: max(0, bottom - top))
+    }
+
+    private func scrollSmallStep(_ direction: ScrollDirection, distance: CGFloat, viewport: CGRect) {
+        XCTAssertGreaterThan(viewport.height, 60, "A modal or keyboard leaves no usable scroll area.")
+        let travel = min(max(36, distance), viewport.height * 0.45)
+        let middle = viewport.midY
         let startY = direction == .towardBottom ? middle + travel / 2 : middle - travel / 2
         let endY = direction == .towardBottom ? middle - travel / 2 : middle + travel / 2
         // The list/scroll-view gutter avoids sliders, EQ handles and switches.
         // A short slow drag followed by a hold prevents a full-screen inertial flick
         // from oscillating a row between the navigation bar and floating tab bar.
         let origin = app.coordinate(withNormalizedOffset: .zero)
-        let x = screen.minX + 8
-        origin.withOffset(CGVector(dx: x, dy: startY))
+        let screen = app.frame
+        let x = viewport.minX + 8 - screen.minX
+        origin.withOffset(CGVector(dx: x, dy: startY - screen.minY))
             .press(forDuration: 0.05,
-                   thenDragTo: origin.withOffset(CGVector(dx: x, dy: endY)),
+                   thenDragTo: origin.withOffset(CGVector(dx: x, dy: endY - screen.minY)),
                    withVelocity: .slow,
                    thenHoldForDuration: 0.15)
     }

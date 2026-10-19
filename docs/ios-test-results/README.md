@@ -2,7 +2,10 @@
 
 These are compact summaries exported with Apple's `xcresulttool get test-results summary` from actual simulator runs of this **AI-assisted iOS port attempt**. The original project is [Earshot by HellzYeahh and contributors](https://github.com/HellzYeahh/earshot); see [all credits](../../THIRD_PARTY_NOTICES.md).
 
-- [Current iPhone per-case coverage](current-iphone-coverage.json): derived latest results for 159 unit + 29 app UI identifiers and one separate system-widget journey, all Passed across the explicitly listed bundles. This manifest is explicitly **not a single-run total**; it excludes temporary system probes.
+- [Current iPhone per-case coverage](current-iphone-coverage.json): derived latest results for 166 unit + 29 app UI identifiers and two separate system-widget/Control Center journeys, all Passed across the explicitly listed bundles. This manifest is explicitly **not a single-run total**; it excludes temporary system probes.
+- [Final diagnostic-isolation unit suite](diagnostic-isolation-units-final.json): 166 passed, 0 failed, 0 skipped; full native units including seven new wire/correlation regressions.
+- [Actual Control Center acceptance](control-center-system-final.json): 1 passed, 0 failed, 0 skipped; system-driven Cycle opens Earshot and applies Aware in demo.
+- [Expanded iPad integration](ipad-feature-integration.json): 168 passed, 3 failed, 0 skipped; 159 unit + 12 UI attempted, with focused harness reruns pending at this checkpoint.
 - [Actual small-widget acceptance](widget-system-final.json): 1 passed, 0 failed, 0 skipped; WidgetKit Cycle opened Earshot and applied Aware in demo, without test-driven app activation.
 
 - [Final native UI repairs](native-ui-repairs-final.json): 161 passed, 0 failed, 0 skipped; all 159 units plus Wi-Fi and final switcher verification.

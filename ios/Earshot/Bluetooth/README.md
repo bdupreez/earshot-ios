@@ -38,6 +38,16 @@ count as replies. Results and response text are bounded. Ordinary transport logs
 redact known paired-source, name, serial, MAC, aggregate-settings and Print fields. This is targeted
 redaction rather than a guarantee about unknown discovery payloads.
 
+BMAP has no transaction identifier. A scan therefore cannot start while a mutation/rule is awaiting
+its report, and mutations are refused while scanning. Each diagnostic frame carries local origin
+metadata; error replies at its address are isolated from normal capability/write failure handling
+for eight seconds after actual full transmission. Queued reads remain protected under output
+backpressure. Cancellation and task completion discard unsent diagnostic frames; a partially sent
+frame finishes to preserve wire integrity. Valid STATUS/RESULT pushes still update the app, and
+errors at unrelated addresses still fail genuine writes. After cancellation, a same-address change
+must wait for that bounded settling window or a reconnect. An arbitrarily late device reply beyond
+eight seconds remains ambiguous; this is a protocol limitation, not hardware compatibility evidence.
+
 The separate experimental Print console implements only upstream `bind`, `unbind`, `verbosity`
 and `output` packet shapes. Opening the page sends nothing; local validation sends nothing.
 Sending requires explicit confirmation and a verified live control channel. Firmware argument

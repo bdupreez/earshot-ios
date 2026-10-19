@@ -117,6 +117,7 @@ import Combine
         }
         if saved.eq.count != 3 || saved.eq.contains(where: { !$0.isFinite || !(-10...10).contains($0) }) { saved.eq = [0, 0, 0] }
         bluetooth.onPacket = { [weak self] packet in self?.receive(packet) }
+        bluetooth.diagnosticPreflightError = { [weak self] in self?.diagnosticScanPreflightError }
         wifi.onSSIDChange = { [weak self] ssid in self?.observedWiFiJoin(ssid) }
         wifi.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         notifications.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
@@ -344,7 +345,19 @@ import Combine
         do {
             try bluetooth.send(packet)
             trackSentRequest(packet)
-        } catch { commandFailureVersion += 1; message = error.localizedDescription }
+        } catch {
+            commandFailureVersion += 1; message = error.localizedDescription
+            if pendingDeviceOperation?.address == packet.address {
+                deviceOperationTask?.cancel(); deviceOperationTask = nil; pendingDeviceOperation = nil
+                deviceRequestStatus = error.localizedDescription
+            }
+        }
+    }
+    var diagnosticScanPreflightError: String? {
+        guard pendingWrites.isEmpty, pendingDeviceOperation == nil, activeRuleID == nil else {
+            return "A headphone request is still awaiting a report. Wait for it or reconnect before starting a read-only scan."
+        }
+        return nil
     }
     func trackSentRequest(_ packet: BmapPacket) {
         // These documented START operations read information. Their refusal must

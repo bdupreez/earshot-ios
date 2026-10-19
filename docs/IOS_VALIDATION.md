@@ -14,10 +14,11 @@ The original application is [Earshot by HellzYeahh and contributors](https://git
 
 ## Current iPhone feature-pass evidence
 
-**159 unit tests and 29 distinct app UI journeys have a passing latest result**, verified from Apple's per-case exports across the runs below. This is an aggregate of explicitly identified runs, **not a single 188-test green run**. [Current per-case coverage](ios-test-results/current-iphone-coverage.json) records the authoritative bundle for every identifier; earlier failures are retained rather than hidden.
+**166 unit tests and 29 distinct app UI journeys have a passing latest result**, verified from Apple's per-case exports across the runs below. This is an aggregate of explicitly identified runs, **not a single combined green run**. [Current per-case coverage](ios-test-results/current-iphone-coverage.json) records the authoritative bundle for every identifier; earlier failures are retained rather than hidden.
 
 | Run | Exact Xcode outcome | What it establishes |
 | --- | --- | --- |
+| `DiagnosticIsolationUnitsFinal.xcresult` | **166 passed, 0 failed, 0 skipped**, xcodebuild exit 0 | Complete final native unit suite, including seven diagnostic isolation/partial-frame/late-reply regressions. |
 | `FeatureGapAcceptance.xcresult` | **184 passed, 3 failed, 0 skipped** (159 unit + 28 UI attempted) | All unit tests and 25 UI journeys passed, including all new functional flows except the three stated harness interactions. |
 | `FeatureGapFinalFollowups.xcresult` | **162 passed, 1 failed, 0 skipped** | All 159 units, exact/localized deep-plan counts, real sample playback/pause and the new sidetone/50% threshold persistence UI passed. The Settings navigation gesture still needed repair. |
 | `NativeUIRepairsFinal.xcresult` | **161 passed, 0 failed, 0 skipped**, xcodebuild exit 0 | All 159 units, Wi-Fi demo/no-prompt boundaries, and final quick-switcher colours/selection/persistence passed. |
@@ -26,7 +27,14 @@ The failed broad-run cases were a localized deep-plan count checked without reve
 
 Visual review used the actual exported PNGs. It found faint demo-profile captions inheriting Button tint; native plain rows with explicit primary/secondary text colours corrected them, and the final switcher UI rerun passed. The Shortcuts help now includes Cycle. [Native captures and precise provenance](ios-screenshots/README.md) distinguish captures from passing cases from whole-run results.
 
-**Actual system widget:** `WidgetSystemFinal.xcresult` passed **1/1, 0 failures/skips**, with xcodebuild exit 0. The small widget’s Cycle action opened Earshot from SpringBoard and changed Quiet to Aware in demo. The test explicitly waits for the app to become foreground without activating it itself. A prior diagnostic probe installed the actual small widget through the native icon-size menu and observed the same action; the permanent test then passed again with the widget already installed. This is one separate system UI journey, not one of the 29 in-app journeys. Medium layout, Widget Gallery search, Control Center, Siri and signed-iPhone delivery remain unverified. Temporary probes are excluded from coverage. Expanded iPad checks follow this checkpoint. Physical headphone, signed-iPhone SSID and system-delivery limits remain as stated below.
+**Actual system widget:** `WidgetSystemFinal.xcresult` passed **1/1, 0 failures/skips**, with xcodebuild exit 0. The small widget’s Cycle action opened Earshot from SpringBoard and changed Quiet to Aware in demo. The test explicitly waits for the app to become foreground without activating it itself. A prior diagnostic probe installed the actual small widget through the native icon-size menu and observed the same action; the permanent test then passed again with the widget already installed. This is one separate system UI journey, not one of the 29 in-app journeys. The actual Control Center Cycle journey also passed **1/1** in `ControlCenterSystemFinal.xcresult`, with xcodebuild exit 0. Its control opened Earshot and applied Aware without test-driven app activation; prior diagnostics installed it through the actual Add Controls gallery. The three gallery entries were also visually inspected in the unlocked Simulator. Medium layout, Widget Gallery search, Siri and signed-iPhone delivery remain unverified at this checkpoint. Temporary probes are excluded from coverage. Expanded iPad integration finished **168 passed, 3 failed, 0 skipped** (159 units + 12 UI attempted); failures are the duplicate floating Tools selector and two gestures outside the centered rule sheet. Repaired focused reruns are pending. Physical headphone, signed-iPhone SSID and system-delivery limits remain as stated below.
+
+
+## Diagnostic isolation and secondary-device follow-up
+
+The final native unit suite passed **166/166, 0 failures, 0 skipped**, Xcode exit 0 (`DiagnosticIsolationUnitsFinal.xcresult`). A parity review found that a scan GET refusal could enter ordinary capability/write failure handling. The corrected transport labels diagnostic frames, begins its eight-second late-reply isolation only after full transmission, refuses overlapping mutations, preserves genuine unrelated errors and valid status pushes, and discards unsent diagnostic traffic on cancellation/completion. A partial frame finishes without corrupting the stream. Seven regressions cover these boundaries; arbitrarily later BMAP replies remain ambiguous because the protocol has no transaction ID. No physical scanner behavior is inferred.
+
+`iPadFeatureAcceptance.xcresult` finished **168 passed, 3 failed, 0 skipped**: 159 units and nine of 12 UI journeys passed. Actual AX located the foreground rule Form at x127…707, while the failing test dragged at x8 outside its centered sheet. The helper now derives the actual foreground scroll viewport and clips navigation/keyboard occlusion. Exact assertions remain; focused iPad and iPhone reruns are pending at this checkpoint. Microphone playback progress and native release-note credit captures come from individually passing iPad cases.
 
 ## Baseline outcomes (before the feature-gap pass)
 
@@ -69,7 +77,7 @@ Earlier failed/diagnostic `.xcresult` bundles, including `AcceptanceInitial.xcre
 
 - Simulator has no physical headphone BLE transport. No Bose or Skullcandy device, firmware, L2CAP channel, push notification, custom-mode write, headphone volume, source, or shortcut command has been verified against physical hardware here.
 - Simulator recording validates the simulator/host input and a local audio file, not a Bluetooth headset microphone. Numerical audio tests do not establish perceptual quality, acoustic loudness, or hearing safety.
-- The small-widget Cycle flow is verified on Simulator only. It does not establish signed-iPhone App Group provisioning, medium-widget layout, Widget Gallery search, Control Center, Siri recognition or real-world Shortcuts delivery.
+- The small-widget Cycle flow is verified on Simulator only. It does not establish signed-iPhone App Group provisioning, medium-widget layout, Widget Gallery search, Siri recognition or real-world Shortcuts delivery.
 - Background Bluetooth restoration, reconnect behaviour, notification delivery, screen-reader usability, VoiceOver, all Dynamic Type sizes, and every device/firmware need additional acceptance testing.
 - Unsupported Android-only features and remaining implementation gaps are listed in [the migration matrix](IOS_MIGRATION.md). This port must not be advertised as complete functional parity.
 

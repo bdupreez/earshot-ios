@@ -9,6 +9,19 @@ struct DiscoveredHeadphone: Identifiable, Equatable {
     var advertisesBmap: Bool
 }
 
+struct BmapOutgoingFrame {
+    let data: Data
+    let address: BmapAddress
+    let diagnosticID: UUID?
+    let operation: BmapOperation
+
+    static func retainingAfterDiagnosticCancel(_ frames: [Self], partialWriteOffset: Int) -> [Self] {
+        frames.enumerated().compactMap { index, frame in
+            frame.diagnosticID == nil || index == 0 && partialWriteOffset > 0 ? frame : nil
+        }
+    }
+}
+
 /// AI-assisted native port of the MIT-licensed HellzYeahh/earshot Bluetooth contract.
 /// Core Bluetooth connection to the BMAP LE connection-oriented channel advertised by Bose.
 /// A GATT connection alone is not a working control connection: the [0.1] probe must answer.
@@ -24,6 +37,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     @Published private(set) var isReconnecting = false
     @Published private(set) var reconnectAttempt = 0
     var onPacket: ((BmapPacket) -> Void)?
+    var diagnosticPreflightError: (() -> String?)?
     var connectedDeviceID: UUID? { selected?.identifier }
     let protocolScanner = BmapProtocolScanner()
     let printConsole = BosePrintConsole()
@@ -36,7 +50,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     private var selected: CBPeripheral?
     private var channel: CBL2CAPChannel?
     private var frameBuffer = BmapFrameBuffer()
-    private var outgoing: [Data] = []
+    private var outgoing: [BmapOutgoingFrame] = []
     private var outputOffset = 0
     private var lastFrameSent = Date.distantPast
     private var timeout: Timer?
@@ -66,6 +80,14 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
             rememberedID: defaults.string(forKey: Self.preferencePrefix + "identifier").flatMap(UUID.init(uuidString:)),
             userStopped: defaults.bool(forKey: Self.preferencePrefix + "manual-stop"))
         super.init()
+        protocolScanner.onCancel = { [weak self] in self?.discardUnsentDiagnosticFrames() }
+        protocolScanner.preflightError = { [weak self] in
+            guard let self else { return "The headphone control channel is unavailable." }
+            if self.printConsole.isRunning || self.outgoing.contains(where: { $0.operation != .get }) {
+                return "Wait for the current headphone command or console collection to finish before scanning."
+            }
+            return self.diagnosticPreflightError?()
+        }
         // Deliberately no CBCentralManager here: demo/onboarding must not request Bluetooth.
     }
 
@@ -263,8 +285,9 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     /// Features must update hardware state only when a STATUS/RESULT packet arrives.
     func send(_ packet: BmapPacket) throws {
         try BmapWriteGuard.check(packet)
+        if let error = protocolScanner.mutationAccessError(for: packet) { throw BmapFailure.unavailable(error) }
         guard isConnected, channel != nil else { throw BmapFailure.unavailable("Connect to a verified headphone control channel first.") }
-        try enqueue(packet)
+        try enqueue(packet, diagnosticID: protocolScanner.expectsDiagnosticRead(packet) ? UUID() : nil)
     }
 
     private func beginScan() {
@@ -343,15 +366,18 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
         }
         channel = nil
         outgoing.removeAll(); outputOffset = 0
+        protocolScanner.resetDiagnosticConnection()
         frameBuffer.reset()
     }
 
-    private func enqueue(_ packet: BmapPacket, priority: Bool = false) throws {
+    private func enqueue(_ packet: BmapPacket, priority: Bool = false, diagnosticID: UUID? = nil) throws {
         try BmapWriteGuard.check(packet)
         guard outgoing.count < 256 else { throw BmapFailure.unavailable("The headphone command queue is full. Wait for the current changes to finish.") }
         let encoded = try packet.encode()
-        if priority { outgoing.insert(encoded, at: outputOffset > 0 && !outgoing.isEmpty ? 1 : 0) }
-        else { outgoing.append(encoded) }
+        let frame = BmapOutgoingFrame(data: encoded, address: packet.address, diagnosticID: diagnosticID, operation: packet.operation)
+        if let diagnosticID { protocolScanner.queuedDiagnosticRead(id: diagnosticID, address: packet.address) }
+        if priority { outgoing.insert(frame, at: outputOffset > 0 && !outgoing.isEmpty ? 1 : 0) }
+        else { outgoing.append(frame) }
         appendLog("→ \(packetLog(packet))")
         flushOutput()
     }
@@ -360,7 +386,8 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
         guard let stream = channel?.outputStream, stream.hasSpaceAvailable, !outgoing.isEmpty else { return }
         // The Android transport spaces requests too. Preserve whole-frame order even on partial writes.
         guard outputOffset > 0 || Date().timeIntervalSince(lastFrameSent) >= 0.08 else { return }
-        let data = outgoing[0]
+        let frame = outgoing[0]
+        let data = frame.data
         let written = data.withUnsafeBytes { buffer -> Int in
             guard let base = buffer.bindMemory(to: UInt8.self).baseAddress else { return 0 }
             return stream.write(base.advanced(by: outputOffset), maxLength: data.count - outputOffset)
@@ -368,11 +395,31 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
         if written < 0 { fail(stream.streamError?.localizedDescription ?? "The headphone output stream failed."); return }
         outputOffset += written
         if outputOffset == data.count {
+            if let id = frame.diagnosticID { protocolScanner.transmittedDiagnosticRead(id: id) }
             if isConnected, let packet = BmapPacket.decodeOne(data), packet.address != BmapAddress(0, 1) {
                 liveness.sentRequest(at: Date())
             }
             outgoing.removeFirst(); outputOffset = 0; lastFrameSent = Date()
         }
+    }
+
+    private func discardUnsentDiagnosticFrames() {
+        let retained = BmapOutgoingFrame.retainingAfterDiagnosticCancel(outgoing, partialWriteOffset: outputOffset)
+        let retainedIDs = Set(retained.compactMap(\.diagnosticID))
+        for id in outgoing.compactMap(\.diagnosticID) where !retainedIDs.contains(id) {
+            protocolScanner.discardedDiagnosticRead(id: id)
+        }
+        outgoing = retained
+    }
+
+    /// Called after transport liveness verification. Only errors matching an actually
+    /// transmitted diagnostic read are isolated; unsolicited valid status still updates the app.
+    func routeVerifiedResponse(_ packet: BmapPacket, at now: Date = .now) {
+        guard packet.operation.isDeviceResponse else { return }
+        if packet.block == 22 { printConsole.receive(packet); return }
+        protocolScanner.receive(packet)
+        if protocolScanner.isolatesDiagnosticError(packet, at: now) { return }
+        onPacket?(packet)
     }
 
     private func receive(_ data: Data) {
@@ -406,9 +453,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
                     Task { @MainActor in self?.checkLiveness() }
                 }
             }
-            if packet.block == 22 { printConsole.receive(packet); continue }
-            protocolScanner.receive(packet)
-            onPacket?(packet)
+            routeVerifiedResponse(packet)
         }
     }
 
