@@ -71,7 +71,7 @@ xcodebuild -project ios/Earshot.xcodeproj -scheme Earshot \
   -derivedDataPath ios/build -resultBundlePath ios/TestResults/iPadSmoke-NEW.xcresult \
   -only-testing:EarshotUITests/EarshotUITests/testWelcomeAndDemoModeSwitching \
   -only-testing:EarshotUITests/EarshotUITests/testToolsAndCompatibilityNavigation \
-  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
+  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- test
 ```
 
 Choose a new result path for every run. Build and result directories are ignored by Git. Open the generated `.xcresult` in Xcode to inspect individual assertions, native test logs, failure history, and screenshots. Follow the hardware acceptance procedure in [IOS_MIGRATION.md](IOS_MIGRATION.md) before making compatibility claims.
@@ -81,3 +81,19 @@ Choose a new result path for every run. Build and result directories are ignored
 The next native implementation was built and tested with the same installed Xcode26.4.1/iPhone17Pro/iOS26.4.1 environment. `ios/TestResults/FeaturePass1Units.xcresult` reports **96 passed, 0 failed, 0 skipped**, and `xcodebuild` exited0. This runs all eight unit-test classes, including new preset/player lifecycle, multi-action/schedule/migration, Bluetooth/reconnect/scanner, shared command queue and native notification-plan checks. The application and widget/control extension compile together. Compact export: [feature-pass1-units.json](ios-test-results/feature-pass1-units.json).
 
 The baseline 12 UI scenarios have not yet been rerun on these expanded sources at this checkpoint. New feature UI cases are under development. Hardware, SSID entitlement access, signed widgets/Control Center/Shortcuts, background restoration and actual notification delivery remain unverified; unit queue/planner tests do not establish those platform outcomes.
+
+
+## Feature-gap pass — Wi-Fi, controls and actual shared container
+
+`ios/TestResults/FeaturePass2SignedUnits.xcresult` reports **105 passed, 0 failed, 0 skipped** with locally ad hoc signed Simulator app/extension binaries (`CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-`). This includes actual installed-app access to its declared App Group container and a queue write/reopen/drain in an isolated child directory. It does not prove cross-process widget delivery or signed-device provisioning. Export: [feature-pass2-signed-units.json](ios-test-results/feature-pass2-signed-units.json).
+
+The first attempt (`FeaturePass2Units.xcresult`) passed104/105: the real App Group container was unavailable under `CODE_SIGNING_ALLOWED=NO`. The test was retained, and local ad hoc signing made the entitlement available; no production fallback or test skip was introduced. The simulator test script now uses ad hoc signing and needs no Apple development account. A bare unsigned build remains useful for compilation but cannot establish App Group behavior.
+
+Added unit coverage includes Wi-Fi join/SSID matching, initialization without permission/query side effects, signed16-bit experimental latency validation, demo state changes and the `OpenIntent` widget/control contract. Optional SSID observation and experimental device writes still require physical acceptance. The compact Wind Block report helper and expanded UI flows are subsequent changes awaiting their next test run.
+
+
+## Feature-gap pass — integrated review fixes
+
+`ios/TestResults/FeatureGapUnitsFinal.xcresult` reports **125 passed, 0 failed, 0 skipped** on the same iPhone17Pro/iOS26.4.1 simulator, with local ad hoc signing and xcodebuild exit0. Export: [feature-gap-units-final.json](ios-test-results/feature-gap-units-final.json). All13 unit classes ran, including actual native finish/replay and hardware-idle checks, waveform/preamp consistency, dirty-draft preservation, direct noise step/toggle semantics, read-only status/profile layouts, recovery export after clean relaunch, product identity precedence and Wi-Fi opt-out protection.
+
+The expanded22-scenario XCUITest suite is running at this checkpoint. No UI acceptance claim is inferred from the unit result. Public-API code is implemented, but physical Bluetooth/SSID/signed system-surface validation is still pending.

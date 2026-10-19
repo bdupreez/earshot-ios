@@ -7,4 +7,4 @@ mkdir -p TestResults
 xcodebuild -project Earshot.xcodeproj -scheme Earshot -configuration Debug \
   -destination "platform=iOS Simulator,id=$device_id" \
   -derivedDataPath build -resultBundlePath "$result_path" \
-  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
+  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- test

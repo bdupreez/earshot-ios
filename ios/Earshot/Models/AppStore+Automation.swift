@@ -17,9 +17,11 @@ import Foundation
         if let i = saved.rules.firstIndex(where: { $0.id == rule.id }) {
             let old = saved.rules[i]
             if old.effectiveActions != copy.effectiveActions || old.trigger != copy.trigger ||
-                old.hour != copy.hour || old.minute != copy.minute || old.effectiveWeekdays != copy.effectiveWeekdays {
+                old.hour != copy.hour || old.minute != copy.minute || old.effectiveWeekdays != copy.effectiveWeekdays || old.wifiSSID != copy.wifiSSID {
+                firedWiFiRuleIDs.remove(rule.id)
                 copy.lastFiredDay = nil
             }
+            if activeRuleID == copy.id && old.effectiveActions != copy.effectiveActions { cancelRuleExecution(reason: "Cancelled — rule actions changed") }
             saved.rules[i] = copy
         } else if saved.rules.count < 100 { saved.rules.append(copy) }
         else { message = "You can save up to 100 listening rules."; return false }
@@ -45,10 +47,14 @@ import Foundation
             case .mode(let index):
                 guard saved.modes.contains(where: { $0.id == index && $0.configured }), saved.demo || supports(31, 3), !profile.unsupported else { return "This rule’s listening mode is not available on the current headphones." }
             case .noise(let noise):
+                let targetProfile = noiseProfile(for: targetMode)
                 let writes = NoiseWriteCapabilities(globalWrite: saved.demo || supports(31, 10) || supports(1, 5), editableModeIDs: Set(saved.modes.filter { canEditMode($0.id) }.map(\.id)), currentMode: saved.currentMode)
                 guard !profile.unsupported, writes.canWrite(afterSelecting: targetMode) else { return "These headphones have not reported an available noise-control write path." }
-                if noise.wind && !profile.wind { return "Wind Block is not supported by the current headphones." }
-                if noise.spatial != 0 && !profile.spatial { return "Spatial audio is not supported by the current headphones." }
+                if !saved.demo, noise.enabled != saved.noise.enabled, !canToggleANC(for: targetMode) {
+                    return "These headphones cannot switch noise cancellation on or off for this rule’s target mode."
+                }
+                if noise.wind && !targetProfile.wind { return "Wind Block is not supported by this noise-control path." }
+                if noise.spatial != 0 && !targetProfile.spatial { return "Spatial audio is not supported by this noise-control path." }
             case .preset(let id):
                 if let id, !presets.contains(where: { $0.id == id }) { return "This rule refers to a removed EQ preset. Edit the rule and choose another preset." }
             }
@@ -84,6 +90,9 @@ import Foundation
             do {
                 for action in rule.effectiveActions {
                     try Task.checkCancellation()
+                    if source == .shortcut || source == .schedule || source == .wifi {
+                        guard self.appIsActive else { throw RuleExecutionError.failed("Earshot left the foreground before the next rule action.") }
+                    }
                     guard self.bluetooth.isConnected, self.bluetooth.connectedDeviceID == deviceID, !self.saved.demo else { throw RuleExecutionError.failed("The headphone control link changed.") }
                     let failureVersion = self.commandFailureVersion
                     switch action {
@@ -96,9 +105,13 @@ import Foundation
                     case .noise(let noise):
                         guard self.canControlNoise else { throw RuleExecutionError.failed("Noise control is unavailable for the selected mode.") }
                         self.ruleStatuses[rule.id] = "Requesting noise settings"
-                        if !Self.noiseReport(self.saved.noise, matches: noise) {
+                        // Compact QC45 slots echo full cancellation while Wind Block
+                        // masks the requested level. Compare that documented report
+                        // shape without changing either the write or received state.
+                        let expected = try self.expectedNoiseReport(noise)
+                        if !Self.noiseReport(self.saved.noise, matches: expected) {
                             self.changeNoise(noise)
-                            try await self.waitForRuleReport(failureVersion: failureVersion) { Self.noiseReport(self.saved.noise, matches: noise) }
+                            try await self.waitForRuleReport(failureVersion: failureVersion) { Self.noiseReport(self.saved.noise, matches: expected) }
                         }
                     case .preset:
                         self.applyImmediateRuleAction(action)
@@ -118,7 +131,7 @@ import Foundation
             }
             if self.activeRuleID == rule.id {
                 self.activeRuleID = nil; self.automationTask = nil
-                self.processConnectionRules()
+                self.processConnectionRules(); self.processWiFiRules()
             }
         }
         return true
@@ -129,6 +142,20 @@ import Foundation
         automationTask?.cancel(); automationTask = nil; activeRuleID = nil
         ruleStatuses[id] = reason
         appendAutomationLog("Rule → \(reason)")
+    }
+
+    func observedWiFiJoin(_ ssid: String?) {
+        guard appIsActive, !saved.demo else { return }
+        observedWiFiSSID = ssid; firedWiFiRuleIDs = []
+        processWiFiRules()
+    }
+
+    func processWiFiRules() {
+        guard appIsActive, !saved.demo, wifi.isEnabled, let ssid = wifi.ssid,
+              WiFiSSID.matches(observedWiFiSSID, ssid) else { return }
+        for rule in saved.rules where rule.enabled && rule.trigger == "Wi-Fi (app open)" && !firedWiFiRuleIDs.contains(rule.id) && WiFiSSID.matches(rule.wifiSSID, ssid) {
+            if ruleAvailabilityError(rule) == nil, runRule(rule, source: .wifi) { firedWiFiRuleIDs.insert(rule.id) }
+        }
     }
 
     func checkSchedules(now: Date = .now, calendar: Calendar = .current) {

@@ -17,7 +17,7 @@ Implemented areas include:
 - Real Bluetooth GATT discovery and Bose BLE L2CAP control transport, with a verified BMAP reply required before reporting connected. Battery, per-part earbud battery, noise control, modes, favourites, custom-mode layouts, device settings, and diagnostics use upstream BMAP knowledge. Physical headphone interoperability remains **unverified**.
 - Native 3-band headphone EQ controls and a local-player Pro EQ: graphic/parametric filters, seven upstream presets including the AutoEq QC Ultra correction, response graph, headroom, preamp, limiter, and capped boost. JSON and AutoEq import/export, safe custom-preset editing/rename/delete, bounded deduplicated imports, recovery exports, seek/progress, and A/B bypass are supported.
 - Actual local audio playback through AVAudioEngine and a real microphone record/play/delete check using AVAudioRecorder. The microphone route is shown rather than assumed.
-- Persistent multi-action mode/noise/local-EQ rules, weekday schedules while the app is open, optional tap-to-run notification reminders, low-battery notifications, seven App Intents, rich battery/staleness widgets and iOS 18+ Quiet/Aware Control Center buttons. Signed-device delivery remains unverified.
+- Persistent multi-action mode/noise/local-EQ rules, optional foreground Wi-Fi join triggers with explicit permission, weekday schedules while the app is open, optional tap-to-run notification reminders, low-battery notifications, seven App Intents, rich battery/staleness widgets and iOS 18+ Quiet/Aware Control Center buttons. Signed-device delivery remains unverified.
 - Original-project attribution in onboarding, About, diagnostics, and documentation.
 
 This is **not complete Android feature parity**. [The migration matrix](docs/IOS_MIGRATION.md) records implemented, conditional, missing, and platform-restricted features. In particular, iOS does not offer a direct public replacement for Android's arbitrary RFCOMM sockets, Shizuku codec controls, global other-app EQ, call-volume boosting, or unrestricted app/background automation. Compatible BLE control services must be tested on physical headphones. Crusher's Bragi transport remains outstanding.
@@ -38,7 +38,7 @@ These are native simulator captures of this AI-assisted port. Demo device values
 2. Select the shared **Earshot** scheme and an installed iPhone or iPad simulator.
 3. Run. Choose **Try demo mode** to explore without physical headphones.
 
-Development used the installed **Xcode 26.4.1 (17E202)** and **iOS 26.4** simulators. Deployment target is iOS 17.0+. No dependency manager is needed. A simulator build can run without signing:
+Development used the installed **Xcode 26.4.1 (17E202)** and **iOS 26.4** simulators. Deployment target is iOS 17.0+. No dependency manager is needed. A compilation-only simulator build can run without signing (App Group integration tests require the local ad hoc signing used by the test script):
 
 ```sh
 xcodebuild -project ios/Earshot.xcodeproj -scheme Earshot \
@@ -46,7 +46,7 @@ xcodebuild -project ios/Earshot.xcodeproj -scheme Earshot \
   -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build
 ```
 
-For a physical iPhone, select your development team for both the app and Widget extension, use unique bundle identifiers if necessary, and provision the shared App Group `group.dev.earshot.ios` consistently with `EarshotShared` and the widget provider. Bluetooth/microphone permission descriptions are included. Headphone BLE transport, App Group provisioning, background behaviour, and real Bluetooth mic routing require hardware acceptance testing.
+For a physical iPhone, select your development team for both the app and Widget extension, use unique bundle identifiers if necessary, and provision the shared App Group `group.dev.earshot.ios` consistently with `EarshotShared` and the widget provider. Bluetooth/microphone and optional Wi-Fi location-permission descriptions are included. Enable Access Wi-Fi Information on the app to validate foreground SSID rules. Headphone BLE transport, App Group provisioning, background behaviour, and real Bluetooth mic routing require hardware acceptance testing.
 
 The checked-in project is ready to open. If Swift files are added or removed, regenerate it with:
 
@@ -65,7 +65,7 @@ EARSHOT_SIMULATOR_ID=YOUR_SIMULATOR_UDID ios/scripts/test-simulator.sh
 
 **Baseline acceptance (before the feature-gap pass):** 53 tests passed (41 unit + 12 UI), with zero failures or skips on the installed iPhone 17 Pro simulator. See the validation report below for secondary-device checks and remaining limits.
 
-**Feature-gap checkpoint:** 96 native unit tests passed with zero failures/skips after adding preset lifecycle/seek, multi-action rules, reconnect/restoration, device management, richer widgets, Shortcuts/Control Center and reminder support. Expanded UI acceptance is pending at this checkpoint; see the validation report for current scope.
+**Feature-gap checkpoint:** 125 native unit tests passed with zero failures/skips after adding preset lifecycle/seek, multi-action rules, reconnect/restoration, device management, richer widgets, Shortcuts/Control Center, reminders, Wi-Fi/latency models and actual Simulator App Group access. The expanded22-scenario UI acceptance is pending at this checkpoint; see the validation report for current scope.
 
 Results and screenshot attachments are stored in ignored `ios/TestResults/*.xcresult` bundles. Open a result bundle in Xcode to inspect individual assertions, logs, and screenshots. See [the validation report](docs/IOS_VALIDATION.md) for actual outcomes, environment, and limitations. Simulator tests cannot validate a physical Bose Bluetooth connection, sound through headphones, hearing safety, or vendor firmware behaviour.
 

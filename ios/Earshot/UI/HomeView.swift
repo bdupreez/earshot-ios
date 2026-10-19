@@ -22,6 +22,9 @@ struct HomeView: View {
                 if !store.batteries.isEmpty { HStack { ForEach(store.batteries.keys.sorted(), id: \.self) { key in VStack(spacing: 4) { Text("\(store.batteries[key]!)%").font(.headline); Text(key).font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity) } } }
                 if !store.connected { NavigationLink("Find headphones") { ConnectionView() }.buttonStyle(.borderedProminent).frame(maxWidth: .infinity) }
             }
+            if store.deviceStatus.operationMode == .firmwareUpdateOnly {
+                InfoNote(text: "The headphones report firmware-update-only mode. Normal controls may be unavailable. This port does not perform firmware updates.")
+            }
             if store.connected && !store.profile.unsupported {
                 if !store.saved.modes.filter({ $0.configured }).isEmpty {
                     Panel(title: "Listening mode") {
@@ -42,7 +45,7 @@ struct HomeView: View {
                 }
                 if store.profile.noise || store.profile.spatial {
                     Panel(title: "Let the world in. Or out.") {
-                        NoiseControls(noise: Binding(get: { store.saved.noise }, set: { store.changeNoise($0) }), profile: store.profile)
+                        NoiseControls(noise: Binding(get: { store.saved.noise }, set: { store.changeNoise($0) }), profile: store.noiseProfile(), ancToggle: store.canToggleANC())
                             .disabled(!store.canControlNoise)
                         if !store.canControlNoise { Text("Noise control becomes available when the headphones report support. Older models may need a custom mode selected.").font(.caption).foregroundStyle(.secondary) }
                     }

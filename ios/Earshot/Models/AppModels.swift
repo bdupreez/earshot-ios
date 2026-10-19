@@ -59,6 +59,7 @@ struct AutomationRule: Identifiable, Codable, Equatable {
     var actions: [AutomationAction]?
     var weekdays: Set<Int>?
     var notifyAtSchedule: Bool?
+    var wifiSSID: String?
 }
 
 struct SavedAppState: Codable {

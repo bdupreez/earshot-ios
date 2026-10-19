@@ -13,6 +13,9 @@ struct DeviceControlsView: View {
     @State private var sourceTarget: BosePairedSource?
     @State private var confirmSource = false
     @State private var confirmForgetRemembered = false
+    @State private var latencyDraft = 0
+    @State private var pendingLatency = 0
+    @State private var confirmLatency = false
 
     private var nameByteCount: Int { nameDraft.utf8.count }
     private var invalidName: Bool { nameDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || nameByteCount > 31 }
@@ -25,6 +28,7 @@ struct DeviceControlsView: View {
             volumeSection
             playbackSection
             connectionSection
+            deviceStatusSection
             shortcutSection
             voiceSection
             pairedSection
@@ -33,9 +37,11 @@ struct DeviceControlsView: View {
             powerSection
         }
         .navigationTitle("Device controls").navigationBarTitleDisplayMode(.inline)
-        .onAppear { volumeDraft = store.deviceVolume; nameDraft = store.displayDeviceName }
+        .onAppear { volumeDraft = store.deviceVolume; nameDraft = store.displayDeviceName; latencyDraft = store.deviceLatencyValue ?? 0 }
         .onChange(of: store.deviceVolume) { _, value in volumeDraft = value }
         .onChange(of: store.displayDeviceName) { _, value in nameDraft = value }
+        .onChange(of: store.deviceLatencyValue) { _, value in if let value { latencyDraft = value } }
+        .onChange(of: store.deviceLatencyRange) { _, _ in if let value = store.deviceLatencyValue { latencyDraft = value } }
         .alert(sourceAction?.title ?? "Manage source", isPresented: $confirmSource) {
             if let action = sourceAction, let source = sourceTarget {
                 Button(action.title, role: action == .remove || action == .disconnect ? .destructive : nil) { store.manageSource(source, action: action) }
@@ -103,6 +109,26 @@ struct DeviceControlsView: View {
         Section("Connection and latency") {
             LabeledContent("Active source", value: store.audioSource)
             LabeledContent("Reported latency", value: store.deviceLatency)
+            if let range = store.deviceLatencyRange, let current = store.deviceLatencyValue, range.contains(current) {
+                Stepper(value: $latencyDraft, in: range) {
+                    LabeledContent("Experimental value", value: "\(latencyDraft) device units")
+                }
+                .disabled(!canWriteLatency)
+                .accessibilityIdentifier("latencyValue")
+                Button("Review experimental latency write") { pendingLatency = latencyDraft; confirmLatency = true }
+                    .disabled(!canWriteLatency || !range.contains(latencyDraft))
+                    .accessibilityIdentifier("reviewLatencyWrite")
+                    .alert("Send an experimental latency write?", isPresented: $confirmLatency) {
+                        Button(store.saved.demo ? "Simulate write" : "Send experimental write", role: .destructive) { store.updateLatency(pendingLatency) }
+                        Button("Cancel", role: .cancel) {}
+                    } message: {
+                        Text(store.saved.demo
+                             ? "This will simulate a value of \(pendingLatency). No Bluetooth command is sent."
+                             : "Send \(pendingLatency) in the range reported by these headphones. The upstream setter is unused and untested; this field may be a measurement rather than a setting. Its units and audible effect are unverified. Firmware may ignore or reject it. Earshot will wait for an actual device report.")
+                    }
+                Text("Experimental: only the range reported by the headphones is offered. The raw value has no verified audible effect.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
             if let enabled = store.leAudio {
                 Toggle("LE Audio", isOn: Binding(get: { enabled }, set: { nextLEAudio = $0; confirmLEAudio = true }))
                     .disabled(!store.connected || !store.supports(1, 37))
@@ -112,6 +138,46 @@ struct DeviceControlsView: View {
                     } message: { Text(store.saved.demo ? "This changes only the simulated setting." : "Audio and Earshot will disconnect. Reconnect after the headphones restart.") }
                 Text("Changing LE Audio restarts the headphones and disconnects Earshot. Availability depends on the phone and firmware.").font(.caption).foregroundStyle(.secondary)
             } else { Text("LE Audio setting has not been reported.").foregroundStyle(.secondary) }
+        }
+    }
+
+    private var canWriteLatency: Bool {
+        store.connected && store.supports(5, 7) && !store.profile.unsupported
+    }
+
+    private var deviceStatusSection: some View {
+        Section("Read-only device reports") {
+            if let mute = store.deviceStatus.microphoneMuted {
+                LabeledContent("Microphone mute flag", value: mute ? "On" : "Off")
+                Text("The flag’s exact firmware meaning is unconfirmed. It does not report or control iOS microphone permission.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if let mode = store.deviceStatus.operationMode {
+                LabeledContent("Headphone operation", value: mode.title)
+                if mode == .firmwareUpdateOnly {
+                    Text("The headphones report firmware-update-only mode. Normal settings may be unavailable. Use the vendor app for firmware updates.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
+            }
+            if let supported = store.deviceStatus.leAudioSupported {
+                LabeledContent("Headphone LE Audio support", value: supported ? "Supported" : "Not supported")
+            }
+            if let preference = store.deviceStatus.lePreference {
+                Text("LE Audio preference: \(preference.summary)").font(.footnote)
+                Text("This headphone report does not establish the iPhone’s negotiated audio transport or codec.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
+            if store.deviceStatus.leAudioSupported == true {
+                Button("Check LE Audio preference") { store.queryLEAudioPreference() }
+                    .disabled(!store.connected || store.profile.unsupported)
+            }
+            if let available = store.deviceStatus.availableToConnect { LabeledContent("Available to connect", value: available.title) }
+            if let event = store.deviceStatus.lastButtonEvent {
+                Text("Last headphone event: \(event.summary)").font(.footnote)
+                LabeledContent("Received", value: event.receivedAt.formatted(date: .omitted, time: .standard))
+            }
+            Text("Unknown or unsupported values stay hidden. These are reports from the headphone control protocol.")
+                .font(.caption).foregroundStyle(.secondary)
         }
     }
 
@@ -152,6 +218,10 @@ struct DeviceControlsView: View {
             }
             if store.pairedSources.isEmpty { Text("No paired-source list has been reported.").foregroundStyle(.secondary) }
             ForEach(store.pairedSources) { source in sourceRow(source) }
+            Button("Check source routing support") { store.refreshRoutingSupport() }
+                .disabled(!store.connected || store.profile.unsupported)
+            Text("Start playback on another connected source before checking. An empty firmware routing table may make the function unavailable.")
+                .font(.caption).foregroundStyle(.secondary)
             Text("Each source function needs device support evidence. The firmware may still reject an operation; a request is complete only when the headphones report its result.").font(.caption).foregroundStyle(.secondary)
         }
     }
@@ -181,6 +251,9 @@ struct DeviceControlsView: View {
                 }
             }
             Text(source.displayAddress).font(.caption.monospaced()).foregroundStyle(.secondary)
+            if let profiles = store.deviceStatus.extendedProfiles[source.address.hexString] {
+                Text(profiles.summary).font(.caption).foregroundStyle(.secondary)
+            }
         }
     }
 

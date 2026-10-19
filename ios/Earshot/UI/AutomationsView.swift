@@ -61,10 +61,21 @@ struct RuleEditor: View {
                     Picker("Trigger", selection: $rule.trigger) {
                         Text("On connection").tag("On connection")
                         Text("Schedule (app open)").tag("Schedule (app open)")
+                        Text("Wi-Fi (app open)").tag("Wi-Fi (app open)")
                         Text("Manual / Shortcut").tag("Manual")
                     }
                 }
                 if rule.trigger == "Schedule (app open)" { scheduleSection }
+                if rule.trigger == "Wi-Fi (app open)" {
+                    Section("Wi-Fi network") {
+                        TextField("Wi-Fi name (SSID)", text: Binding(get: { rule.wifiSSID ?? "" }, set: { rule.wifiSSID = $0 }))
+                            .textInputAutocapitalization(.never).autocorrectionDisabled().privacySensitive()
+                        if let name = store.wifi.ssid { Button("Use current Wi-Fi name") { rule.wifiSSID = name } }
+                        Button("Allow Wi-Fi access") { store.wifi.requestAccess() }.disabled(store.saved.demo)
+                        Text(store.saved.demo ? "Wi-Fi observation is paused in demo. Configure the name now; enable access on a signed physical iPhone." : store.wifi.status).font(.caption).foregroundStyle(.secondary)
+                        Text("Optional: requires While Using App and Precise Location authorization to read the SSID. No GPS updates are collected. Rules can run only while Earshot is open; use a Shortcuts personal automation for system-managed triggers.").font(.caption).foregroundStyle(.secondary)
+                    }
+                }
                 Section {
                     Toggle("Change listening mode", isOn: actionEnabled("mode", default: .mode(mode)))
                     if hasAction("mode") {
@@ -75,7 +86,7 @@ struct RuleEditor: View {
                     }
                     Toggle("Change noise controls", isOn: actionEnabled("noise", default: .noise(store.saved.noise)))
                     if hasAction("noise") {
-                        NoiseControls(noise: Binding(get: { noise }, set: { replace(.noise($0)) }), profile: store.connected ? store.profile : DeviceProfile.all[0])
+                        NoiseControls(noise: Binding(get: { noise }, set: { replace(.noise($0)) }), profile: store.connected ? store.noiseProfile(for: hasAction("mode") ? mode : nil) : DeviceProfile.all[0], ancToggle: !store.connected || store.canToggleANC(for: hasAction("mode") ? mode : nil))
                     }
                     Toggle("Change local EQ", isOn: actionEnabled("preset", default: .preset(store.saved.presetID)))
                     if hasAction("preset") {
@@ -144,7 +155,7 @@ struct ShortcutsHelpView: View {
         List {
             Section("Personal automations") {
                 Text("In Apple’s Shortcuts app, create a personal automation for a time, joining Wi-Fi, or opening an app. Add Earshot’s Run listening rule action and select a saved rule. Allow Earshot to open when the automation runs.")
-                Text("Earshot does not monitor your Wi-Fi networks or other apps. Shortcuts owns those triggers, and a locked device or system confirmation may delay execution.")
+                Text("Shortcuts owns those triggers, and a locked device or system confirmation may delay execution. Earshot’s separate Wi-Fi rules observe the network name only while Earshot is open and after you allow access. Earshot cannot monitor other apps.")
             }
             if !store.shortcutStatus.isEmpty { Section("Latest request") { Text(store.shortcutStatus) } }
             if !store.shortcutLog.isEmpty { Section("Request history") { ForEach(Array(store.shortcutLog.prefix(10).enumerated()), id: \.offset) { _, text in Text(text).font(.caption) } } }

@@ -82,15 +82,24 @@ struct HeadphoneArtwork: View {
 struct NoiseControls: View {
     @Binding var noise: NoiseState
     var profile: DeviceProfile
+    var ancToggle = true
+    private var ancOn: Bool { noise.enabled || !ancToggle }
     var body: some View {
         VStack(spacing: 18) {
             if profile.noise {
-                Toggle("Noise cancellation", isOn: $noise.enabled)
+                if ancToggle { Toggle("Noise cancellation", isOn: $noise.enabled) }
                 VStack(spacing: 8) {
                     HStack { Text("Cancellation level").font(.subheadline); Spacer(); Text("\(Int(noise.level))/10").monospacedDigit().foregroundStyle(Color.earshot) }
                     Slider(value: $noise.level, in: 0...10, step: 1).accessibilityIdentifier("noiseLevel")
                     HStack { Text("Aware"); Spacer(); Text("Quiet") }.font(.caption).foregroundStyle(.secondary)
-                }.disabled(!noise.enabled)
+                }.disabled(!ancOn || noise.wind)
+                if noise.wind {
+                    Text("Cancellation level has no effect while Wind Block is on.")
+                        .font(.caption).foregroundStyle(.secondary)
+                } else if !ancOn {
+                    Text("Cancellation level has no effect while noise cancellation is off.")
+                        .font(.caption).foregroundStyle(.secondary)
+                }
             }
             if profile.wind { Toggle("Wind Block", isOn: $noise.wind) }
             if profile.spatial {

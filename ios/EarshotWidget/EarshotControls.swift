@@ -9,7 +9,7 @@ import WidgetKit
 struct EarshotQuietControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "EarshotQuietControl") {
-            ControlWidgetButton(action: QuietModeIntent()) { Label("Quiet mode", systemImage: "moon") }
+            ControlWidgetButton(action: OpenEarshotListeningIntent(target: .quiet)) { Label("Quiet mode", systemImage: "moon") }
         }
         .displayName("Earshot Quiet")
         .description("Open Earshot and request Quiet mode on supported connected headphones or the demo device.")
@@ -20,7 +20,7 @@ struct EarshotQuietControl: ControlWidget {
 struct EarshotAwareControl: ControlWidget {
     var body: some ControlWidgetConfiguration {
         StaticControlConfiguration(kind: "EarshotAwareControl") {
-            ControlWidgetButton(action: AwareModeIntent()) { Label("Aware mode", systemImage: "sun.max") }
+            ControlWidgetButton(action: OpenEarshotListeningIntent(target: .aware)) { Label("Aware mode", systemImage: "sun.max") }
         }
         .displayName("Earshot Aware")
         .description("Open Earshot and request Aware mode on supported connected headphones or the demo device.")

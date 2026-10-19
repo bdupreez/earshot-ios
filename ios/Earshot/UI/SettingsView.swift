@@ -43,6 +43,13 @@ struct PreferencesView: View {
                 Toggle("Demo mode", isOn: Binding(get: { store.saved.demo }, set: { store.setDemo($0) })).accessibilityIdentifier("demoToggle")
                 if store.saved.demo { Picker("Demo headphone", selection: Binding(get: { store.saved.profileID }, set: { store.selectProfile($0) })) { ForEach(DeviceProfile.all) { Text($0.name).tag($0.id) } } }
             } header: { Text("Explore") } footer: { Text("Demo mode uses local virtual state. It never controls physical headphones.") }
+            Section("Optional Wi-Fi automation") {
+                Text(store.wifi.status).font(.caption).foregroundStyle(.secondary)
+                if let ssid = store.wifi.ssid { LabeledContent("Current network", value: ssid).privacySensitive() }
+                Button("Allow Wi-Fi access") { store.wifi.requestAccess() }.disabled(store.saved.demo)
+                if store.wifi.isEnabled { Button("Turn off Wi-Fi observation") { store.wifi.disable() } }
+                Text("Reads only the Wi-Fi name while Earshot is open, after explicit opt-in and precise When In Use authorization. No GPS updates, background location or network-name uploads. Simulator cannot verify SSID access.").font(.caption).foregroundStyle(.secondary)
+            }
             Section("Low battery alerts") {
                 Picker("Alert at", selection: $store.saved.batteryAlert) { Text("Off").tag(0); Text("10%").tag(10); Text("20%").tag(20); Text("30%").tag(30) }
                 Button("Allow notifications") { Task { await store.notifications.requestPermission(); store.notifications.syncRuleReminders(store.saved.demo ? [] : store.saved.rules); store.objectWillChange.send() } }

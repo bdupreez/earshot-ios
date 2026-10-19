@@ -1,4 +1,5 @@
 import XCTest
+import AVFoundation
 @testable import Earshot
 
 final class PresetLifecycleTests: XCTestCase {
@@ -49,6 +50,51 @@ final class PresetLifecycleTests: XCTestCase {
         let gains = [-2.0, -1, 0, 1, 2, 3, 4, 5, 6, 7]
         let canonical = GraphicEQ.bandsFromGains(gains)
         XCTAssertEqual(GraphicEQ.approximateBands(from: canonical), canonical)
+    }
+
+    func testDraftChangeDetectionProtectsEditsButAllowsUnmodifiedCancellation() {
+        let original = BuiltInPresets.bassBoost
+        var draft = PresetEditorDraft(preset: original)
+        XCTAssertFalse(draft.hasUnsavedChanges(calculatePreamp: true))
+        draft.useParametricLayout()
+        XCTAssertFalse(draft.hasUnsavedChanges(calculatePreamp: true), "Editor layout alone does not change the saved curve")
+        draft.preset.name = "Changed"
+        XCTAssertTrue(draft.hasUnsavedChanges(calculatePreamp: true))
+        draft.preset = original
+        XCTAssertFalse(draft.hasUnsavedChanges(calculatePreamp: true))
+        XCTAssertTrue(draft.hasUnsavedChanges(calculatePreamp: false), "A changed preamp-saving option must be protected")
+        draft.useGraphicLayout()
+        XCTAssertTrue(draft.hasUnsavedChanges(calculatePreamp: true))
+        draft.restoreParametricFilters()
+        XCTAssertFalse(draft.hasUnsavedChanges(calculatePreamp: true), "Exact restoration should clear the dirty state")
+        let custom = PresetEditorDraft(preset: userPreset())
+        XCTAssertFalse(custom.hasUnsavedChanges(calculatePreamp: false))
+    }
+
+    @MainActor
+    func testDisplayedPreampUsesTheSameSafetyPlanAsActualAudioOutput() throws {
+        let fixture = makeStore(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        _ = try store.createUserPreset(userPreset(gain: 6))
+        store.saved.proEnabled = true
+        store.saved.audioOptions.automaticHeadroom = false
+        store.saved.audioOptions.manualPreampDb = 0
+        store.saved.audioOptions.limiterEnabled = false
+        store.saved.boost = 3
+        let plan = store.audioGainPlan
+        XCTAssertLessThan(plan.preampDb, -9)
+        XCTAssertEqual(store.effectiveAudioPreamp, plan.preampDb)
+        XCTAssertEqual(plan.boostDb, 3)
+        XCTAssertEqual(AudioGainPlan(bands: store.preset.bands, requestedPreampDb: plan.preampDb, boostDb: 3, limiterEnabled: false), plan, "Passing the applied preamp through the native planner must be idempotent")
+        let samples = (0..<24_000).map { Float(0.1 * sin(2 * Double.pi * 1000 * Double($0) / 48_000)) }
+        let rendered = try NativeEQRenderer.render(samples: samples, preset: store.preset, preamp: store.effectiveAudioPreamp, boost: 3, limiterEnabled: false)
+        func rms(_ values: [Float]) -> Double {
+            let tail = values.dropFirst(4096)
+            return sqrt(tail.reduce(0) { $0 + Double($1 * $1) } / Double(tail.count))
+        }
+        let measuredDb = 20 * log10(rms(rendered) / rms(samples))
+        XCTAssertEqual(measuredDb, plan.inputGainDb + 6, accuracy: 0.15)
+        XCTAssertEqual(measuredDb, -1, accuracy: 0.15, "Limiter-off playback must retain its one-decibel safety reserve")
     }
 
     func testAutomaticHeadroomCanCompensateMoreThanThirtyDecibels() throws {
@@ -265,6 +311,76 @@ final class PresetLifecycleTests: XCTestCase {
         try await Task.sleep(for: .milliseconds(250))
         XCTAssertFalse(audio.isPlaying)
         XCTAssertEqual(audio.position, paused, accuracy: 0.01)
+    }
+
+    @MainActor
+    func testPauseResumeStopAndSeekToEndReleaseAudioHardware() throws {
+        let audio = LocalAudioEngine()
+        defer { audio.stop() }
+        try audio.loadDemo()
+        XCTAssertFalse(audio.isEngineRunning)
+        audio.playPause()
+        XCTAssertTrue(audio.isEngineRunning)
+        audio.playPause()
+        XCTAssertFalse(audio.isEngineRunning, "Pausing the player alone must not leave silent hardware rendering")
+        audio.playPause()
+        XCTAssertTrue(audio.isPlaying)
+        XCTAssertTrue(audio.isEngineRunning)
+        audio.seek(to: audio.duration)
+        XCTAssertFalse(audio.isPlaying)
+        XCTAssertFalse(audio.isEngineRunning)
+        audio.playPause()
+        XCTAssertTrue(audio.isEngineRunning)
+        audio.stop()
+        XCTAssertFalse(audio.isEngineRunning)
+        XCTAssertEqual(audio.position, 0)
+    }
+
+    @MainActor
+    func testNaturalCompletionStopsHardwareAndReplayStartsANewTimeline() async throws {
+        let audio = LocalAudioEngine()
+        defer { audio.stop() }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("earshot-replay-\(UUID().uuidString).wav")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let format = try XCTUnwrap(AVAudioFormat(standardFormatWithSampleRate: 48_000, channels: 1))
+        let buffer = try XCTUnwrap(AVAudioPCMBuffer(pcmFormat: format, frameCapacity: 48_000))
+        buffer.frameLength = buffer.frameCapacity
+        for frame in 0..<48_000 { buffer.floatChannelData![0][frame] = Float(0.005 * sin(2 * Double.pi * 220 * Double(frame) / 48_000)) }
+        do { let writer = try AVAudioFile(forWriting: url, settings: format.settings); try writer.write(from: buffer) }
+        try audio.load(url: url)
+        audio.playPause()
+        XCTAssertTrue(audio.isPlaying)
+        let deadline = ContinuousClock.now.advanced(by: .seconds(4))
+        while audio.isPlaying, ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(50)) }
+        XCTAssertFalse(audio.isPlaying, audio.status)
+        XCTAssertFalse(audio.isEngineRunning, "Finishing a track must release the native audio engine")
+        XCTAssertEqual(audio.position, audio.duration, accuracy: 0.01)
+        audio.playPause()
+        XCTAssertTrue(audio.isPlaying)
+        XCTAssertEqual(audio.position, 0, accuracy: 0.01)
+        try await Task.sleep(for: .milliseconds(300))
+        XCTAssertGreaterThan(audio.position, 0.05)
+        XCTAssertLessThan(audio.position, 0.8, "The replay must not reuse the previous player timeline")
+    }
+
+    @MainActor
+    func testSessionReleaseConsultsSharedMicrophoneOwnershipGuard() throws {
+        let audio = LocalAudioEngine()
+        defer {
+            audio.stop()
+            // This test vetoes release without running a real recorder; clean up its session.
+            try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
+        }
+        var releaseChecks = 0
+        audio.mayReleaseAudioSession = { releaseChecks += 1; return false }
+        try audio.loadDemo()
+        audio.playPause()
+        XCTAssertTrue(audio.isPlaying)
+        audio.stop()
+        XCTAssertFalse(audio.isEngineRunning)
+        XCTAssertEqual(releaseChecks, 1, "An active recorder must be able to veto shared-session deactivation")
+        audio.stop()
+        XCTAssertEqual(releaseChecks, 1, "Stopping an unowned session must not try to release another tool's session")
     }
 
     private func userPreset(name: String = "User", gain: Double = 2) -> EQPreset {

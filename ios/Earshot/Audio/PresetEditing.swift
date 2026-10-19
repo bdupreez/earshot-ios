@@ -15,6 +15,23 @@ struct AudioPlaybackOptions: Codable, Equatable, Sendable {
     }
 }
 
+/// The preamp and boost actually used by the native input stage, shared with the UI.
+struct AudioGainPlan: Equatable, Sendable {
+    let preampDb: Double
+    let boostDb: Double
+    var inputGainDb: Double { preampDb + boostDb }
+
+    init(bands: [EQBand], requestedPreampDb: Double, boostDb: Double, limiterEnabled: Bool, sampleRate: Double = Biquad.defaultSampleRate) {
+        self.boostDb = Headroom.clampBoost(boostDb, limiterEnabled: limiterEnabled)
+        let requested = requestedPreampDb.clamped(to: -96...0)
+        if limiterEnabled { preampDb = requested }
+        else {
+            let recommendation = Headroom.recommendedPreampDb(bands: bands, sampleRate: sampleRate)
+            preampDb = min(requested, recommendation - self.boostDb - 1).clamped(to: -96...0)
+        }
+    }
+}
+
 enum PresetValidationError: LocalizedError {
     case invalidName, invalidFilters, invalidGain, protectedPreset, missingPreset, libraryFull, excessiveGain
 
@@ -65,12 +82,18 @@ enum PresetValidation {
 /// Keeps an exact recovery point when a parametric curve is approximated by ten graphic bands.
 struct PresetEditorDraft: Equatable {
     var preset: EQPreset
+    private let initialPreset: EQPreset
     private(set) var graphic: Bool
     private(set) var parametricBackup: [EQBand]?
 
     init(preset: EQPreset) {
         self.preset = preset
+        initialPreset = preset
         graphic = GraphicEQ.isGraphic(preset.bands)
+    }
+
+    func hasUnsavedChanges(calculatePreamp: Bool) -> Bool {
+        preset != initialPreset || calculatePreamp != initialPreset.isBuiltIn
     }
 
     mutating func useGraphicLayout() {

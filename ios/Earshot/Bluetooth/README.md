@@ -21,6 +21,8 @@ path requiring an accessory and protocol supported by the manufacturer under MFi
 made-up protocol identifier or unsupported GATT byte transport are used here. If a device does not
 publish the documented PSM characteristic, the app explains that it has no supported control path.
 
+Reconnect is explicitly opt-in and remembers only the selected peripheral. Retry delays are finite (1/2/4/8/16/30 seconds), manual disconnect/power-off cancels retries, and demo suspends them. Core Bluetooth restoration always reopens streams and verifies a fresh BMAP reply. Three actually sent unanswered requests trigger a liveness probe; idle subscribed devices are not aggressively polled. Physical/background behavior remains unverified.
+
 The simulator exercises the actual SwiftUI app and deterministic protocol models. Real Bluetooth
 headphone compatibility, secure-channel requirements, background connection recovery and device
 firmware quirks require an actual iPhone and headphones. This implementation has not been verified

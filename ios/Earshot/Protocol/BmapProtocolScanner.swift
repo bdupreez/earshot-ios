@@ -22,7 +22,7 @@ final class BmapProtocolScanner: ObservableObject {
 
     static let addresses: [BmapAddress] = [
         (0, [0, 1, 2, 3, 5, 15, 23]), (1, [0, 2, 3, 4, 5, 7, 9, 10, 11, 24, 27, 34, 37]),
-        (2, [0, 2, 5, 16, 21]), (4, [0, 1, 4, 8, 14, 18]), (5, [0, 1, 3, 4, 5, 7]),
+        (2, [0, 2, 5, 16, 21]), (4, [0, 1, 4, 8, 12, 14, 18]), (5, [0, 1, 3, 4, 5, 7]),
         (7, [0, 1, 4]), (9, [0, 2]), (31, [0, 2, 3, 8, 10])
     ].flatMap { (block: UInt8, functions: [UInt8]) in functions.map { BmapAddress(block, $0) } }
 

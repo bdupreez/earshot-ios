@@ -15,6 +15,10 @@ final class LocalAudioEngine: ObservableObject {
     @Published private(set) var isBypassed = false
 
     var hasFile: Bool { audioFile != nil }
+    var isEngineRunning: Bool { engine.isRunning }
+    var processingSampleRate: Double { audioFile?.processingFormat.sampleRate ?? Biquad.defaultSampleRate }
+    /// The app's microphone tools share this process-wide audio session.
+    var mayReleaseAudioSession: @MainActor () -> Bool = { true }
 
     private let engine = AVAudioEngine()
     private let player = AVAudioPlayerNode()
@@ -34,6 +38,7 @@ final class LocalAudioEngine: ObservableObject {
     private var enabled = false
     private var boost: Double = 0
     private var limiterEnabled = true
+    private var ownsAudioSession = false
 
     init() {
         engine.attach(player)
@@ -61,9 +66,11 @@ final class LocalAudioEngine: ObservableObject {
             Task { @MainActor [weak self] in
                 guard let self, self.audioFile != nil, !self.engine.isRunning else { return }
                 // Hardware sample-rate changes can invalidate a player's scheduled buffers.
+                let position = self.position
                 self.stop()
+                self.seek(to: position)
                 self.updateRoute()
-                self.status = "Audio output changed. Press play to restart the track."
+                self.status = "Audio output changed. Press play to resume the track."
             }
         })
         updateRoute()
@@ -117,6 +124,7 @@ final class LocalAudioEngine: ObservableObject {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, mode: .default)
             try session.setActive(true)
+            ownsAudioSession = true
             if !engine.isRunning { engine.prepare(); try engine.start() }
             if needsSchedule {
                 if position >= duration { position = 0; scheduledStartFrame = 0 }
@@ -137,10 +145,10 @@ final class LocalAudioEngine: ObservableObject {
                             self.playPause()
                             return
                         }
-                        self.isPlaying = false
-                        self.playbackMonitor?.cancel()
+                        // This runs on the main actor after the audio callback returns.
+                        // Reset the native player timeline as well as the UI clock.
+                        self.stop()
                         self.position = self.duration
-                        self.needsSchedule = true
                         self.status = "Finished · \(self.fileName)"
                     }
                 }
@@ -152,6 +160,8 @@ final class LocalAudioEngine: ObservableObject {
             updateRoute()
             status = "Playing · \(fileName)"
         } catch {
+            engine.stop()
+            releasePlaybackSession()
             isPlaying = false
             status = "Playback unavailable: \(error.localizedDescription)"
         }
@@ -160,6 +170,8 @@ final class LocalAudioEngine: ObservableObject {
     func stop() {
         scheduleToken = UUID()
         player.stop()
+        engine.stop()
+        releasePlaybackSession()
         playbackMonitor?.cancel()
         isPlaying = false
         needsSchedule = true
@@ -193,7 +205,11 @@ final class LocalAudioEngine: ObservableObject {
         scheduledStartFrame = min(file.length, AVAudioFramePosition((position * file.processingFormat.sampleRate).rounded(.down)))
         needsSchedule = true
         if resume, position < duration { playPause() }
-        else { status = position >= duration ? "Finished · \(fileName)" : "Paused · \(fileName)" }
+        else {
+            engine.pause()
+            releasePlaybackSession()
+            status = position >= duration ? "Finished · \(fileName)" : "Paused · \(fileName)"
+        }
     }
 
     func skip(seconds: Double) { seek(to: position + seconds) }
@@ -222,9 +238,20 @@ final class LocalAudioEngine: ObservableObject {
     private func pause(status: String) {
         updatePosition()
         player.pause()
+        engine.pause()
+        releasePlaybackSession()
         playbackMonitor?.cancel()
         isPlaying = false
         self.status = status
+    }
+
+    private func releasePlaybackSession() {
+        guard ownsAudioSession else { return }
+        ownsAudioSession = false
+        let session = AVAudioSession.sharedInstance()
+        // Never deactivate a microphone tool or another category owner.
+        guard mayReleaseAudioSession(), session.category == .playback else { return }
+        try? session.setActive(false, options: .notifyOthersOnDeactivation)
     }
 
     private func beginProgressUpdates() {
@@ -299,15 +326,9 @@ enum NativeAudioConfiguration {
             case .highShelf: parameters.filterType = .resonantHighShelf
             }
         }
-        let effectiveBoost = Headroom.clampBoost(boost, limiterEnabled: limiterEnabled)
-        // Automatic headroom can require more attenuation than the manual preamp control.
-        let userPreamp = preamp.clamped(to: -96...0)
-        let recommendation = Headroom.recommendedPreampDb(bands: preset.bands, sampleRate: sampleRate)
-        // The dynamics unit handles sustained overload; the final limiter catches transients.
-        let safePreamp = limiterEnabled ? userPreamp : min(userPreamp, recommendation - effectiveBoost - 1)
+        let gainPlan = AudioGainPlan(bands: preset.bands, requestedPreampDb: preamp, boostDb: boost, limiterEnabled: limiterEnabled, sampleRate: sampleRate)
         for (index, unit) in equalizers.enumerated() {
-            let gain = safePreamp + effectiveBoost
-            unit.globalGain = enabled && index == 0 ? Float(gain.clamped(to: -96...24)) : 0
+            unit.globalGain = enabled && index == 0 ? Float(gainPlan.inputGainDb.clamped(to: -96...24)) : 0
         }
         compressor.bypass = !enabled || !limiterEnabled
         AudioUnitSetParameter(limiter.audioUnit, kLimiterParam_PreGain, kAudioUnitScope_Global, 0, 0, 0)

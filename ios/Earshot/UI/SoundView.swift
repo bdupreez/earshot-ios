@@ -169,7 +169,7 @@ struct LocalPlayerView: View {
             Text(engine.routeName).font(.caption).foregroundStyle(.secondary)
             Toggle("A/B: hear original audio", isOn: Binding(get: { engine.isBypassed }, set: { engine.setBypassed($0) })).disabled(!store.saved.proEnabled).accessibilityIdentifier("compareOriginal")
             Text(!store.saved.proEnabled ? "Pro EQ is off: listening to the original audio." : engine.isBypassed ? "Original audio: filters, preamp, boost and protection are bypassed." : "Listening with your current Pro EQ settings.").font(.caption).foregroundStyle(.secondary)
-            Button("Load listening sample") { do { try engine.loadDemo() } catch { store.message = error.localizedDescription } }.font(.footnote).accessibilityIdentifier("loadSample")
+            Button("Load listening sample") { do { try engine.loadDemo(); store.applyAudio() } catch { store.message = error.localizedDescription } }.font(.footnote).accessibilityIdentifier("loadSample")
         }.onChange(of: engine.position) { _, value in if !scrubbing { seekPosition = value } }
     }
 
@@ -182,11 +182,12 @@ struct AudioOutputPicker: UIViewRepresentable {
 }
 
 struct PresetEditor: View {
+    private enum EditorConfirmation: Equatable { case graphic, discard }
     @EnvironmentObject var store: AppStore
     @Environment(\.dismiss) var dismiss
     @State private var draft: PresetEditorDraft
     @State private var calculatePreamp: Bool
-    @State private var confirmingGraphic = false
+    @State private var pendingConfirmation: EditorConfirmation?
     @State private var previewing = false
     @State private var errorText: String?
     private let editingID: String?
@@ -205,7 +206,7 @@ struct PresetEditor: View {
                     Toggle("10-band graphic layout", isOn: Binding(get: { draft.graphic }, set: { value in
                         if value {
                             if GraphicEQ.isGraphic(draft.preset.bands) { draft.useGraphicLayout() }
-                            else { confirmingGraphic = true }
+                            else { pendingConfirmation = .graphic }
                         } else { draft.useParametricLayout() }
                     }))
                     EQChart(preset: draft.preset)
@@ -246,17 +247,27 @@ struct PresetEditor: View {
                     if editingID != nil { Button("Save a new copy") { save(asCopy: true) } }
                 }
             }.navigationTitle(editingID == nil ? "Edit preset copy" : "Edit preset").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }; ToolbarItem(placement: .confirmationAction) { Button("Save") { save(asCopy: false) }.disabled((try? PresetValidation.validated(draft.preset)) == nil) } }
-                .confirmationDialog("Convert to graphic EQ?", isPresented: $confirmingGraphic, titleVisibility: .visible) {
-                    Button("Approximate with ten bands") { draft.useGraphicLayout() }
-                } message: { Text("The current curve will be sampled at ten frequencies. Shelves and narrow filters may sound different. Your exact parametric filters remain available to restore until you close this editor.") }
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { if hasUnsavedChanges { pendingConfirmation = .discard } else { dismiss() } } }; ToolbarItem(placement: .confirmationAction) { Button("Save") { save(asCopy: false) }.disabled((try? PresetValidation.validated(draft.preset)) == nil) } }
+                .confirmationDialog(pendingConfirmation == .discard ? "Discard preset changes?" : "Convert to graphic EQ?", isPresented: Binding(get: { pendingConfirmation != nil }, set: { if !$0 { pendingConfirmation = nil } }), titleVisibility: .visible) {
+                    if pendingConfirmation == .discard {
+                        Button("Discard changes", role: .destructive) { dismiss() }
+                        Button("Keep editing", role: .cancel) { pendingConfirmation = nil }
+                    } else {
+                        Button("Approximate with ten bands") { draft.useGraphicLayout() }
+                        Button("Cancel", role: .cancel) { pendingConfirmation = nil }
+                    }
+                } message: {
+                    Text(pendingConfirmation == .discard ? "Your unsaved filters, name and preamp changes will be discarded. The saved preset will stay unchanged." : "The current curve will be sampled at ten frequencies. Shelves and narrow filters may sound different. Your exact parametric filters remain available to restore until you close this editor.")
+                }
                 .alert("Cannot save preset", isPresented: Binding(get: { errorText != nil }, set: { if !$0 { errorText = nil } })) { Button("OK") { errorText = nil } } message: { Text(errorText ?? "") }
                 .onChange(of: draft.preset) { _, _ in updatePreview() }
                 .onChange(of: calculatePreamp) { _, _ in updatePreview() }
                 .onChange(of: previewing) { _, _ in if previewing { updatePreview() } else { store.applyAudio() } }
                 .onDisappear { store.applyAudio() }
-        }
+        }.interactiveDismissDisabled(hasUnsavedChanges)
     }
+
+    private var hasUnsavedChanges: Bool { draft.hasUnsavedChanges(calculatePreamp: calculatePreamp) }
 
     private var calculatedPreamp: Double { calculatePreamp ? max(-30, Headroom.recommendedPreampDb(bands: draft.preset.bands)) : draft.preset.preampDb }
 

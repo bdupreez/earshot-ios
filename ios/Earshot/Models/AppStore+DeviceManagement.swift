@@ -2,12 +2,13 @@
 import Foundation
 
 enum PendingDeviceOperation: Equatable {
-    case name(String), pairing(Bool), language(UInt8), source(Data, BoseSourceAction)
+    case name(String), pairing(Bool), language(UInt8), latency(Int), source(Data, BoseSourceAction)
     var address: BmapAddress {
         switch self {
         case .name: return BmapAddress(1, 2)
         case .pairing: return BmapAddress(4, 8)
         case .language: return BmapAddress(1, 3)
+        case .latency: return BmapAddress(5, 7)
         case .source(_, let action): return BmapAddress(4, action.rawValue)
         }
     }
@@ -16,6 +17,30 @@ enum PendingDeviceOperation: Equatable {
 @MainActor extension AppStore {
     var displayDeviceName: String { saved.demo ? saved.demoDeviceNames[saved.profileID] ?? profile.name : liveDeviceName }
     var remainingTimeDescription: String? { EarshotWidgetBattery(id: "main", name: "Headphones", percent: battery, remainingMinutes: batteryMinutes).remainingDescription }
+
+    func queryLEAudioPreference() {
+        if saved.demo {
+            deviceStatus.lePreference = BoseLEPreference(flags: 3)
+            deviceRequestStatus = "LE preference reported in demo only."
+            return
+        }
+        guard connected, !saved.demo, !profile.unsupported else { message = "Connect real compatible headphones to query their LE preference."; return }
+        send(BoseCommands.checkLEAudioPreference)
+        deviceRequestStatus = "Requested headphone LE preference; waiting for a report."
+    }
+
+    func refreshRoutingSupport() {
+        if saved.demo {
+            sourceCommandSupport.insert(.route)
+            deviceRequestStatus = "Routing support reported in demo only."
+            return
+        }
+        guard connected, !saved.demo, !profile.unsupported else { message = "Connect real compatible headphones to read routing support."; return }
+        // An empty routing table can return error 4, then change when a source
+        // starts streaming. An explicit refresh must retry that informational GET.
+        send(BoseCommands.readRoutingSupport)
+        deviceRequestStatus = "Requested current routing support; waiting for a report."
+    }
 
     func renameHeadphones(_ name: String) {
         guard connected, supports(1, 2), !profile.unsupported else { message = "Headphone renaming has not been reported as available."; return }
@@ -71,6 +96,19 @@ enum PendingDeviceOperation: Equatable {
         } catch { message = error.localizedDescription }
     }
 
+    /// Called only after the dedicated experimental-write confirmation.
+    func updateLatency(_ value: Int) {
+        guard connected, supports(5, 7), !profile.unsupported, let range = deviceLatencyRange else { message = "No supported latency range has been reported."; return }
+        do {
+            let packet = try BoseCommands.setLatency(value, reportedRange: range)
+            if saved.demo {
+                deviceLatencyValue = value
+                deviceLatency = "\(value) (range \(range.lowerBound)…\(range.upperBound); simulated device units)"
+                deviceRequestStatus = "Experimental value changed in demo only."
+            } else { beginDeviceOperation(.latency(value)); send(packet) }
+        } catch { message = error.localizedDescription }
+    }
+
     func beginDeviceOperation(_ operation: PendingDeviceOperation) {
         deviceOperationTask?.cancel()
         pendingDeviceOperation = operation
@@ -93,6 +131,7 @@ enum PendingDeviceOperation: Equatable {
         switch operation {
         case .name(let name): confirmed = liveDeviceName == name
         case .pairing(let enabled): confirmed = pairingMode == enabled
+        case .latency(let value): confirmed = deviceLatencyValue == value
         case .language(let language): confirmed = voicePromptsState?.language == language
         case .source(let address, let action):
             switch action {

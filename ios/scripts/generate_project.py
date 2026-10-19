@@ -56,7 +56,7 @@ for name,paths,product,kind in [("Earshot",app_files,"Earshot.app","application"
     for conf in ["Debug","Release"]:
         settings={"PRODUCT_NAME":"$(TARGET_NAME)","PRODUCT_BUNDLE_IDENTIFIER":"dev.earshot.ios" + ("" if name=="Earshot" else ".widget" if name=="EarshotWidget" else "."+name),"SWIFT_VERSION":"5.0","IPHONEOS_DEPLOYMENT_TARGET":"17.0","TARGETED_DEVICE_FAMILY":"1,2","GENERATE_INFOPLIST_FILE":"YES","CODE_SIGN_STYLE":"Automatic","MARKETING_VERSION":"0.1.0","CURRENT_PROJECT_VERSION":"1","SWIFT_EMIT_LOC_STRINGS":"YES","SUPPORTED_PLATFORMS":"iphoneos iphonesimulator","SUPPORTS_MACCATALYST":"NO"}
         if name=="Earshot": settings.update({"INFOPLIST_FILE":"Earshot/Resources/Info.plist","GENERATE_INFOPLIST_FILE":"NO","ASSETCATALOG_COMPILER_APPICON_NAME":"AppIcon","CODE_SIGN_ENTITLEMENTS":"Earshot/Resources/Earshot.entitlements"})
-        if name=="EarshotWidget": settings.update({"INFOPLIST_FILE":"EarshotWidget/Info.plist","GENERATE_INFOPLIST_FILE":"NO","APPLICATION_EXTENSION_API_ONLY":"YES","SKIP_INSTALL":"YES","CODE_SIGN_ENTITLEMENTS":"Earshot/Resources/Earshot.entitlements"})
+        if name=="EarshotWidget": settings.update({"INFOPLIST_FILE":"EarshotWidget/Info.plist","GENERATE_INFOPLIST_FILE":"NO","APPLICATION_EXTENSION_API_ONLY":"YES","SKIP_INSTALL":"YES","CODE_SIGN_ENTITLEMENTS":"EarshotWidget/EarshotWidget.entitlements"})
         if name=="EarshotTests": settings.update({"TEST_HOST":"$(BUILT_PRODUCTS_DIR)/Earshot.app/Earshot","BUNDLE_LOADER":"$(TEST_HOST)","SWIFT_EMIT_LOC_STRINGS":"NO"})
         if name=="EarshotUITests": settings.update({"TEST_TARGET_NAME":"Earshot","SWIFT_EMIT_LOC_STRINGS":"NO"})
         configs.append(obj("config:"+name+conf,"XCBuildConfiguration",buildSettings=settings,name=conf))

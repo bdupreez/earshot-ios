@@ -18,7 +18,7 @@ enum BoseCommands {
         BmapAddress(5, 4), BmapAddress(2, 21), BmapAddress(0, 23), BmapAddress(5, 1),
         BmapAddress(5, 3), BmapAddress(5, 7), BmapAddress(7, 4), BmapAddress(0, 2),
         BmapAddress(4, 1), BmapAddress(4, 2), BmapAddress(4, 3), BmapAddress(4, 8),
-        BmapAddress(4, 9), BmapAddress(4, 14), BmapAddress(4, 18)].map(get)
+        BmapAddress(4, 9), BmapAddress(4, 12), BmapAddress(4, 14), BmapAddress(4, 18), BmapAddress(2, 16)].map(get)
 
     static func setVolume(level: Int, maximum: Int) throws -> BmapPacket {
         guard (1...255).contains(maximum), (0...maximum).contains(level) else { throw BmapFailure.invalidPacket("Volume is outside the range reported by the headphones.") }
@@ -85,9 +85,12 @@ enum BoseCommands {
 
     static func setDirectNoise(level: Int, steps: Int, enabled: Bool = true) throws -> BmapPacket {
         guard (0...10).contains(level), (2...255).contains(steps) else { throw BmapFailure.invalidPacket("Invalid noise level or device step range.") }
-        let wire = Int((Double(10 - level) / 10 * Double(steps - 1)).rounded())
+        let maximum = steps - 1
+        let wire = maximum - (level * maximum + 5) / 10
         return BmapPacket(block: 1, function: 5, operation: .setGet, payload: Data([UInt8(wire), enabled ? 1 : 0]))
     }
+
+    static let readCurrentMode = get(BmapAddress(31, 3))
 
     static func writeMode(_ mode: BoseMode, name: String? = nil, settings: BoseAudioSettings? = nil) throws -> BmapPacket {
         guard mode.editable == true else { throw BmapFailure.invalidPacket("Only a mode reported editable by the headphones can be changed.") }

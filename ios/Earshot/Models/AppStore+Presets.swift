@@ -34,7 +34,13 @@ extension AppStore {
     }
 
     var effectiveAudioPreamp: Double {
-        saved.audioOptions.automaticHeadroom ? min(preset.preampDb, Headroom.recommendedPreampDb(bands: preset.bands)) : saved.audioOptions.manualPreampDb.clamped(to: -30...0)
+        audioGainPlan.preampDb
+    }
+
+    var audioGainPlan: AudioGainPlan {
+        let sampleRate = audio.processingSampleRate
+        let requested = saved.audioOptions.automaticHeadroom ? min(preset.preampDb, Headroom.recommendedPreampDb(bands: preset.bands, sampleRate: sampleRate)) : saved.audioOptions.manualPreampDb.clamped(to: -30...0)
+        return AudioGainPlan(bands: preset.bands, requestedPreampDb: requested, boostDb: saved.boost, limiterEnabled: saved.audioOptions.limiterEnabled, sampleRate: sampleRate)
     }
 
     @discardableResult

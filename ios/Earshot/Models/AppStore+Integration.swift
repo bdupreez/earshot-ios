@@ -5,6 +5,9 @@ import WidgetKit
 
 @MainActor extension AppStore {
     func syncPlatformIntegrations() {
+        let observeWiFi = appIsActive && !saved.demo
+        if lastWiFiActive != observeWiFi { lastWiFiActive = observeWiFi; wifi.setActive(observeWiFi) }
+        processWiFiRules()
         let reminderRules = saved.demo ? [] : saved.rules
         if lastReminderRules != reminderRules {
             lastReminderRules = reminderRules

@@ -55,5 +55,7 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Optional Wi-Fi rules need permission to read the current network name while Earshot is open. Earshot does not collect GPS updates or upload your network name.</string>
 </dict>
 </plist>

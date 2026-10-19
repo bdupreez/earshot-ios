@@ -28,10 +28,13 @@ extension AutomationRule {
 
     var configurationError: String? {
         guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, name.count <= 100 else { return "Give the rule a name of 1–100 characters." }
-        guard ["On connection", "Schedule (app open)", "Manual"].contains(trigger) else { return "Choose a supported rule trigger." }
+        guard ["On connection", "Schedule (app open)", "Wi-Fi (app open)", "Manual"].contains(trigger) else { return "Choose a supported rule trigger." }
         guard (0...23).contains(hour), (0...59).contains(minute) else { return "Choose a valid schedule time." }
         if trigger == "Schedule (app open)" {
             guard !effectiveWeekdays.isEmpty, effectiveWeekdays.isSubset(of: Set(1...7)) else { return "Choose at least one weekday." }
+        }
+        if trigger == "Wi-Fi (app open)" {
+            guard let ssid = WiFiSSID.normalize(wifiSSID), ssid.utf8.count <= 32 else { return "Enter a Wi-Fi name of 1–32 UTF-8 bytes." }
         }
         guard !effectiveActions.isEmpty, effectiveActions.count <= 3,
               Set(effectiveActions.map(\.kind)).count == effectiveActions.count else { return "Choose one or more different actions." }
@@ -56,7 +59,7 @@ extension AutomationRule {
         effectiveWeekdays == Set(1...7) ? "Every day" : effectiveWeekdays.sorted().map { Self.weekdayName($0, short: true) }.joined(separator: ", ")
     }
     var scheduleDescription: String {
-        trigger == "Schedule (app open)" ? String(format: "%02d:%02d · ", hour, minute) + weekdayDescription + " · app open" : trigger
+        trigger == "Schedule (app open)" ? String(format: "%02d:%02d · ", hour, minute) + weekdayDescription + " · app open" : trigger == "Wi-Fi (app open)" ? "Wi-Fi: " + (wifiSSID ?? "Not set") + " · app open" : trigger
     }
 
     func scheduleOccurrence(at date: Date, calendar: Calendar = .current) -> String? {
@@ -74,7 +77,7 @@ extension AutomationRule {
     }
 }
 
-enum RuleRunSource: Equatable { case manual, connection, schedule, shortcut }
+enum RuleRunSource: Equatable { case manual, connection, schedule, wifi, shortcut }
 
 enum RuleExecutionError: LocalizedError {
     case failed(String)
@@ -87,4 +90,19 @@ struct NoiseWriteCapabilities {
     let editableModeIDs: Set<Int>
     let currentMode: Int
     func canWrite(afterSelecting target: Int?) -> Bool { globalWrite || editableModeIDs.contains(target ?? currentMode) }
+}
+
+/// Match upstream Earshot's quote/whitespace-tolerant, case-insensitive SSID rule
+/// semantics. The platform observer only supplies actual network names, not a guess.
+enum WiFiSSID {
+    static func normalize(_ raw: String?) -> String? {
+        guard var value = raw?.trimmingCharacters(in: .whitespacesAndNewlines) else { return nil }
+        if value.count >= 2, value.hasPrefix("\""), value.hasSuffix("\"") { value = String(value.dropFirst().dropLast()) }
+        guard !value.isEmpty, value != "<unknown ssid>", value != "0x", !value.contains("\0") else { return nil }
+        return value
+    }
+    static func matches(_ expected: String?, _ current: String?) -> Bool {
+        guard let expected = normalize(expected), let current = normalize(current) else { return false }
+        return expected.caseInsensitiveCompare(current) == .orderedSame
+    }
 }

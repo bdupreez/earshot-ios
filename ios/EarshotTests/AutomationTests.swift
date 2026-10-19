@@ -141,6 +141,93 @@ final class AutomationTests: XCTestCase {
         XCTAssertEqual(f.store.deviceRequestStatus, "Confirmed by headphone reports.")
     }
 
+    func testWiFiRuleUsesUpstreamMatchingWithoutUnknownNetworkFallback() {
+        XCTAssertTrue(WiFiSSID.matches(" \"Office\" ", "office"))
+        XCTAssertFalse(WiFiSSID.matches("Office", nil))
+        XCTAssertFalse(WiFiSSID.matches("Office", "<unknown ssid>"))
+        XCTAssertFalse(WiFiSSID.matches("Office", "0x"))
+        XCTAssertNil(AutomationRule(name: "Office", trigger: "Wi-Fi (app open)", wifiSSID: "Office").configurationError)
+        XCTAssertNotNil(AutomationRule(name: "Missing", trigger: "Wi-Fi (app open)").configurationError)
+    }
+
+    @MainActor func testLatencyDemoStillUsesReportedRangeAndNeverSendsBluetooth() {
+        let f = fixture(); defer { f.defaults.removePersistentDomain(forName: f.suite) }
+        f.store.setDemo(true)
+        f.store.updateLatency(225)
+        XCTAssertEqual(f.store.deviceLatencyValue, 225)
+        XCTAssertTrue(f.store.deviceRequestStatus.contains("demo only"))
+        f.store.updateLatency(401)
+        XCTAssertEqual(f.store.deviceLatencyValue, 225)
+        XCTAssertNotNil(f.store.message)
+        XCTAssertFalse(f.store.bluetooth.isConnected)
+    }
+
+    @MainActor func testRememberedSSIDCannotRunRulesAfterObservationIsDisabled() {
+        let f = fixture(); defer { f.defaults.removePersistentDomain(forName: f.suite) }
+        f.store.appIsActive = true
+        let rule = AutomationRule(name: "Office EQ", trigger: "Wi-Fi (app open)",
+                                  actions: [.preset(BuiltInPresets.bassBoost.id)], wifiSSID: "Office")
+        XCTAssertTrue(f.store.upsertRule(rule))
+        // A prior observation is not fresh evidence after opt-out/permission loss.
+        f.store.observedWiFiSSID = "Office"
+        f.store.wifi.disable()
+        f.store.processWiFiRules()
+        XCTAssertFalse(f.store.saved.proEnabled)
+        XCTAssertTrue(f.store.automationLog.isEmpty)
+        XCTAssertTrue(f.store.firedWiFiRuleIDs.isEmpty)
+    }
+
+    @MainActor func testReportedProductIdentityOverridesNameFallbackAndLaterRename() {
+        let f = fixture(); defer { f.defaults.removePersistentDomain(forName: f.suite) }
+        f.store.receive(BmapPacket(block: 0, function: 15, operation: .status, payload: Data("Bose QC45".utf8)))
+        XCTAssertEqual(f.store.profile.id, "qc45")
+        XCTAssertEqual(f.store.profile.customCount, 2)
+        f.store.receive(BmapPacket(block: 0, function: 3, operation: .status, payload: Data([0x40, 0x82])))
+        XCTAssertEqual(f.store.profile.id, "ultra2")
+        f.store.receive(BmapPacket(block: 0, function: 15, operation: .status, payload: Data("Bose QC45".utf8)))
+        XCTAssertEqual(f.store.profile.id, "ultra2", "A renamed device must retain its reported product identity.")
+    }
+
+    @MainActor func testReportedCapabilitiesOverrideCatalogueDefaults() {
+        let f = fixture(); defer { f.defaults.removePersistentDomain(forName: f.suite) }
+        f.store.receive(BmapPacket(block: 0, function: 3, operation: .status, payload: Data([0x40, 0x39])))
+        f.store.receive(BmapPacket(block: 31, function: 2, operation: .status, payload: Data([3, 4, 0, 0, 0, 0b0010_1101])))
+        XCTAssertEqual(f.store.profile.customCount, 4)
+        XCTAssertTrue(f.store.profile.spatial)
+        XCTAssertTrue(f.store.profile.wind)
+        XCTAssertEqual(f.store.saved.modes.filter(\.builtIn).count, 3)
+    }
+
+    @MainActor func testRecoveryExportSurvivesRepairAndCleanRelaunch() throws {
+        let suite = "EarshotRecoveryTests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let original = Data("{unreadable original settings}".utf8)
+        defaults.set(original, forKey: "earshot.ios.state")
+        let store = AppStore(defaults: defaults, arguments: [])
+        let recovery = try XCTUnwrap(store.stateRecoveryURL)
+        defer { try? FileManager.default.removeItem(at: recovery) }
+        store.saved.theme = "Dark" // Persist the successfully recovered/default state.
+        let restored = AppStore(defaults: defaults, arguments: [])
+        XCTAssertEqual(restored.saved.theme, "Dark")
+        XCTAssertEqual(restored.stateRecoveryURL, recovery)
+        XCTAssertEqual(try Data(contentsOf: recovery), original)
+    }
+
+    @MainActor func testDirectNoiseUsesReportedQuantizationAndTogglePermission() throws {
+        let f = fixture(); defer { f.defaults.removePersistentDomain(forName: f.suite) }
+        f.store.receive(BmapPacket(block: 0, function: 3, operation: .status, payload: Data([0x40, 0x24])))
+        f.store.receive(BmapPacket(block: 1, function: 5, operation: .status, payload: Data([3, 1, 3])))
+        XCTAssertTrue(f.store.usesDirectNoise())
+        XCTAssertFalse(f.store.canToggleANC())
+        XCTAssertFalse(f.store.noiseProfile().spatial)
+        XCTAssertFalse(f.store.noiseProfile().wind)
+        XCTAssertEqual(f.store.saved.noise.level, 5)
+        let expected = try f.store.expectedNoiseReport(NoiseState(level: 3, enabled: false))
+        XCTAssertEqual(expected.level, 5, "A rule must wait for the representable reported level, not an impossible value.")
+        XCTAssertTrue(expected.enabled, "The device's no-toggle flag must preserve its actual ANC state.")
+    }
+
     @MainActor private func fixture() -> (store: AppStore, defaults: UserDefaults, suite: String) {
         let suite = "EarshotAutomationTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!

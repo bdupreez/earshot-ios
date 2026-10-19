@@ -2,6 +2,8 @@
 
 These are compact summaries exported with Apple's `xcresulttool get test-results summary` from actual simulator runs of this **AI-assisted iOS port attempt**. The original project is [Earshot by HellzYeahh and contributors](https://github.com/HellzYeahh/earshot); see [all credits](../../THIRD_PARTY_NOTICES.md).
 
+- [Integrated feature-gap unit regression](feature-gap-units-final.json): 125 passed, 0 failed, 0 skipped, including native replay/idle, preamp, recovery and protocol review fixes.
+- [Feature-gap second signed unit checkpoint](feature-pass2-signed-units.json): 105 passed, 0 failed, 0 skipped, including access to the installed simulator app’s actual App Group container.
 - [Feature-gap first unit checkpoint](feature-pass1-units.json): 96 passed, 0 failed, 0 skipped on expanded source; UI acceptance still pending at that checkpoint.
 - [iPad smoke](ipad-smoke.json): 2 passed, 0 failed, 0 skipped; onboarding/mode switching and tools/compatibility navigation on iPad Pro 11-inch (M5).
 - [Final iPhone device-control follow-up](iphone-device-controls.json): 1 passed, 0 failed, 0 skipped after rebuilding the final test helper.

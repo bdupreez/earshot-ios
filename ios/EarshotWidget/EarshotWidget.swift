@@ -70,9 +70,9 @@ struct EarshotWidgetView: View {
                 .foregroundStyle(stale ? Color(red: 0.50, green: 0.24, blue: 0.05) : Color(red: 0.22, green: 0.34, blue: 0.31))
             Spacer(minLength: 0)
             HStack(spacing: 8) {
-                Button(intent: QuietModeIntent()) { Label("Quiet", systemImage: "moon").font(.caption2.weight(.semibold)) }
+                Button(intent: OpenEarshotListeningIntent(target: .quiet)) { Label("Quiet", systemImage: "moon").font(.caption2.weight(.semibold)) }
                 Spacer(minLength: 0)
-                Button(intent: AwareModeIntent()) { Label("Aware", systemImage: "sun.max").font(.caption2.weight(.semibold)) }
+                Button(intent: OpenEarshotListeningIntent(target: .aware)) { Label("Aware", systemImage: "sun.max").font(.caption2.weight(.semibold)) }
             }.buttonStyle(.plain)
         }
         .foregroundStyle(Color(red: 0.04, green: 0.18, blue: 0.16))

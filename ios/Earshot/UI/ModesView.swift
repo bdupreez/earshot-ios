@@ -39,7 +39,7 @@ struct ModeEditor: View {
         NavigationStack {
             Form {
                 Section("Name") { TextField("Mode name", text: $mode.name).accessibilityIdentifier("modeName"); Text("\(mode.name.utf8.count)/31 UTF-8 bytes").font(.caption).foregroundStyle(.secondary) }
-                Section("Listening preferences") { NoiseControls(noise: $mode.noise, profile: store.profile) }
+                Section("Listening preferences") { NoiseControls(noise: $mode.noise, profile: store.noiseProfile(for: mode.id), ancToggle: store.canToggleANC(for: mode.id)) }
                 if mode.configured { Section { Button("Reset custom mode", role: .destructive) { store.resetMode(mode.id); dismiss() } } }
             }.navigationTitle("Custom mode").navigationBarTitleDisplayMode(.inline)
                 .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }; ToolbarItem(placement: .confirmationAction) { Button("Save") { store.saveMode(mode); dismiss() }.disabled(mode.name.trimmingCharacters(in: .whitespaces).isEmpty || mode.name.utf8.count > 31).accessibilityIdentifier("saveMode") } }

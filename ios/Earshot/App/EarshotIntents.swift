@@ -46,6 +46,34 @@ struct EarshotRuleQuery: EntityQuery {
     func suggestedEntities() async throws -> [EarshotRuleEntity] { EarshotShared.catalog().rules.map { .init(id: $0.id, name: $0.name) } }
 }
 
+enum EarshotListeningDestination: String, AppEnum, Codable {
+    case quiet, aware
+    static var typeDisplayRepresentation: TypeDisplayRepresentation = "Listening destination"
+    static var caseDisplayRepresentations: [Self: DisplayRepresentation] = [.quiet: "Quiet", .aware: "Aware"]
+    var requestPayload: EarshotCommandPayload {
+        .listeningRole(self == .quiet ? .quiet : .aware)
+    }
+}
+
+/// Control Center must use the public OpenIntent contract to open the containing
+/// app. Keep target membership in both app and widget extension, as Apple requires:
+/// https://developer.apple.com/documentation/widgetkit/creating-controls-to-perform-actions-across-the-system
+struct OpenEarshotListeningIntent: OpenIntent {
+    static var title: LocalizedStringResource = "Open Earshot listening mode"
+    static var description = IntentDescription("Open Earshot and request the selected semantic mode on supported headphones or the demo device.")
+    static var isDiscoverable = false
+    static var openAppWhenRun = true
+    @available(iOS 26.0, *) static var supportedModes: IntentModes { .foreground }
+    static var authenticationPolicy: IntentAuthenticationPolicy { .requiresAuthentication }
+    @Parameter(title: "Listening destination") var target: EarshotListeningDestination
+    init() {}
+    init(target: EarshotListeningDestination) { self.target = target }
+    func perform() async throws -> some IntentResult {
+        try EarshotShared.request(target.requestPayload)
+        return .result()
+    }
+}
+
 struct QuietModeIntent: AppIntent {
     static var title: LocalizedStringResource = "Use Quiet mode in Earshot"
     static var description = IntentDescription("Open Earshot and request the device’s Quiet mode. The app checks whether the current model supports it.")

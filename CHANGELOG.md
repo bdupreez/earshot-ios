@@ -6,7 +6,7 @@ Validation with installed Xcode 26.4.1: **53 iPhone Simulator tests passed** (41
 
 ## Feature-gap continuation (2026-10-19)
 
-Added full custom-preset lifecycle/recovery, local playback seeking and A/B; migrated multi-action rules with ISO weekdays and reminders; implemented opt-in reconnect/restoration, safe device/source/language management and read-only scanning; expanded widgets, Shortcuts and iOS18+ controls. First integrated unit run:96passed/0failed/0skipped; expanded UI acceptance remains pending at this checkpoint. Original Earshot credits and MIT notices remain intact.
+Added full custom-preset lifecycle/recovery, local playback seeking and A/B; migrated multi-action rules with ISO weekdays and reminders; implemented opt-in reconnect/restoration, safe device/source/language management and read-only scanning; expanded widgets, Shortcuts and iOS18+ controls. First integrated unit run:96passed/0failed/0skipped; expanded UI acceptance remains pending at this checkpoint. Added optional foreground Wi-Fi SSID rules, guarded experimental latency writes, read-only device status/profile reports, correct direct ANC/step semantics and the Control Center OpenIntent route. Fixed audio engine idling/replay, applied-preamp reporting, recovery export persistence and unsaved preset dismissal. The signed Simulator unit checkpoint passed105/105 before these final review fixes; final expanded regression/UI execution is recorded in the validation report. Original Earshot credits and MIT notices remain intact.
 
 ## Original Android changelog (preserved)
 

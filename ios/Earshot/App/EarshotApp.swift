@@ -12,10 +12,15 @@ import SwiftUI
                 .onChange(of: phase, initial: true) { _, phase in
                     store.appIsActive = phase == .active
                     if phase == .active {
+                        // Permission may have changed in Settings. Reconcile the
+                        // real notification plan even when saved rules are equal.
+                        store.lastReminderRules = nil
                         store.checkSchedules()
                         store.processSharedRequests()
-                        store.syncPlatformIntegrations()
                     }
+                    // Inactivity must stop SSID observation immediately. Waiting
+                    // for an unrelated published change could retain a stale join.
+                    store.syncPlatformIntegrations()
                 }
                 .onReceive(NotificationCenter.default.publisher(for: EarshotShared.intentNotification).receive(on: RunLoop.main)) { _ in
                     store.processSharedRequests()
