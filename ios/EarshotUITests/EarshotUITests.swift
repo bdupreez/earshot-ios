@@ -163,7 +163,7 @@ final class EarshotUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Listening rule"].waitForNonExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Commute rule"].waitForExistence(timeout: 5))
         app.buttons["Run now"].tap()
-        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Commute rule → mode request sent")).firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Commute rule → applied in demo")).firstMatch.waitForExistence(timeout: 5))
         selectTab("Home")
         reveal(app.staticTexts["currentMode"])
         XCTAssertTrue(app.staticTexts["currentMode"].label.contains("Aware"))

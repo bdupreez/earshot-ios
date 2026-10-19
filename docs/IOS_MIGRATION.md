@@ -55,15 +55,15 @@ Status meanings: **Native** is implemented for local iOS behavior; **Partial** h
 | Virtual Bose model selection | Partial | Swift model profiles drive a simulated UI; this is not the Android virtual peripheral protocol test harness. |
 | BLE discovery and BMAP over LE L2CAP | Hardware pending | Real Core Bluetooth scan, PSM lookup and streams need iPhone/headphones validation. |
 | Bluetooth Classic RFCOMM channel probing | Blocked | No arbitrary RFCOMM socket API for this iOS application; no supported MFi integration. |
-| Automatic reconnect and background state restoration | Outstanding | Bluetooth background capability is declared; Android's reconnect manager and iOS preservation/restoration are not fully delivered. |
+| Automatic reconnect and background state restoration | Hardware pending | Opt-in remembered peripheral, finite backoff, cancellation/manual-stop, Core Bluetooth restoration and fresh BMAP verification are implemented. Physical reconnect/background delivery remains unverified. |
 | Battery and firmware | Hardware pending | Parse/report received device information; sample demo battery is explicitly simulated. |
-| Bud/case battery and remaining minutes | Partial | Demo per-part display exists; full hardware reporting must be verified separately. |
-| Model/product identification and capability adaptation | Partial | Demo profiles and received-function gating; Android's full runtime capability/quirk matrix is not completely ported. |
+| Bud/case battery and remaining minutes | Hardware pending | Per-component reports and device-estimated minutes are parsed; unknown sentinels remain unknown. Home/widget display and demo values exist; actual device reports need validation. |
+| Model/product identification and capability adaptation | Partial | Upstream product/name catalogue, known absences, older mode-dump fallback and reported built-in counts are ported; device responses override defaults. Physical model/firmware combinations remain unverified. |
 | Listening-mode selection | Hardware pending | BMAP command path and demo switching; audible behavior requires hardware. |
 | ANC, noise level, Wind Block, spatial modes | Hardware pending | Live settings, direct-noise and editable custom-slot fallback command paths; per-model firmware quirks still require acceptance tests. |
 | Custom mode editing/favourites/reset | Hardware pending | Demo editing/persistence plus writes gated by device-reported capabilities and complete slot layouts; physical validation remains outstanding. |
 | Hardware three-band EQ | Hardware pending | Uses BMAP values; do not infer audible results from simulator sliders. |
-| Graphic/parametric EQ, presets and AutoEq import | Partial | Native editing, save/import/export and local playback processing. Preset deletion UI remains outstanding; Android's cross-app effects are unavailable. |
+| Graphic/parametric EQ, presets and AutoEq import | Partial | Native create/edit/copy/rename/delete, filter reorder/removal, reversible graphic conversion, JSON/AutoEq import/export, bounded deduplicated imports and recovery backups. Seeking/progress/A-B and automatic/manual preamp operate on local playback; cross-app effects remain unavailable. |
 | Systemwide/per-app Pro EQ, external-app profiles | Blocked | The app cannot intercept other apps' audio sessions. |
 | Volume boost and limiter | Partial | Local audio graph with a compressor followed by a peak limiter; native render checks cover sustained overload and audible output. No system or call boost. |
 | Playback transport/headset volume | Hardware pending | Device-control panel uses reported volume ranges and playback action masks; writes wait for device reports. Simulator controls are explicitly simulated. |
@@ -74,18 +74,18 @@ Status meanings: **Native** is implemented for local iOS behavior; **Partial** h
 | Call-volume boost, negotiated call codec | Blocked | Cannot change another app's call gain or inspect its private Bluetooth negotiation. |
 | Real microphone record/meter/play/delete | Native | AVAudioRecorder/AVAudioPlayer, explicit permission, actual route, local cache, interruptions stop capture. |
 | Sidetone | Hardware pending | Device setting; audible effect depends on firmware and use case. |
-| Auto-pause, auto-answer, multipoint, prompts, touch, standby | Partial | Capability-gated read/write controls; voice-prompt language is preserved but its selection UI remains outstanding. Physical effects require validation. |
+| Auto-pause, auto-answer, multipoint, prompts, touch, standby | Partial | Capability-gated read/write controls; installed voice-prompt languages can be selected while preserving prompt enablement. Physical effects require validation. |
 | Paired-source list and information | Hardware pending | Reads the headphone-reported list and device names; this is separate from iOS system audio pairing. |
-| Headphone source routing, pairing mode and rename | Outstanding | Android repository has a larger command surface. This build also offers the system output picker, which does not replace headphone multipoint source-routing commands. |
+| Headphone source routing, pairing mode and rename | Hardware pending | Safe upstream commands, independent capability evidence, local-source warnings, confirmations and report-driven completion/timeout are implemented. System audio route selection remains a separate iOS picker. |
 | Power off and shortcut-button mapping | Hardware pending | Power confirmation and shortcut choices gated by reported device support. Physical effect remains unverified. |
-| Safe raw read/lab report | Partial | BMAP GET exploration/log sharing; not the Android full scan/Print console. |
+| Safe raw read/lab report | Partial | Manual GETs and a paced, cancellable read-only capability scan with response/timeouts and redacted reports. No raw write console, firmware/auth scans or destructive scan operations. |
 | Destructive firmware/auth/factory writes | Guarded | Remain disallowed; never advertise firmware updates in this port. |
-| On-connect/manual automation | Partial | Native stored rules; command completion must follow real device responses. |
-| Automation action combinations | Partial | Listening-mode actions are implemented. Android's multi-action rules with separate EQ-preset/noise actions are not fully ported. |
-| Day/time background schedule | Partial | Foreground schedule only; exact suspended execution unavailable. |
-| Wi-Fi/other-app foreground triggers | Outstanding/blocked | No built-in watchers; user-created Shortcuts is the replacement path. |
+| On-connect/manual automation | Partial | Native stored multi-action rules preflight every action, wait for matching live reports between mode/noise writes, expose cancellation/failures and allow local-only rules offline. |
+| Automation action combinations | Partial | Mode, noise and local EQ preset/off actions are implemented in canonical order. Preset deletion leaves an actionable broken reference; invalid combinations fail before any action is sent. |
+| Day/time background schedule | Partial | ISO weekdays, DST-safe occurrence latching and foreground execution; optional system reminders open the app after a user tap. Exact suspended command execution remains unavailable. |
+| Wi-Fi/other-app foreground triggers | Outstanding/blocked | Seven foreground App Intents support user-created Shortcuts personal automations. Optional foreground SSID observation is being added; unrestricted other-app/background watchers remain unavailable. |
 | Low-battery notification | Hardware pending | Native permission/helper integrated with actual battery/charging reports and threshold recovery. No alerts from demo data; physical delivery remains unverified. |
-| Widget and Quick Settings replacement | Partial | WidgetKit shows the last app snapshot; Quiet/Aware links open the app. Quiet/Aware App Intents use an App Group pending command with foreground execution. Signed-device/widget/Shortcuts validation remains pending; no Control Center extension. |
+| Widget and Quick Settings replacement | Partial | WidgetKit shows timestamped battery/per-bud/minutes snapshots with stale-state indication. Seven intents and iOS18+ ControlWidget request buttons use a bounded atomic expiring App Group queue and foreground capability validation. Signed-device widget/Control Center/Shortcuts delivery remains pending. |
 | Skullcandy Crusher bass/security | Outstanding/blocked | Simulated model only; Bragi secure transport is not ported and Classic transport is unavailable. |
 | Credits/licences | Native | Original Earshot provenance, AI-assisted migration disclosure and upstream/reference acknowledgements. |
 

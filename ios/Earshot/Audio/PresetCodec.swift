@@ -3,8 +3,9 @@ import Foundation
 enum PresetCodec {
     static func encodePresets(_ presets: [EQPreset]) throws -> String { try encode(presets) }
     static func decodePresets(_ text: String) throws -> [EQPreset] {
+        try checkTextSize(text)
         let values = try JSONDecoder().decode([EQPreset].self, from: Data(text.utf8))
-        guard values.count <= 1000, values.allSatisfy({ $0.bands.count <= 128 }) else {
+        guard values.count <= PresetValidation.maximumPresets, values.allSatisfy({ $0.bands.count <= PresetValidation.maximumBands }) else {
             throw PresetImportError.tooManyBands
         }
         return values
@@ -20,14 +21,35 @@ enum PresetCodec {
 
     /// Accepts an Android array export, a single JSON preset, or an AutoEQ text file.
     static func importPresets(text: String, name: String = "Imported preset") throws -> [EQPreset] {
+        try checkTextSize(text)
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        if trimmed.hasPrefix("[") { return try decodePresets(trimmed) }
+        if trimmed.hasPrefix("[") {
+            let values = try decodePresets(trimmed).map(PresetValidation.validated)
+            guard !values.isEmpty else { throw PresetImportError.noFilters }
+            return values
+        }
         if trimmed.hasPrefix("{") {
             let preset = try JSONDecoder().decode(EQPreset.self, from: Data(trimmed.utf8))
-            guard preset.bands.count <= 128 else { throw PresetImportError.tooManyBands }
-            return [preset]
+            return [try PresetValidation.validated(preset)]
         }
-        return [try AutoEQParser.parse(text: trimmed, id: UUID().uuidString, name: name)]
+        return [try PresetValidation.validated(AutoEQParser.parse(text: trimmed, id: UUID().uuidString, name: name))]
+    }
+
+    static func readImportFile(_ url: URL) throws -> String {
+        let access = url.startAccessingSecurityScopedResource()
+        defer { if access { url.stopAccessingSecurityScopedResource() } }
+        let size = try url.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+        guard size <= PresetValidation.maximumFileBytes else { throw PresetImportError.fileTooLarge }
+        let handle = try FileHandle(forReadingFrom: url)
+        defer { try? handle.close() }
+        let data = try handle.read(upToCount: PresetValidation.maximumFileBytes + 1) ?? Data()
+        guard data.count <= PresetValidation.maximumFileBytes else { throw PresetImportError.fileTooLarge }
+        guard let text = String(data: data, encoding: .utf8) else { throw PresetImportError.invalidEncoding }
+        return text
+    }
+
+    static func checkTextSize(_ text: String) throws {
+        guard text.utf8.count <= PresetValidation.maximumFileBytes else { throw PresetImportError.fileTooLarge }
     }
 
     private static func encode<T: Encodable>(_ value: T) throws -> String {
@@ -40,11 +62,15 @@ enum PresetCodec {
 enum PresetImportError: LocalizedError {
     case noFilters
     case tooManyBands
+    case fileTooLarge
+    case invalidEncoding
 
     var errorDescription: String? {
         switch self {
         case .noFilters: return "No supported AutoEQ filters found. Import an AutoEQ ParametricEQ text file or an Earshot JSON export."
-        case .tooManyBands: return "This file exceeds the import limit of 128 filters per preset or 1,000 presets."
+        case .tooManyBands: return "This file exceeds the import limit of 128 filters per preset or 250 presets."
+        case .fileTooLarge: return "Import a UTF-8 preset file smaller than 2 MiB."
+        case .invalidEncoding: return "Preset files must contain UTF-8 JSON or AutoEQ text."
         }
     }
 }
@@ -57,6 +83,7 @@ enum AutoEQParser {
         options: .caseInsensitive)
 
     static func parse(text: String, id: String = UUID().uuidString, name: String = "Imported preset", description: String? = nil, isBuiltIn: Bool = false) throws -> EQPreset {
+        try PresetCodec.checkTextSize(text)
         var preamp = 0.0
         var bands: [EQBand] = []
         for raw in text.components(separatedBy: .newlines) {
@@ -76,7 +103,7 @@ enum AutoEQParser {
             default: filterType = .peak
             }
             let q = capture(5, match: match, text: line).flatMap(Double.init) ?? 0.707
-            bands.append(EQBand(frequencyHz: frequency, gainDb: gain.clamped(to: EQBand.gainRange), q: q.clamped(to: EQBand.qRange), type: filterType, enabled: capture(1, match: match, text: line)?.uppercased() == "ON"))
+            bands.append(EQBand(frequencyHz: frequency.clamped(to: 20...20_000), gainDb: gain.clamped(to: EQBand.gainRange), q: q.clamped(to: EQBand.qRange), type: filterType, enabled: capture(1, match: match, text: line)?.uppercased() == "ON"))
             guard bands.count <= 128 else { throw PresetImportError.tooManyBands }
         }
         guard !bands.isEmpty else { throw PresetImportError.noFilters }

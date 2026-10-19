@@ -16,8 +16,9 @@ struct HomeView: View {
                     if let battery = store.battery { Label("\(battery)%", systemImage: "battery.75percent").font(.subheadline.weight(.medium)).monospacedDigit() }
                 }
                 HeadphoneArtwork(earbuds: store.profile.earbuds)
-                Text(store.saved.demo ? store.profile.name : store.liveDeviceName).font(.title2.weight(.bold)).frame(maxWidth: .infinity)
+                Text(store.displayDeviceName).font(.title2.weight(.bold)).frame(maxWidth: .infinity)
                 Text(store.saved.demo ? "A virtual device. Changes stay in the demo." : store.bluetooth.status).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                if let time = store.remainingTimeDescription { Text("Reported listening time: \(time)\(store.saved.demo ? " · simulated" : "")").font(.caption).foregroundStyle(.secondary) }
                 if !store.batteries.isEmpty { HStack { ForEach(store.batteries.keys.sorted(), id: \.self) { key in VStack(spacing: 4) { Text("\(store.batteries[key]!)%").font(.headline); Text(key).font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity) } } }
                 if !store.connected { NavigationLink("Find headphones") { ConnectionView() }.buttonStyle(.borderedProminent).frame(maxWidth: .infinity) }
             }

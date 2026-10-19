@@ -12,7 +12,7 @@ The original application is [Earshot by HellzYeahh and contributors](https://git
 - Deployment target: iOS 17.0; iOS 17 hardware/runtime was not available for this run.
 - Project: `ios/Earshot.xcodeproj`, shared scheme **Earshot**; Swift 5 language mode, no third-party packages.
 
-## Recorded outcomes
+## Baseline outcomes (before the feature-gap pass)
 
 | Check | Actual outcome | Evidence |
 | --- | --- | --- |
@@ -75,3 +75,9 @@ xcodebuild -project ios/Earshot.xcodeproj -scheme Earshot \
 ```
 
 Choose a new result path for every run. Build and result directories are ignored by Git. Open the generated `.xcresult` in Xcode to inspect individual assertions, native test logs, failure history, and screenshots. Follow the hardware acceptance procedure in [IOS_MIGRATION.md](IOS_MIGRATION.md) before making compatibility claims.
+
+## Feature-gap pass — first integrated checkpoint
+
+The next native implementation was built and tested with the same installed Xcode26.4.1/iPhone17Pro/iOS26.4.1 environment. `ios/TestResults/FeaturePass1Units.xcresult` reports **96 passed, 0 failed, 0 skipped**, and `xcodebuild` exited0. This runs all eight unit-test classes, including new preset/player lifecycle, multi-action/schedule/migration, Bluetooth/reconnect/scanner, shared command queue and native notification-plan checks. The application and widget/control extension compile together. Compact export: [feature-pass1-units.json](ios-test-results/feature-pass1-units.json).
+
+The baseline 12 UI scenarios have not yet been rerun on these expanded sources at this checkpoint. New feature UI cases are under development. Hardware, SSID entitlement access, signed widgets/Control Center/Shortcuts, background restoration and actual notification delivery remain unverified; unit queue/planner tests do not establish those platform outcomes.

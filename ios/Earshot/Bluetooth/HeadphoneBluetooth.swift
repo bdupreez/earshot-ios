@@ -9,6 +9,7 @@ struct DiscoveredHeadphone: Identifiable, Equatable {
     var advertisesBmap: Bool
 }
 
+/// AI-assisted native port of the MIT-licensed HellzYeahh/earshot Bluetooth contract.
 /// Core Bluetooth connection to the BMAP LE connection-oriented channel advertised by Bose.
 /// A GATT connection alone is not a working control connection: the [0.1] probe must answer.
 @MainActor
@@ -18,8 +19,13 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     @Published private(set) var isConnected = false
     @Published private(set) var isScanning = false
     @Published private(set) var log: [String] = []
+    @Published private(set) var reconnectEnabled: Bool
+    @Published private(set) var rememberedDeviceName: String?
+    @Published private(set) var isReconnecting = false
+    @Published private(set) var reconnectAttempt = 0
     var onPacket: ((BmapPacket) -> Void)?
     var connectedDeviceID: UUID? { selected?.identifier }
+    let protocolScanner = BmapProtocolScanner()
 
     static let service = CBUUID(string: "FEBE")
     static let psmCharacteristic = CBUUID(string: "089CA084-6721-4419-9003-5E14D5AB587D")
@@ -35,7 +41,103 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     private var timeout: Timer?
     private var scanTimeout: Timer?
     private var writeTimer: Timer?
+    private var livenessTimer: Timer?
+    private var liveness = BluetoothLivenessMonitor(lastResponse: .distantPast)
     private var wantsScan = false
+    private var findingRememberedDevice = false
+    private var wantsRememberedReconnect = false
+    private var restoredCancellations: [CBPeripheral] = []
+    private var cancelRestoredScan = false
+    private var restoringPeripheral = false
+    private var retryTask: Task<Void, Never>?
+    private var retryToken = UUID()
+    private var reconnectPolicy: BluetoothReconnectPolicy
+    private let defaults: UserDefaults
+    private static let restorationID = "dev.earshot.ios.bmap-central"
+    private static let preferencePrefix = "earshot.bluetooth."
+
+    init(defaults: UserDefaults = .standard) {
+        self.defaults = defaults
+        let enabled = defaults.bool(forKey: Self.preferencePrefix + "reconnect")
+        reconnectEnabled = enabled
+        rememberedDeviceName = defaults.string(forKey: Self.preferencePrefix + "name")
+        reconnectPolicy = BluetoothReconnectPolicy(enabled: enabled,
+            rememberedID: defaults.string(forKey: Self.preferencePrefix + "identifier").flatMap(UUID.init(uuidString:)),
+            userStopped: defaults.bool(forKey: Self.preferencePrefix + "manual-stop"))
+        super.init()
+        // Deliberately no CBCentralManager here: demo/onboarding must not request Bluetooth.
+    }
+
+    /// Call after the application has established that it is outside demo/onboarding.
+    /// iOS may restore a manager after system termination; force-quit is not a relaunch promise.
+    func start() {
+        reconnectPolicy.resume()
+        guard reconnectPolicy.eligible else { return }
+        #if targetEnvironment(simulator)
+        return
+        #else
+        ensureCentral()
+        if central?.state == .poweredOn, selected == nil, retryTask == nil { attemptRememberedConnection() }
+        #endif
+    }
+
+    func setReconnectEnabled(_ enabled: Bool) {
+        let cancelPendingConnection = !enabled && isReconnecting && !isConnected
+        reconnectEnabled = enabled
+        reconnectPolicy.enable(enabled)
+        defaults.set(enabled, forKey: Self.preferencePrefix + "reconnect")
+        defaults.set(reconnectPolicy.userStopped, forKey: Self.preferencePrefix + "manual-stop")
+        if enabled && !reconnectPolicy.suspended { start() }
+        else {
+            cancelRetry()
+            if cancelPendingConnection { stopScan(); closeLink(); status = "Automatic reconnect is off." }
+        }
+    }
+
+    func reconnectRememberedDevice() {
+        guard reconnectPolicy.rememberedID != nil else { status = "Connect headphones once before using remembered-device reconnect."; return }
+        reconnectPolicy.manualConnection()
+        wantsRememberedReconnect = true
+        defaults.set(false, forKey: Self.preferencePrefix + "manual-stop")
+        #if targetEnvironment(simulator)
+        status = "Remembered-device Bluetooth reconnect needs a physical iPhone."
+        #else
+        cancelRetry(); ensureCentral()
+        if central?.state == .poweredOn { attemptRememberedConnection() }
+        #endif
+    }
+
+    /// Cancels a connection for demo mode without changing the user's saved reconnect preference.
+    func suspend() {
+        reconnectPolicy.suspended = true
+        wantsRememberedReconnect = false
+        cancelRetry(); stopScan(); closeLink()
+        status = "Bluetooth control is paused."
+    }
+
+    /// Use before an intentional power-off or disconnection of the control source.
+    func preventReconnectUntilUserAction() {
+        reconnectPolicy.manualDisconnect()
+        wantsRememberedReconnect = false
+        defaults.set(true, forKey: Self.preferencePrefix + "manual-stop")
+        cancelRetry()
+    }
+
+    func forgetRememberedDevice() {
+        disconnect()
+        reconnectPolicy.rememberedID = nil
+        rememberedDeviceName = nil
+        defaults.removeObject(forKey: Self.preferencePrefix + "identifier")
+        defaults.removeObject(forKey: Self.preferencePrefix + "name")
+    }
+
+    private func ensureCentral() {
+        guard central == nil else { return }
+        // Apple's restoration dictionary preserves peripherals, not our L2CAP streams. Restored
+        // devices always rediscover their PSM and pass a new BMAP liveness probe before use.
+        central = CBCentralManager(delegate: self, queue: .main,
+            options: [CBCentralManagerOptionRestoreIdentifierKey: Self.restorationID, CBCentralManagerOptionShowPowerAlertKey: false])
+    }
 
     func scan() {
         #if targetEnvironment(simulator)
@@ -43,9 +145,11 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
         appendLog("Simulator: real headphone discovery requires an iPhone.")
         #else
         guard !isConnected, selected == nil else { return }
+        wantsRememberedReconnect = false
+        reconnectPolicy.resume(); cancelRetry()
         wantsScan = true
         if central == nil {
-            central = CBCentralManager(delegate: self, queue: .main)
+            ensureCentral()
         } else if central?.state == .poweredOn {
             beginScan()
         } else {
@@ -56,6 +160,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
 
     func stopScan() {
         wantsScan = false
+        findingRememberedDevice = false
         central?.stopScan()
         scanTimeout?.invalidate(); scanTimeout = nil
         isScanning = false
@@ -66,22 +171,91 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
             status = "Scan for nearby headphones before connecting."
             return
         }
-        disconnect()
+        cancelRetry(); closeLink()
+        reconnectPolicy.manualConnection()
+        wantsRememberedReconnect = false
+        defaults.set(false, forKey: Self.preferencePrefix + "manual-stop")
         stopScan()
+        openControlLink(peripheral, name: device.name)
+    }
+
+    private func openControlLink(_ peripheral: CBPeripheral, name: String) {
+        guard let central, central.state == .poweredOn else { return }
         selected = peripheral
         peripheral.delegate = self
-        status = "Connecting to \(device.name)…"
+        status = "Connecting to \(name)…"
         appendLog("Connecting to the selected Bose device.")
-        central.connect(peripheral, options: nil)
+        if peripheral.state == .connected {
+            status = "Restoring headphone control service…"
+            peripheral.discoverServices(nil)
+        } else if peripheral.state != .connecting {
+            central.connect(peripheral, options: nil)
+        }
         armTimeout(seconds: 15, message: "Connection timed out. Keep the headphones nearby and close other control apps.")
     }
 
     func disconnect() {
+        preventReconnectUntilUserAction()
+        stopScan(); closeLink()
+        status = "Not connected"
+    }
+
+    private func closeLink() {
         let peripheral = selected
         selected = nil
+        restoringPeripheral = false
         closeChannel()
-        if let peripheral { central?.cancelPeripheralConnection(peripheral) }
-        status = "Not connected"
+        if let peripheral {
+            if central?.state == .poweredOn { central?.cancelPeripheralConnection(peripheral) }
+            else if peripheral.state != .disconnected { restoredCancellations.append(peripheral) }
+        }
+    }
+
+    private func cancelRetry() {
+        retryToken = UUID(); retryTask?.cancel(); retryTask = nil
+        isReconnecting = false
+    }
+
+    private func attemptRememberedConnection() {
+        guard !reconnectPolicy.suspended, !reconnectPolicy.userStopped,
+              !isConnected, selected == nil, let central, central.state == .poweredOn,
+              let identifier = reconnectPolicy.rememberedID else { return }
+        retryTask = nil
+        wantsRememberedReconnect = false
+        isReconnecting = true; reconnectAttempt = max(1, reconnectPolicy.attempts)
+        let known = peripherals[identifier] ?? central.retrievePeripherals(withIdentifiers: [identifier]).first
+        if let peripheral = known, peripheral.state != .disconnecting {
+            peripherals[identifier] = peripheral
+            openControlLink(peripheral, name: rememberedDeviceName ?? "remembered Bose headphones")
+        } else if known?.state == .disconnecting {
+            scheduleReconnect()
+        } else {
+            findingRememberedDevice = true
+            isScanning = true
+            status = "Looking for your remembered headphones…"
+            // A service-filtered scan is also valid under iOS's constrained background policy.
+            central.scanForPeripherals(withServices: [Self.service], options: nil)
+            armTimeout(seconds: 8, message: "Remembered headphones are not advertising a compatible control service.")
+        }
+    }
+
+    private func scheduleReconnect() {
+        guard reconnectPolicy.eligible, central?.state == .poweredOn else { isReconnecting = false; return }
+        guard let delay = reconnectPolicy.nextDelay() else {
+            isReconnecting = false
+            if reconnectPolicy.exhausted { status = "Automatic reconnect paused after six retries. Tap Reconnect or scan again." }
+            return
+        }
+        cancelRetry()
+        isReconnecting = true
+        reconnectAttempt = reconnectPolicy.attempts
+        status = "Reconnecting in \(Int(delay)) seconds (attempt \(reconnectPolicy.attempts) of 6)…"
+        let token = UUID(); retryToken = token
+        retryTask = Task { @MainActor [weak self] in
+            do { try await Task.sleep(for: .seconds(delay)) } catch { return }
+            guard let self, self.retryToken == token, self.reconnectPolicy.eligible else { return }
+            self.attemptRememberedConnection()
+        }
     }
 
     /// Acceptance means queued for transport, not acknowledged by the headphones.
@@ -145,15 +319,19 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     }
 
     private func fail(_ message: String) {
-        disconnect()
+        let failedIdentifier = selected?.identifier ?? (findingRememberedDevice ? reconnectPolicy.rememberedID : nil)
+        stopScan(); closeLink()
         status = message
         appendLog(message)
+        if failedIdentifier == reconnectPolicy.rememberedID { scheduleReconnect() }
     }
 
     private func closeChannel() {
         isConnected = false
+        protocolScanner.cancel()
         timeout?.invalidate(); timeout = nil
         writeTimer?.invalidate(); writeTimer = nil
+        livenessTimer?.invalidate(); livenessTimer = nil
         if let channel {
             channel.inputStream.delegate = nil
             channel.outputStream.delegate = nil
@@ -166,10 +344,12 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
         frameBuffer.reset()
     }
 
-    private func enqueue(_ packet: BmapPacket) throws {
+    private func enqueue(_ packet: BmapPacket, priority: Bool = false) throws {
         try BmapWriteGuard.check(packet)
         guard outgoing.count < 256 else { throw BmapFailure.unavailable("The headphone command queue is full. Wait for the current changes to finish.") }
-        outgoing.append(try packet.encode())
+        let encoded = try packet.encode()
+        if priority { outgoing.insert(encoded, at: outputOffset > 0 && !outgoing.isEmpty ? 1 : 0) }
+        else { outgoing.append(encoded) }
         appendLog("→ \(packetLog(packet))")
         flushOutput()
     }
@@ -186,6 +366,9 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
         if written < 0 { fail(stream.streamError?.localizedDescription ?? "The headphone output stream failed."); return }
         outputOffset += written
         if outputOffset == data.count {
+            if isConnected, let packet = BmapPacket.decodeOne(data), packet.address != BmapAddress(0, 1) {
+                liveness.sentRequest(at: Date())
+            }
             outgoing.removeFirst(); outputOffset = 0; lastFrameSent = Date()
         }
     }
@@ -196,6 +379,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
         if frameBuffer.desyncCount > oldDesyncCount { fail("The control channel returned invalid BMAP data. Reconnect to try again."); return }
         for packet in packets {
             guard packet.operation.isDeviceResponse else { continue }
+            liveness.received(at: Date())
             appendLog("← \(packetLog(packet))")
             if !isConnected {
                 guard packet.answersLivenessProbe else { continue }
@@ -203,8 +387,33 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
                 timeout?.invalidate(); timeout = nil
                 status = "Connected to \(selected?.name ?? "Bose headphones")"
                 appendLog("BMAP liveness verified over LE L2CAP.")
+                if let selected {
+                    reconnectPolicy.verified(selected.identifier)
+                    rememberedDeviceName = selected.name ?? "Bose headphones"
+                    defaults.set(selected.identifier.uuidString, forKey: Self.preferencePrefix + "identifier")
+                    defaults.set(rememberedDeviceName, forKey: Self.preferencePrefix + "name")
+                    defaults.set(false, forKey: Self.preferencePrefix + "manual-stop")
+                }
+                cancelRetry()
+                // This timer runs only when iOS grants the process execution time. Restoration
+                // never assumes that timers or our L2CAP streams survived suspension/termination.
+                livenessTimer?.invalidate()
+                livenessTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                    Task { @MainActor in self?.checkLiveness() }
+                }
             }
+            protocolScanner.receive(packet)
             onPacket?(packet)
+        }
+    }
+
+    private func checkLiveness() {
+        guard isConnected else { return }
+        switch liveness.tick(at: Date()) {
+        case .none: break
+        case .sendProbe:
+            do { try enqueue(BoseCommands.liveness, priority: true) } catch { fail(error.localizedDescription) }
+        case .disconnect: fail("The headphones stopped answering BMAP requests. Their control channel will be reconnected if automatic reconnect is enabled.")
         }
     }
 
@@ -224,15 +433,50 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
 }
 
 extension HeadphoneBluetooth: @preconcurrency CBCentralManagerDelegate {
+    func centralManager(_ central: CBCentralManager, willRestoreState dict: [String: Any]) {
+        let restored = dict[CBCentralManagerRestoredStatePeripheralsKey] as? [CBPeripheral] ?? []
+        cancelRestoredScan = true
+        guard reconnectPolicy.eligible else {
+            if central.state == .poweredOn {
+                for peripheral in restored { central.cancelPeripheralConnection(peripheral) }
+                central.stopScan()
+            } else { restoredCancellations += restored; cancelRestoredScan = true }
+            return
+        }
+        guard let peripheral = restored.first(where: { $0.identifier == reconnectPolicy.rememberedID }) else { return }
+        let others = restored.filter { $0.identifier != peripheral.identifier }
+        if central.state == .poweredOn { for other in others { central.cancelPeripheralConnection(other) } }
+        else { restoredCancellations += others }
+        // Retain delegates before Apple's later didConnect/didUpdateState callbacks arrive.
+        peripherals[peripheral.identifier] = peripheral
+        selected = peripheral; peripheral.delegate = self
+        restoringPeripheral = true
+        isReconnecting = true
+        status = "Restoring Bluetooth. The headphone protocol still needs verification…"
+        appendLog("Core Bluetooth restored the remembered peripheral; re-verification required.")
+        if central.state == .poweredOn {
+            if peripheral.state == .connected { peripheral.discoverServices(nil) }
+            else if peripheral.state == .disconnected { central.connect(peripheral, options: nil) }
+        }
+        armTimeout(seconds: 15, message: "Restored connection did not establish a working headphone control channel.")
+    }
+
     func centralManagerDidUpdateState(_ central: CBCentralManager) {
-        if central.state == .poweredOn, wantsScan { beginScan() }
-        else {
-            if central.state != .poweredOn {
-                // The manager may report unknown/resetting before it is ready. Keep the scan
-                // intent so its subsequent poweredOn callback can actually begin discovery.
-                let resumeScan = wantsScan && (central.state == .unknown || central.state == .resetting)
-                stopScan(); disconnect(); wantsScan = resumeScan
-            }
+        if central.state == .poweredOn {
+            if cancelRestoredScan { central.stopScan(); cancelRestoredScan = false }
+            for peripheral in restoredCancellations { central.cancelPeripheralConnection(peripheral) }
+            restoredCancellations.removeAll()
+            if wantsScan { beginScan() }
+            else if let selected {
+                if selected.state == .connected, channel == nil { selected.discoverServices(nil) }
+                else if selected.state == .disconnected { openControlLink(selected, name: rememberedDeviceName ?? "Bose headphones") }
+            } else if wantsRememberedReconnect || reconnectPolicy.eligible {
+                reconnectPolicy.rearm(); attemptRememberedConnection()
+            } else { updateBluetoothStatus() }
+        } else {
+            if central.state == .unknown, restoringPeripheral { updateBluetoothStatus(); return }
+            let resumeScan = wantsScan && [.unknown, .resetting, .poweredOff].contains(central.state)
+            cancelRetry(); stopScan(); closeLink(); wantsScan = resumeScan
             updateBluetoothStatus()
         }
     }
@@ -246,6 +490,10 @@ extension HeadphoneBluetooth: @preconcurrency CBCentralManagerDelegate {
         let knownName = name.localizedCaseInsensitiveContains("bose") || name.localizedCaseInsensitiveContains("quietcomfort")
         guard bmap || knownName else { return }
         record(peripheral, name: name, rssi: RSSI.intValue, bmap: bmap)
+        if findingRememberedDevice, peripheral.identifier == reconnectPolicy.rememberedID {
+            stopScan()
+            openControlLink(peripheral, name: rememberedDeviceName ?? name)
+        }
     }
 
     func centralManager(_ central: CBCentralManager, connectionEventDidOccur event: CBConnectionEvent, for peripheral: CBPeripheral) {
@@ -271,6 +519,7 @@ extension HeadphoneBluetooth: @preconcurrency CBCentralManagerDelegate {
         selected = nil; closeChannel()
         status = error.map { "Disconnected: \($0.localizedDescription)" } ?? "Headphones disconnected."
         appendLog(status)
+        if peripheral.identifier == reconnectPolicy.rememberedID { scheduleReconnect() }
     }
 }
 

@@ -16,7 +16,9 @@ enum BoseCommands {
         BmapAddress(1, 10), BmapAddress(1, 11), BmapAddress(1, 24), BmapAddress(1, 27),
         BmapAddress(1, 34), BmapAddress(1, 37), BmapAddress(4, 4), BmapAddress(5, 5),
         BmapAddress(5, 4), BmapAddress(2, 21), BmapAddress(0, 23), BmapAddress(5, 1),
-        BmapAddress(5, 3), BmapAddress(5, 7), BmapAddress(7, 4)].map(get)
+        BmapAddress(5, 3), BmapAddress(5, 7), BmapAddress(7, 4), BmapAddress(0, 2),
+        BmapAddress(4, 1), BmapAddress(4, 2), BmapAddress(4, 3), BmapAddress(4, 8),
+        BmapAddress(4, 9), BmapAddress(4, 14), BmapAddress(4, 18)].map(get)
 
     static func setVolume(level: Int, maximum: Int) throws -> BmapPacket {
         guard (1...255).contains(maximum), (0...maximum).contains(level) else { throw BmapFailure.invalidPacket("Volume is outside the range reported by the headphones.") }

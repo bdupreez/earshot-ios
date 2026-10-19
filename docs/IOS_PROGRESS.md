@@ -46,6 +46,16 @@ The secondary **iPad Pro 11-inch (M5)** normal-build smoke run passed **2 tests,
 
 Checkpoint 3 was pushed as [`ef728fc`](https://github.com/bdupreez/earshot-ios/commit/ef728fc), exclusively to the user's fork. The final documentation commit records the completed acceptance and secondary-device outcomes. Physical iPhone/headphone compatibility, signed Widget/Shortcuts execution, and the explicit missing/platform-restricted features in the migration matrix remain unverified or outstanding; passing Simulator tests does not complete that work.
 
+## Checkpoint 5 — remaining public-iOS features, first integrated unit run (19 October 2026)
+
+Continued at the user's request. Implemented safe preset lifecycle (edit/copy/rename/delete), filter editing/reorder, reversible graphic conversion, bounded deduplicated import and recovery backups, manual/automatic preamp, playback progress/seek and A/B bypass. Added explicit saved-state migration so new fields do not erase old preferences or mode-only rules; malformed individual records preserve unrelated data and recovery bytes.
+
+Rules now combine mode, noise and local EQ in a deterministic order, preflight the complete combination and wait for real headphone reports before dependent live actions. Added ISO weekdays, DST-safe occurrence latching, cancellation/status, offline local-only rules, optional system schedule reminders and foreground Run rule actions. A review caught and fixed the case where an editable current slot incorrectly authorized a noise write after switching to a non-editable destination slot.
+
+Added opt-in remembered-device reconnect/restoration with fresh protocol verification; capability-gated rename, pairing, source management and installed voice languages; device-estimated battery minutes; upstream model/older-mode quirks; and a cancellable read-only protocol scanner. Added richer battery/staleness widgets, seven App Intents, iOS18+ Control Center buttons and a bounded atomic expiring command queue. No physical headphone, background, signed-widget, notification delivery or Siri compatibility claim is made.
+
+Installed Xcode 26.4.1 built the app/widget and executed **96 native simulator unit tests: 96 passed, 0 failed, 0 skipped**. Verified `FeaturePass1Units.xcresult` with `xcresulttool`. This is new unit evidence; the earlier 53-test UI/unit acceptance belongs to the prior checkpoint. Expanded UI scenarios are being added, while optional foreground Wi-Fi triggers and guarded experimental latency writes are the remaining feasible implementation work in this pass. All destructive firmware/auth/factory operations remain blocked.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

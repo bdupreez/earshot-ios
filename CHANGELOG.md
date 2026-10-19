@@ -4,6 +4,10 @@ This fork explores a native Swift/SwiftUI port of [Earshot by HellzYeahh and con
 
 Validation with installed Xcode 26.4.1: **53 iPhone Simulator tests passed** (41 unit + 12 UI), zero failures or skips. Native tests exposed and corrected sustained-overload audio decay, complete Pro EQ bypass, restored demo state, automation row interactions, and finalized recording duration. Native captures and exported result summaries accompany the validation report. Physical headphones and signed Widget/Shortcuts execution remain unverified.
 
+## Feature-gap continuation (2026-10-19)
+
+Added full custom-preset lifecycle/recovery, local playback seeking and A/B; migrated multi-action rules with ISO weekdays and reminders; implemented opt-in reconnect/restoration, safe device/source/language management and read-only scanning; expanded widgets, Shortcuts and iOS18+ controls. First integrated unit run:96passed/0failed/0skipped; expanded UI acceptance remains pending at this checkpoint. Original Earshot credits and MIT notices remain intact.
+
 ## Original Android changelog (preserved)
 
 # Changelog

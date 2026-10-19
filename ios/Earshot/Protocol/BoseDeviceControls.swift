@@ -4,6 +4,7 @@ struct BosePairedSource: Identifiable, Equatable {
     let address: Data
     var name: String
     var connected: Bool
+    var isLocal = false
     var id: String { address.hexString }
     var displayAddress: String { address.map { String(format: "%02X", $0) }.joined(separator: ":") }
 

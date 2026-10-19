@@ -56,6 +56,9 @@ struct AutomationRule: Identifiable, Codable, Equatable {
     var hour = 9
     var minute = 0
     var lastFiredDay: String?
+    var actions: [AutomationAction]?
+    var weekdays: Set<Int>?
+    var notifyAtSchedule: Bool?
 }
 
 struct SavedAppState: Codable {
@@ -79,4 +82,53 @@ struct SavedAppState: Codable {
     var boost = 0.0
     var batteryAlert = 20
     var rules: [AutomationRule] = []
+    var audioOptions = AudioPlaybackOptions()
+    var demoDeviceNames: [String: String] = [:]
+    var demoVoiceLanguage: UInt8 = 1
+    var recoveredItemCount = 0
+
+    init() {}
+    // Synthesized Codable ignores property defaults when keys are absent. Decode
+    // each key with its default so upgrades preserve presets, settings and rules.
+    private enum CodingKeys: String, CodingKey {
+        case demo, profileID, modes, currentMode, noise, eq, sidetone, autoPause, autoAnswer, multipoint, voicePrompts, touchControls, autoOff, theme, proEnabled, presetID, customPresets, boost, batteryAlert, rules, audioOptions, demoDeviceNames, demoVoiceLanguage
+    }
+    init(from decoder: Decoder) throws {
+        self.init()
+        let values = try decoder.container(keyedBy: CodingKeys.self)
+        demo = try values.decodeIfPresent(Bool.self, forKey: .demo) ?? demo
+        profileID = try values.decodeIfPresent(String.self, forKey: .profileID) ?? profileID
+        modes = try values.decodeIfPresent([ListeningMode].self, forKey: .modes) ?? modes
+        currentMode = try values.decodeIfPresent(Int.self, forKey: .currentMode) ?? currentMode
+        noise = try values.decodeIfPresent(NoiseState.self, forKey: .noise) ?? noise
+        eq = try values.decodeIfPresent([Double].self, forKey: .eq) ?? eq
+        sidetone = try values.decodeIfPresent(Int.self, forKey: .sidetone) ?? sidetone
+        autoPause = try values.decodeIfPresent(Bool.self, forKey: .autoPause) ?? autoPause
+        autoAnswer = try values.decodeIfPresent(Bool.self, forKey: .autoAnswer) ?? autoAnswer
+        multipoint = try values.decodeIfPresent(Bool.self, forKey: .multipoint) ?? multipoint
+        voicePrompts = try values.decodeIfPresent(Bool.self, forKey: .voicePrompts) ?? voicePrompts
+        touchControls = try values.decodeIfPresent(Bool.self, forKey: .touchControls) ?? touchControls
+        autoOff = try values.decodeIfPresent(Int.self, forKey: .autoOff) ?? autoOff
+        theme = try values.decodeIfPresent(String.self, forKey: .theme) ?? theme
+        proEnabled = try values.decodeIfPresent(Bool.self, forKey: .proEnabled) ?? proEnabled
+        presetID = try values.decodeIfPresent(String.self, forKey: .presetID) ?? presetID
+        if let decoded = try values.decodeIfPresent([RecoverableRecord<EQPreset>].self, forKey: .customPresets) {
+            customPresets = decoded.compactMap(\.value); recoveredItemCount += decoded.count - customPresets.count
+        }
+        boost = try values.decodeIfPresent(Double.self, forKey: .boost) ?? boost
+        batteryAlert = try values.decodeIfPresent(Int.self, forKey: .batteryAlert) ?? batteryAlert
+        if let decoded = try values.decodeIfPresent([RecoverableRecord<AutomationRule>].self, forKey: .rules) {
+            rules = decoded.compactMap(\.value); recoveredItemCount += decoded.count - rules.count
+        }
+        audioOptions = try values.decodeIfPresent(AudioPlaybackOptions.self, forKey: .audioOptions) ?? audioOptions
+        demoDeviceNames = try values.decodeIfPresent([String: String].self, forKey: .demoDeviceNames) ?? demoDeviceNames
+        demoVoiceLanguage = try values.decodeIfPresent(UInt8.self, forKey: .demoVoiceLanguage) ?? demoVoiceLanguage
+    }
+
+}
+
+// Recover a bad individual record without throwing away unrelated preferences.
+private struct RecoverableRecord<Value: Decodable>: Decodable {
+    let value: Value?
+    init(from decoder: Decoder) throws { value = try? Value(from: decoder) }
 }

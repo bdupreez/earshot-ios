@@ -3,6 +3,7 @@ import WidgetKit
 
 struct RootView: View {
     @EnvironmentObject var store: AppStore
+    @Environment(\.scenePhase) private var phase
     let timer = Timer.publish(every: 15, on: .main, in: .common).autoconnect()
     var body: some View {
         TabView {
@@ -14,18 +15,10 @@ struct RootView: View {
         }
         .fullScreenCover(isPresented: $store.welcome) { WelcomeView().environmentObject(store) }
         .alert("Earshot", isPresented: Binding(get: { store.message != nil }, set: { if !$0 { store.message = nil } })) { Button("OK") { store.message = nil } } message: { Text(store.message ?? "") }
-        .onReceive(timer) { _ in store.checkSchedules() }
-        .onReceive(store.$saved.debounce(for: .milliseconds(200), scheduler: RunLoop.main)) { _ in updateWidget() }
-        .onChange(of: store.battery) { _, _ in updateWidget() }
+        .onReceive(timer) { _ in if phase == .active { store.checkSchedules() } }
+        .onReceive(store.objectWillChange.debounce(for: .milliseconds(250), scheduler: RunLoop.main)) { _ in store.syncPlatformIntegrations() }
     }
-    private func updateWidget() {
-        let shared = EarshotShared.defaults
-        shared?.set(store.connected ? store.modeName : "Disconnected", forKey: "widgetMode")
-        shared?.set(store.battery, forKey: "widgetBattery")
-        shared?.set(store.saved.demo, forKey: "widgetDemo")
-        shared?.set(Date.now, forKey: "widgetUpdated")
-        WidgetCenter.shared.reloadTimelines(ofKind: "EarshotListeningWidget")
-    }
+
 }
 
 struct WelcomeView: View {

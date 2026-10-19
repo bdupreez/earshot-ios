@@ -45,54 +45,12 @@ struct PreferencesView: View {
             } header: { Text("Explore") } footer: { Text("Demo mode uses local virtual state. It never controls physical headphones.") }
             Section("Low battery alerts") {
                 Picker("Alert at", selection: $store.saved.batteryAlert) { Text("Off").tag(0); Text("10%").tag(10); Text("20%").tag(20); Text("30%").tag(30) }
-                Button("Allow notifications") { Task { await store.notifications.requestPermission(); store.objectWillChange.send() } }
+                Button("Allow notifications") { Task { await store.notifications.requestPermission(); store.notifications.syncRuleReminders(store.saved.demo ? [] : store.saved.rules); store.objectWillChange.send() } }
+                if let url = store.stateRecoveryURL { ShareLink("Export recovered settings", item: url) }
                 Text(store.notifications.status).font(.caption).foregroundStyle(.secondary)
             }
             Section { Text("Your preferences and presets are stored locally. Imported audio is copied into app storage; microphone checks use the cache. No account, cloud service, or analytics SDK.").font(.footnote).foregroundStyle(.secondary) }
         }.navigationTitle("App preferences").navigationBarTitleDisplayMode(.inline)
-    }
-}
-
-struct AutomationsView: View {
-    @EnvironmentObject var store: AppStore
-    @State private var editing: AutomationRule?
-    var body: some View {
-        List {
-            Section { Text("Connection rules run when a verified control link connects. Schedules run while Earshot is open. Use a Shortcut for user-initiated mode changes; iOS does not provide Android-style app monitoring or exact background alarms.").font(.footnote).foregroundStyle(.secondary) }
-            Section("Rules") {
-                if store.saved.rules.isEmpty { ContentUnavailableView("A little less tapping", systemImage: "bolt", description: Text("Add a rule to choose a listening mode.")) }
-                ForEach(store.saved.rules) { rule in
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack { Button(rule.name) { editing = rule }; Spacer(); Toggle("Enabled", isOn: Binding(get: { rule.enabled }, set: { var copy = rule; copy.enabled = $0; store.upsertRule(copy) })).labelsHidden() }
-                        Text(rule.trigger == "Schedule (app open)" ? String(format: "Daily %02d:%02d · app open", rule.hour, rule.minute) : rule.trigger).font(.caption).foregroundStyle(.secondary)
-                        Button("Run now") { store.runRule(rule) }.font(.subheadline)
-                    }
-                    // List's automatic style shares one row action between sibling buttons.
-                    // Keep Run now independent of the name button that opens the editor.
-                    .buttonStyle(.borderless)
-                }.onDelete { offsets in store.saved.rules.remove(atOffsets: offsets) }
-            }
-            if !store.automationLog.isEmpty { Section("Recent activity") { ForEach(Array(store.automationLog.prefix(20).enumerated()), id: \.offset) { _, text in Text(text).font(.caption) } } }
-        }.navigationTitle("Automations").navigationBarTitleDisplayMode(.inline)
-            .toolbar { Button { editing = AutomationRule(name: "My listening rule") } label: { Image(systemName: "plus") }.accessibilityLabel("Add automation") }
-            .sheet(item: $editing) { RuleEditor(rule: $0) }
-    }
-}
-
-struct RuleEditor: View {
-    @EnvironmentObject var store: AppStore
-    @Environment(\.dismiss) var dismiss
-    @State var rule: AutomationRule
-    var body: some View {
-        NavigationStack {
-            Form {
-                TextField("Rule name", text: $rule.name)
-                Picker("Trigger", selection: $rule.trigger) { Text("On connection").tag("On connection"); Text("Schedule (app open)").tag("Schedule (app open)"); Text("Manual").tag("Manual") }
-                if rule.trigger == "Schedule (app open)" { DatePicker("Time", selection: Binding(get: { Calendar.current.date(from: DateComponents(hour: rule.hour, minute: rule.minute)) ?? .now }, set: { let c = Calendar.current.dateComponents([.hour,.minute], from: $0); rule.hour = c.hour ?? 9; rule.minute = c.minute ?? 0 }), displayedComponents: .hourAndMinute) }
-                Picker("Listening mode", selection: $rule.modeIndex) { ForEach(store.saved.modes.filter { $0.configured }) { Text($0.name).tag($0.id) } }
-            }.navigationTitle("Listening rule").navigationBarTitleDisplayMode(.inline)
-                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }; ToolbarItem(placement: .confirmationAction) { Button("Save") { store.upsertRule(rule); dismiss() }.disabled(rule.name.trimmingCharacters(in: .whitespaces).isEmpty || store.saved.modes.isEmpty) } }
-        }
     }
 }
 

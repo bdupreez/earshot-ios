@@ -19,10 +19,11 @@ def emit(value):
     if isinstance(value, list): return "( " + ", ".join(emit(x) for x in value) + ", )" if value else "()"
     return quote(value)
 
-app_files = sorted((ROOT / "Earshot").rglob("*.swift"))
+shared_files = sorted((ROOT / "Shared").glob("*.swift"))
+app_files = sorted((ROOT / "Earshot").rglob("*.swift")) + shared_files
 test_files = sorted((ROOT / "EarshotTests").glob("*.swift"))
 ui_files = sorted((ROOT / "EarshotUITests").glob("*.swift"))
-widget_files = sorted((ROOT / "EarshotWidget").glob("*.swift"))
+widget_files = sorted((ROOT / "EarshotWidget").glob("*.swift")) + shared_files + [ROOT / "Earshot/App/EarshotIntents.swift"]
 groups = []
 def files_group(name, paths):
     children=[]
@@ -30,7 +31,7 @@ def files_group(name, paths):
         key=obj("file:"+str(path.relative_to(ROOT)), "PBXFileReference", lastKnownFileType="sourcecode.swift" if path.suffix==".swift" else "text", path=str(path.relative_to(ROOT)), sourceTree="SOURCE_ROOT")
         children.append(key)
     return obj("group:"+name,"PBXGroup",children=children,name=name,sourceTree="<group>")
-for name,paths in [("Earshot",app_files),("EarshotTests",test_files),("EarshotUITests",ui_files),("EarshotWidget",widget_files)]: groups.append(files_group(name,paths))
+for name,paths in [("Earshot",app_files),("EarshotTests",test_files),("EarshotUITests",ui_files),("EarshotWidget",widget_files)]: groups.append(files_group(name, [p for p in paths if name != "EarshotWidget" or p not in app_files]))
 resource_paths = [ROOT/"Earshot/Resources/Assets.xcassets", ROOT/"Earshot/Resources/LICENSE.txt", ROOT/"Earshot/Resources/THIRD_PARTY_NOTICES.txt"]
 resources=[]
 for p in resource_paths:
@@ -39,7 +40,7 @@ groups.append(obj("group:resources","PBXGroup",children=resources,name="Resource
 products=[]; targets=[]
 for name,paths,product,kind in [("Earshot",app_files,"Earshot.app","application"),("EarshotTests",test_files,"EarshotTests.xctest","bundle.unit-test"),("EarshotUITests",ui_files,"EarshotUITests.xctest","bundle.ui-testing"),("EarshotWidget",widget_files,"EarshotWidget.appex","app-extension")]:
     prod=obj("product:"+name,"PBXFileReference",explicitFileType="wrapper.application" if kind=="application" else "wrapper.app-extension" if kind=="app-extension" else "wrapper.cfbundle",includeInIndex="0",path=product,sourceTree="BUILT_PRODUCTS_DIR"); products.append(prod)
-    builds=[obj("build:"+str(p.relative_to(ROOT)),"PBXBuildFile",fileRef=ref("file:"+str(p.relative_to(ROOT)))) for p in paths]
+    builds=[obj("build:"+name+":"+str(p.relative_to(ROOT)),"PBXBuildFile",fileRef=ref("file:"+str(p.relative_to(ROOT)))) for p in paths]
     phases=[obj("sources:"+name,"PBXSourcesBuildPhase",buildActionMask="2147483647",files=builds,runOnlyForDeploymentPostprocessing="0"),obj("frameworks:"+name,"PBXFrameworksBuildPhase",buildActionMask="2147483647",files=[],runOnlyForDeploymentPostprocessing="0")]
     resource_builds=[obj("resource:"+str(p),"PBXBuildFile",fileRef=r) for p,r in zip(resource_paths,resources)] if name=="Earshot" else []
     phases.append(obj("resources:"+name,"PBXResourcesBuildPhase",buildActionMask="2147483647",files=resource_builds,runOnlyForDeploymentPostprocessing="0"))

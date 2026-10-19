@@ -26,7 +26,7 @@ enum BmapFailure: LocalizedError, Equatable {
         case .device(let address, let code):
             let reasons: [UInt8: String] = [0: "Unknown error", 1: "Invalid length", 2: "Invalid checksum",
                 3: "Function block not supported", 4: "Function not supported",
-                5: "The headphones’ firmware doesn’t support changing this", 6: "Invalid data",
+                5: "This operation is not supported for this function", 6: "Invalid data",
                 7: "Data unavailable", 8: "The firmware rejected this value", 9: "Request timed out",
                 10: "Not applicable in the current state", 11: "Device not in the paired list", 12: "Headphones are busy",
                 19: "Unknown port", 20: "Insecure transport", 24: "Undocumented device error 24", 255: "Block-specific error"]

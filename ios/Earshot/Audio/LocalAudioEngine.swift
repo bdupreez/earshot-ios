@@ -10,6 +10,9 @@ final class LocalAudioEngine: ObservableObject {
     @Published private(set) var status = "Choose a local audio file to listen with EQ."
     @Published private(set) var fileName = ""
     @Published private(set) var routeName = "System audio output"
+    @Published private(set) var duration = 0.0
+    @Published private(set) var position = 0.0
+    @Published private(set) var isBypassed = false
 
     var hasFile: Bool { audioFile != nil }
 
@@ -23,6 +26,8 @@ final class LocalAudioEngine: ObservableObject {
     private var ownedURL: URL?
     private var needsSchedule = true
     private var scheduleToken = UUID()
+    private var scheduledStartFrame: AVAudioFramePosition = 0
+    private var playbackMonitor: Task<Void, Never>?
     private var observers: [NSObjectProtocol] = []
     private var preset = BuiltInPresets.flat
     private var preamp: Double = 0
@@ -65,6 +70,7 @@ final class LocalAudioEngine: ObservableObject {
     }
 
     deinit {
+        playbackMonitor?.cancel()
         observers.forEach(NotificationCenter.default.removeObserver)
     }
 
@@ -92,6 +98,9 @@ final class LocalAudioEngine: ObservableObject {
             ownedURL = destination
             audioFile = file
             fileName = url.lastPathComponent
+            duration = Double(file.length) / file.processingFormat.sampleRate
+            position = 0
+            scheduledStartFrame = 0
             needsSchedule = true
             apply(preset: preset, preamp: preamp, enabled: enabled, boost: boost, limiterEnabled: limiterEnabled)
             status = "Ready · \(fileName)"
@@ -110,13 +119,27 @@ final class LocalAudioEngine: ObservableObject {
             try session.setActive(true)
             if !engine.isRunning { engine.prepare(); try engine.start() }
             if needsSchedule {
+                if position >= duration { position = 0; scheduledStartFrame = 0 }
                 scheduleToken = UUID()
                 let token = scheduleToken
-                file.framePosition = 0
-                player.scheduleFile(file, at: nil, completionCallbackType: .dataPlayedBack) { [weak self] _ in
+                let remaining = file.length - scheduledStartFrame
+                let frameCount = AVAudioFrameCount(min(remaining, AVAudioFramePosition(UInt32.max)))
+                let endFrame = scheduledStartFrame + AVAudioFramePosition(frameCount)
+                player.scheduleSegment(file, startingFrame: scheduledStartFrame, frameCount: frameCount, at: nil, completionCallbackType: .dataPlayedBack) { [weak self] _ in
                     Task { @MainActor [weak self] in
                         guard let self, self.scheduleToken == token else { return }
+                        if endFrame < file.length {
+                            self.player.stop()
+                            self.scheduledStartFrame = endFrame
+                            self.position = Double(endFrame) / file.processingFormat.sampleRate
+                            self.needsSchedule = true
+                            self.isPlaying = false
+                            self.playPause()
+                            return
+                        }
                         self.isPlaying = false
+                        self.playbackMonitor?.cancel()
+                        self.position = self.duration
                         self.needsSchedule = true
                         self.status = "Finished · \(self.fileName)"
                     }
@@ -125,6 +148,7 @@ final class LocalAudioEngine: ObservableObject {
             }
             player.play()
             isPlaying = true
+            beginProgressUpdates()
             updateRoute()
             status = "Playing · \(fileName)"
         } catch {
@@ -136,8 +160,11 @@ final class LocalAudioEngine: ObservableObject {
     func stop() {
         scheduleToken = UUID()
         player.stop()
+        playbackMonitor?.cancel()
         isPlaying = false
         needsSchedule = true
+        position = 0
+        scheduledStartFrame = 0
         status = audioFile == nil ? "Choose a local audio file to listen with EQ." : "Stopped · \(fileName)"
     }
 
@@ -147,8 +174,29 @@ final class LocalAudioEngine: ObservableObject {
         self.enabled = enabled
         self.boost = boost
         self.limiterEnabled = limiterEnabled
-        NativeAudioConfiguration.apply(equalizers: equalizers, compressor: compressor, limiter: limiter, preset: preset, preamp: self.preamp, enabled: enabled, boost: boost, limiterEnabled: limiterEnabled, sampleRate: audioFile?.processingFormat.sampleRate ?? 48_000)
+        NativeAudioConfiguration.apply(equalizers: equalizers, compressor: compressor, limiter: limiter, preset: preset, preamp: self.preamp, enabled: enabled && !isBypassed, boost: boost, limiterEnabled: limiterEnabled, sampleRate: audioFile?.processingFormat.sampleRate ?? 48_000)
     }
+
+    func setBypassed(_ bypassed: Bool) {
+        isBypassed = bypassed
+        apply(preset: preset, preamp: preamp, enabled: enabled, boost: boost, limiterEnabled: limiterEnabled)
+    }
+
+    func seek(to seconds: Double) {
+        guard let file = audioFile, seconds.isFinite else { return }
+        let resume = isPlaying
+        scheduleToken = UUID()
+        player.stop()
+        playbackMonitor?.cancel()
+        isPlaying = false
+        position = seconds.clamped(to: 0...duration)
+        scheduledStartFrame = min(file.length, AVAudioFramePosition((position * file.processingFormat.sampleRate).rounded(.down)))
+        needsSchedule = true
+        if resume, position < duration { playPause() }
+        else { status = position >= duration ? "Finished · \(fileName)" : "Paused · \(fileName)" }
+    }
+
+    func skip(seconds: Double) { seek(to: position + seconds) }
 
     /// A quiet, app-generated source permits an actual playback smoke test without a file provider.
     func loadDemo() throws {
@@ -172,9 +220,27 @@ final class LocalAudioEngine: ObservableObject {
     }
 
     private func pause(status: String) {
+        updatePosition()
         player.pause()
+        playbackMonitor?.cancel()
         isPlaying = false
         self.status = status
+    }
+
+    private func beginProgressUpdates() {
+        playbackMonitor?.cancel()
+        playbackMonitor = Task { [weak self] in
+            while !Task.isCancelled {
+                guard self?.isPlaying == true else { return }
+                self?.updatePosition()
+                do { try await Task.sleep(for: .milliseconds(200)) } catch { return }
+            }
+        }
+    }
+
+    private func updatePosition() {
+        guard let file = audioFile, let renderTime = player.lastRenderTime, let played = player.playerTime(forNodeTime: renderTime) else { return }
+        position = (Double(scheduledStartFrame) / file.processingFormat.sampleRate + Double(played.sampleTime) / played.sampleRate).clamped(to: 0...duration)
     }
 
     private func updateRoute() {
@@ -234,7 +300,8 @@ enum NativeAudioConfiguration {
             }
         }
         let effectiveBoost = Headroom.clampBoost(boost, limiterEnabled: limiterEnabled)
-        let userPreamp = preamp.clamped(to: -30...0)
+        // Automatic headroom can require more attenuation than the manual preamp control.
+        let userPreamp = preamp.clamped(to: -96...0)
         let recommendation = Headroom.recommendedPreampDb(bands: preset.bands, sampleRate: sampleRate)
         // The dynamics unit handles sustained overload; the final limiter catches transients.
         let safePreamp = limiterEnabled ? userPreamp : min(userPreamp, recommendation - effectiveBoost - 1)
