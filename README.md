@@ -15,12 +15,22 @@ Implemented areas include:
 - Five native tabs: Home, Sound, Modes, Tools, and Settings, with light/dark appearance and iPhone/iPad layouts.
 - Persistent, explicitly labelled demo profiles for the Bose models represented by upstream and the experimental Crusher interface. Demo data never establishes a physical Bluetooth connection.
 - Real Bluetooth GATT discovery and Bose BLE L2CAP control transport, with a verified BMAP reply required before reporting connected. Battery, per-part earbud battery, noise control, modes, favourites, custom-mode layouts, device settings, and diagnostics use upstream BMAP knowledge. Physical headphone interoperability remains **unverified**.
-- Native 3-band headphone EQ controls and a local-player Pro EQ: graphic/parametric filters, seven upstream presets including the AutoEq QC Ultra correction, response graph, headroom, preamp, limiter, and capped boost. JSON presets and AutoEq text import/export are supported.
+- Native 3-band headphone EQ controls and a local-player Pro EQ: graphic/parametric filters, seven upstream presets including the AutoEq QC Ultra correction, response graph, headroom, preamp, limiter, and capped boost. JSON preset import/export and AutoEq text import are supported.
 - Actual local audio playback through AVAudioEngine and a real microphone record/play/delete check using AVAudioRecorder. The microphone route is shown rather than assumed.
 - Persistent on-connect/manual rules and schedules while the app is open, low-battery notification support, Quiet/Aware App Intents, and a WidgetKit overview linking back into the app.
 - Original-project attribution in onboarding, About, diagnostics, and documentation.
 
 This is **not complete Android feature parity**. [The migration matrix](docs/IOS_MIGRATION.md) records implemented, conditional, missing, and platform-restricted features. In particular, iOS does not offer a direct public replacement for Android's arbitrary RFCOMM sockets, Shizuku codec controls, global other-app EQ, call-volume boosting, or unrestricted app/background automation. Compatible BLE control services must be tested on physical headphones. Crusher's Bragi transport remains outstanding.
+
+## Actual iOS simulator captures
+
+These are native simulator captures of this AI-assisted port. Demo device values are simulated; they do not establish physical headphone compatibility. [More captures and provenance](docs/ios-screenshots/README.md).
+
+<p align="center">
+  <img src="docs/ios-screenshots/home-light.png" width="30%" alt="Native SwiftUI Home in light mode, explicitly marked Demo">
+  <img src="docs/ios-screenshots/pro-eq.png" width="30%" alt="Native Pro EQ with explicit iOS local-player limitation">
+  <img src="docs/ios-screenshots/credits.png" width="30%" alt="About credits the original Earshot and identifies this AI-assisted port attempt">
+</p>
 
 ## Build with Xcode
 
@@ -52,6 +62,8 @@ The test targets run actual XCTest and XCUITest in the installed simulator; they
 xcrun simctl list devices available
 EARSHOT_SIMULATOR_ID=YOUR_SIMULATOR_UDID ios/scripts/test-simulator.sh
 ```
+
+**Recorded acceptance:** 53 tests passed (41 unit + 12 UI), with zero failures or skips on the installed iPhone 17 Pro simulator. See the validation report below for secondary-device checks and remaining limits.
 
 Results and screenshot attachments are stored in ignored `ios/TestResults/*.xcresult` bundles. Open a result bundle in Xcode to inspect individual assertions, logs, and screenshots. See [the validation report](docs/IOS_VALIDATION.md) for actual outcomes, environment, and limitations. Simulator tests cannot validate a physical Bose Bluetooth connection, sound through headphones, hearing safety, or vendor firmware behaviour.
 

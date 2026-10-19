@@ -178,9 +178,17 @@ final class EarshotUITests: XCTestCase {
         XCTAssertTrue(app.navigationBars["Device controls"].waitForExistence(timeout: 5))
         let reported = app.staticTexts.matching(NSPredicate(format: "label BEGINSWITH %@", "Reported volume,")).firstMatch
         XCTAssertTrue(reported.exists)
-        let before = reported.label + String(describing: reported.value)
-        app.sliders["Headphone volume"].adjust(toNormalizedSliderPosition: 0.9)
-        XCTAssertNotEqual(reported.label + String(describing: reported.value), before)
+        let before = reported.label
+        let volume = app.sliders["Headphone volume"]
+        reveal(volume)
+        dragSliderThumb(volume, to: 0.9)
+        XCTAssertTrue(app.navigationBars["Device controls"].exists, app.debugDescription)
+        // A new device report replaces this SwiftUI row; wait for the new value
+        // instead of requesting a second snapshot while the old row disappears.
+        let changedVolume = app.staticTexts.matching(NSPredicate(
+            format: "label BEGINSWITH %@ AND label != %@", "Reported volume,", before
+        )).firstMatch
+        XCTAssertTrue(changedVolume.waitForExistence(timeout: 5), app.debugDescription)
         app.buttons["Play"].tap()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Playing · simulated")).firstMatch.waitForExistence(timeout: 5))
         app.buttons["Pause"].tap()
@@ -188,21 +196,21 @@ final class EarshotUITests: XCTestCase {
         let leAudio = app.switches["LE Audio"]
         reveal(leAudio)
         let prior = leAudio.value as? String
-        print("LE Audio switch frame: \(leAudio.frame)")
         attachScreenshot("Device controls before requesting LE Audio")
         tapSwitchKnob(leAudio)
-        XCTAssertTrue(app.buttons["Change LE Audio and restart"].waitForExistence(timeout: 5), app.debugDescription)
-        app.buttons["Cancel"].tap()
+        let restart = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "restart")).firstMatch
+        XCTAssertTrue(restart.waitForExistence(timeout: 5), app.debugDescription)
+        dismissConfirmation(restart)
         XCTAssertEqual(leAudio.value as? String, prior)
         tapSwitchKnob(leAudio)
-        app.buttons["Change LE Audio and restart"].tap()
+        XCTAssertTrue(restart.waitForExistence(timeout: 5))
+        restart.tap()
         XCTAssertNotEqual(leAudio.value as? String, prior)
         let power = app.buttons["Power off headphones"]
         reveal(power)
         power.tap()
         XCTAssertTrue(app.buttons["Power off"].waitForExistence(timeout: 5))
-        app.buttons["Cancel"].tap()
-        XCTAssertTrue(app.buttons["Power off"].waitForNonExistence(timeout: 5))
+        dismissConfirmation(app.buttons["Power off"])
         attachScreenshot("Simulated device controls and confirmed LE Audio setting")
     }
 
@@ -263,7 +271,7 @@ final class EarshotUITests: XCTestCase {
         XCTAssertTrue(app.buttons["tryDemo"].waitForExistence(timeout: 10))
         reveal(app.buttons["tryDemo"])
         app.buttons["tryDemo"].tap()
-        XCTAssertTrue(app.tabBars.buttons["Home"].waitForExistence(timeout: 5))
+        XCTAssertTrue(tabButton("Home").waitForExistence(timeout: 5))
     }
 
     private func replaceText(in field: XCUIElement, with text: String) {
@@ -275,8 +283,27 @@ final class EarshotUITests: XCTestCase {
     }
 
     private func reveal(_ element: XCUIElement) {
-        for _ in 0..<8 where !element.isHittable { app.swipeUp() }
-        XCTAssertTrue(element.isHittable, "Expected a reachable control: \(element)")
+        for _ in 0..<8 {
+            let screen = app.frame
+            var top = screen.minY + 20
+            var bottom = screen.maxY - 20
+            let navigation = app.navigationBars.firstMatch
+            if navigation.exists, navigation.isHittable { top = max(top, navigation.frame.maxY + 8) }
+            let bar = app.tabBars.firstMatch
+            if bar.exists, bar.isHittable {
+                if bar.frame.minY > screen.midY { bottom = min(bottom, bar.frame.minY - 12) }
+                else { top = max(top, bar.frame.maxY + 8) }
+            }
+            if element.exists {
+                let frame = element.frame
+                if element.isHittable, frame.minY >= top, frame.maxY <= bottom { return }
+                if !frame.isEmpty, frame.minY < top { app.swipeDown(); continue }
+            }
+            // A translucent floating tab bar can leave an obscured row "hittable" in AX.
+            // Ensure the entire control is clear of that overlay before interacting.
+            app.swipeUp()
+        }
+        XCTFail("Expected a fully visible control: \(element)")
     }
 
     private func button(startingWith title: String) -> XCUIElement {
@@ -284,11 +311,18 @@ final class EarshotUITests: XCTestCase {
     }
 
     private func selectTab(_ title: String) {
-        let item = app.tabBars.buttons[title]
+        let item = tabButton(title)
         XCTAssertTrue(item.waitForExistence(timeout: 5))
         XCTAssertTrue(item.isHittable, "Dismiss the presented screen before switching tabs.")
         item.tap()
         if title == "Home" { XCTAssertTrue(app.navigationBars["earshot"].waitForExistence(timeout: 5), app.debugDescription) }
+    }
+
+    private func tabButton(_ title: String) -> XCUIElement {
+        let compact = app.tabBars.buttons[title]
+        if compact.exists { return compact }
+        // iPad's floating top tabs expose semantic Buttons without a TabBar container.
+        return app.buttons.matching(NSPredicate(format: "label == %@", title)).firstMatch
     }
 
     private func tapSwitchKnob(_ toggle: XCUIElement) {
@@ -298,6 +332,35 @@ final class EarshotUITests: XCTestCase {
         // is at the trailing edge; tap the knob rather than the row's empty center.
         let point = CGVector(dx: frame.maxX - min(25, frame.width / 2), dy: frame.midY)
         app.coordinate(withNormalizedOffset: .zero).withOffset(point).tap()
+    }
+
+    private func dragSliderThumb(_ slider: XCUIElement, to position: CGFloat) {
+        let frame = slider.frame
+        XCTAssertGreaterThan(frame.width, 50)
+        let normalized = slider.normalizedSliderPosition
+        print("Slider drag frame: \(frame), current fraction: \(normalized)")
+        // XCTest's adjust operation invoked interactive Back in a captured run.
+        // Drag the visible thumb along its observed track instead.
+        let inset = min(CGFloat(18), frame.width / 4)
+        let track = frame.width - 2 * inset
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        let start = origin.withOffset(CGVector(dx: frame.minX + inset + track * normalized, dy: frame.midY))
+        let finish = origin.withOffset(CGVector(dx: frame.minX + inset + track * position, dy: frame.midY))
+        start.press(forDuration: 0.1, thenDragTo: finish)
+    }
+
+    private func dismissConfirmation(_ action: XCUIElement) {
+        let cancel = app.buttons["Cancel"]
+        if cancel.exists {
+            cancel.tap()
+        } else {
+            // iOS 26 presents anchored confirmation popovers without a Cancel row.
+            // Tapping the observed navigation title outside the popover cancels it.
+            let navigation = app.navigationBars.firstMatch.frame
+            app.coordinate(withNormalizedOffset: .zero)
+                .withOffset(CGVector(dx: navigation.midX, dy: navigation.midY)).tap()
+        }
+        XCTAssertTrue(action.waitForNonExistence(timeout: 5))
     }
 
     private func attachScreenshot(_ name: String) {

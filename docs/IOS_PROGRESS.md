@@ -34,6 +34,18 @@ The remaining device-control flow has passed reported-volume changes and simulat
 
 Checkpoint 2 was pushed as [`b4aa918`](https://github.com/bdupreez/earshot-ios/commit/b4aa918), again only to the user's fork. The final screenshots and authoritative acceptance summary will follow once the remaining flow is verified.
 
+## Checkpoint 4 — complete iPhone simulator acceptance (19 October 2026)
+
+The installed Xcode completed the combined native acceptance run with **53 passed, 0 failed, 0 skipped**: 41 unit tests and all 12 UI scenarios. Both the `xcodebuild` exit status and the `xcresulttool` summary confirm success. The authoritative bundle is `ios/TestResults/Acceptance.xcresult`, recorded on iPhone 17 Pro, runtime iOS 26.4.1 (23E254a). No expected failures were used.
+
+The remaining device-control failures were traced through actual test videos to test gestures: a switch under the translucent tab bar could be reported as hittable, anchored popovers omitted a Cancel row, and XCTest's standard slider adjustment intermittently initiated a Back swipe. The harness now exposes the entire control, verifies cancellation without changing state, and drags the observed slider thumb. A normal-build focused rerun of the final helper passed in `UIDeviceControlsFinal.xcresult`; its activity log confirms the actual 0.1-second thumb press/drag and changed reported volume. An earlier focused run predated the final helper edit and is not evidence for that edit. Product source was unchanged between the combined acceptance and that focused follow-up.
+
+Exported native screenshots from the passing acceptance bundle cover light/dark Home, local Pro EQ, original-author credits, custom-mode persistence, microphone flow, connection facts and device controls. They are retained in `docs/ios-screenshots/`, visually inspected, and clearly identify demo device values as simulated. The README includes these native captures.
+
+The secondary **iPad Pro 11-inch (M5)** normal-build smoke run passed **2 tests, 0 failures, 0 skipped** on iOS 26.4.1. It covers onboarding/demo mode switching and tools/compatibility navigation; it is not a complete iPad UI-suite run. A first cold-start attempt stalled before app launch, and the next attempt exposed the test harness’s iPhone-only TabBar lookup. The final helper uses iPad’s actual semantic tab buttons, and the final result is `iPadSmoke.xcresult`. Earlier diagnostic bundles are preserved. The final iPad Home screenshot was visually inspected. A final repeat of the existing iPhone onboarding case also passed (`UIHomeFinal.xcresult`), leaving the app on Home for handoff.
+
+Checkpoint 3 was pushed as [`ef728fc`](https://github.com/bdupreez/earshot-ios/commit/ef728fc), exclusively to the user's fork. The final documentation commit records the completed acceptance and secondary-device outcomes. Physical iPhone/headphone compatibility, signed Widget/Shortcuts execution, and the explicit missing/platform-restricted features in the migration matrix remain unverified or outstanding; passing Simulator tests does not complete that work.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

@@ -8,6 +8,7 @@ The original application is [Earshot by HellzYeahh and contributors](https://git
 - Installed Xcode: **26.4.1**, build **17E202**, `/Applications/Xcode.app`.
 - Simulator SDK: **iOS 26.4**; the test result reports runtime **iOS 26.4.1 (23E254a)**.
 - Primary simulator: **iPhone 17 Pro**, `670AA0BD-A1DF-4768-835F-966A0D09E7B3`.
+- Secondary simulator: **iPad Pro 11-inch (M5)**, `F0735D38-82C8-4F9F-B319-410374B0B2B7`, also runtime iOS 26.4.1 (23E254a).
 - Deployment target: iOS 17.0; iOS 17 hardware/runtime was not available for this run.
 - Project: `ios/Earshot.xcodeproj`, shared scheme **Earshot**; Swift 5 language mode, no third-party packages.
 
@@ -16,15 +17,20 @@ The original application is [Earshot by HellzYeahh and contributors](https://git
 | Check | Actual outcome | Evidence |
 | --- | --- | --- |
 | Native app + Widget extension build | Passed with installed Xcode | `xcodebuild ... CODE_SIGNING_ALLOWED=NO build` |
-| iPhone simulator XCTest | **41 passed, 0 failed, 0 skipped** | `ios/TestResults/UnitTestsVerified.xcresult`; verified with `xcresulttool get test-results summary` |
+| Combined iPhone simulator acceptance | **53 passed, 0 failed, 0 skipped** | `ios/TestResults/Acceptance.xcresult`; `xcodebuild` exited 0 and `xcresulttool get test-results summary` confirms Passed |
+| Focused device-control harness follow-up | **1 passed, 0 failed, 0 skipped** | `ios/TestResults/UIDeviceControlsFinal.xcresult`; final observed-thumb slider drag plus volume/playback/restart/power cancellation assertions |
+| iPad UI smoke, normal build | **2 passed, 0 failed, 0 skipped** | `ios/TestResults/iPadSmoke.xcresult`; onboarding/demo mode switching and tools/compatibility navigation |
+| Earlier independent unit suite | **41 passed, 0 failed, 0 skipped** | `ios/TestResults/UnitTestsVerified.xcresult` |
 
-The XCTest count comprises 14 DSP/audio tests, 6 app-state tests, and 21 protocol/integration tests. This final run includes the complete master-bypass regression and the automation-row product fix. No tests are marked as expected failures to obtain this result.
+Compact [Xcode summary exports](ios-test-results/README.md) are checked into the fork; full result bundles remain local.
+
+The combined run comprises **41 unit tests** (14 DSP/audio, 6 app-state and 21 protocol/integration) and **12 XCUITest scenarios**. It includes the complete master-bypass regression, automation-row fix, fresh microphone recording, device-control confirmations, onboarding, persistence, attribution and both appearances. The focused device-control and iPad smoke runs repeat existing scenarios; they are additional device/harness evidence, not additional distinct test cases. The complete 12-scenario UI suite ran on iPhone; only the two stated smoke scenarios ran on iPad. No tests are marked as expected failures to obtain these results.
 
 ## What the checks establish
 
 The Xcode build compiles a real native iOS app and WidgetKit extension. XCTest checks wire framing/safety, data parsers, state persistence, DSP response math, and waveform output rendered through the actual AVAudioEngine/AVAudioUnitEQ/limiter graph. XCUITest launches the actual app, operates its controls and verifies resulting UI state. Microphone and local-player tests exercise AVFoundation inside Simulator, rather than substituting prerecorded test responses.
 
-Screenshot attachments are retained in the `.xcresult` bundles. Selected exported screenshots are available in `docs/ios-screenshots/` after visual inspection. All original numbered images in `docs/screenshots/` are Android reference images.
+Screenshot attachments are retained in the `.xcresult` bundles. Selected exported screenshots from the passing iPhone acceptance and iPad smoke runs are available in [docs/ios-screenshots/](ios-screenshots/README.md) after visual inspection. All original numbered images in `docs/screenshots/` are Android reference images.
 
 ## Issues found during validation
 
@@ -35,7 +41,13 @@ Screenshot attachments are retained in the `.xcresult` bundles. Selected exporte
 - Actual UI test video revealed that tapping Run now also opened the automation editor: SwiftUI List's automatic button style shared an action across sibling buttons. Separate borderless actions prevent the editor action from firing on a Run now tap.
 - A strict fresh-recording UI check found the live recorder clock could show 8.8 seconds for a finalized 7.963-second AAC clip. The display now uses the finalized file's frame count/sample rate. The fresh capture/play/delete check passed after this correction.
 
-Earlier failed/diagnostic `.xcresult` bundles are retained locally alongside the final runs. The final result paths below identify the authoritative outcomes.
+Test automation also needed platform-specific corrections. Accessibility can report a control beneath the translucent iOS 26 tab bar as hittable, so the harness checks the visible control frame before tapping. Anchored confirmation popovers can omit a Cancel button, so cancellation taps outside the popover and asserts dismissal and unchanged state. XCTest’s standard slider adjustment intermittently triggered an interactive Back swipe; a follow-up check uses a drag from the observed slider thumb. These are harness corrections; recorded failures remain in the earlier bundles. The final rebuilt device-control log explicitly records the thumb press/drag and changed reported volume.
+
+The first iPad attempt stalled during Simulator cold boot/launch, before an app process started. After restarting that simulator, direct app launch succeeded. A subsequent smoke attempt exposed a test-only assumption that tabs always have a `TabBar` accessibility container: iPad exposes its floating top tabs as semantic buttons. The helper now uses the compact TabBar when present and exact-label buttons otherwise. A normal-build rerun of both iPad cases passed, and its Home layout was visually inspected. Earlier diagnostics remain in `iPadSmokeLaunchStalled.xcresult` and `iPadSmokeTabHarness.xcresult`.
+
+Simulator microphone permission was pre-granted before acceptance to isolate real recording from an XCTest interruption-monitor stall. The microphone case deletes any existing recording, captures a fresh approximately eight-second clip, checks the finalized duration, plays it, and deletes it. This does not verify the first-install microphone permission flow.
+
+Earlier failed/diagnostic `.xcresult` bundles, including `AcceptanceInitial.xcresult`, are retained locally alongside the final runs. The table above identifies authoritative outcomes.
 
 ## Limits of this evidence
 
@@ -51,4 +63,15 @@ Earlier failed/diagnostic `.xcresult` bundles are retained locally alongside the
 EARSHOT_SIMULATOR_ID=670AA0BD-A1DF-4768-835F-966A0D09E7B3 ios/scripts/test-simulator.sh
 ```
 
-Build and result directories are ignored by Git. Open the generated `.xcresult` in Xcode to inspect individual assertions, native test logs, failure history, and screenshots. Follow the hardware acceptance procedure in [IOS_MIGRATION.md](IOS_MIGRATION.md) before making compatibility claims.
+For the recorded iPad smoke scope:
+
+```sh
+xcodebuild -project ios/Earshot.xcodeproj -scheme Earshot \
+  -destination 'platform=iOS Simulator,id=F0735D38-82C8-4F9F-B319-410374B0B2B7' \
+  -derivedDataPath ios/build -resultBundlePath ios/TestResults/iPadSmoke-NEW.xcresult \
+  -only-testing:EarshotUITests/EarshotUITests/testWelcomeAndDemoModeSwitching \
+  -only-testing:EarshotUITests/EarshotUITests/testToolsAndCompatibilityNavigation \
+  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO test
+```
+
+Choose a new result path for every run. Build and result directories are ignored by Git. Open the generated `.xcresult` in Xcode to inspect individual assertions, native test logs, failure history, and screenshots. Follow the hardware acceptance procedure in [IOS_MIGRATION.md](IOS_MIGRATION.md) before making compatibility claims.

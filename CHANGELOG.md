@@ -2,6 +2,8 @@
 
 This fork explores a native Swift/SwiftUI port of [Earshot by HellzYeahh and contributors](https://github.com/HellzYeahh/earshot). Original app, protocol/DSP work, documentation and licences are credited and preserved. Added native iOS app, WidgetKit extension, App Intents, BLE L2CAP transport, local audio EQ/player, microphone tools, persistent demo profiles, and simulator XCTest/XCUITest targets. Full hardware parity is not established; see [migration](docs/IOS_MIGRATION.md) and [validation](docs/IOS_VALIDATION.md).
 
+Validation with installed Xcode 26.4.1: **53 iPhone Simulator tests passed** (41 unit + 12 UI), zero failures or skips. Native tests exposed and corrected sustained-overload audio decay, complete Pro EQ bypass, restored demo state, automation row interactions, and finalized recording duration. Native captures and exported result summaries accompany the validation report. Physical headphones and signed Widget/Shortcuts execution remain unverified.
+
 ## Original Android changelog (preserved)
 
 # Changelog
