@@ -1,3 +1,5 @@
+> **Upstream Android reference — AI-assisted iOS port fork.** The original work and research are credited to [HellzYeahh/earshot and contributors](https://github.com/HellzYeahh/earshot). This historical document describes the original Android implementation, not verified iOS functionality. See [iOS migration and current limits](IOS_MIGRATION.md) and [full credits](../THIRD_PARTY_NOTICES.md).
+
 # Bose QC / noise-cancelling models: per-model facts for Earshot's adaptive UI
 
 Research date 2026-10-18 (for Earshot 0.4.0).

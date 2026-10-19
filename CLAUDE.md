@@ -1,3 +1,5 @@
+> **AI-assisted iOS port attempt of [HellzYeahh/earshot](https://github.com/HellzYeahh/earshot), MIT.** Native iOS instructions are in [AGENTS.md](AGENTS.md), with current scope in [docs/IOS_MIGRATION.md](docs/IOS_MIGRATION.md). The original Android contributor guide below is preserved for provenance and applies to the retained Android source tree. Original authors retain full credit; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+
 # Earshot — Bose QC Ultra Headphones (2nd Gen) controller for Android
 
 A native Kotlin/Compose replacement for the Bose app, plus a sound-tuning engine, codec panel,

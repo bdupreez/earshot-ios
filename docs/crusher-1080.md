@@ -1,3 +1,5 @@
+> **Upstream Android reference — AI-assisted iOS port fork.** The original work and research are credited to [HellzYeahh/earshot and contributors](https://github.com/HellzYeahh/earshot). This historical document describes the original Android implementation, not verified iOS functionality. See [iOS migration and current limits](IOS_MIGRATION.md) and [full credits](../THIRD_PARTY_NOTICES.md).
+
 # Skullcandy Crusher 1080 ANC ("Sound by Bose")
 
 Earshot can control the Crusher 1080 ANC, but **it has not been tried on real headphones yet**.

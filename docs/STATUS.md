@@ -1,3 +1,5 @@
+> **Upstream Android reference — AI-assisted iOS port fork.** The original work and research are credited to [HellzYeahh/earshot and contributors](https://github.com/HellzYeahh/earshot). This historical document describes the original Android implementation, not verified iOS functionality. See [iOS migration and current limits](IOS_MIGRATION.md) and [full credits](../THIRD_PARTY_NOTICES.md).
+
 # Earshot — status (morning of 2026-10-17, written 07:45)
 
 The build on your phone right now is the QA-passed one from 05:04 (commit 873095d); it connected,

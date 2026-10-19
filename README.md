@@ -1,181 +1,77 @@
-# Earshot
+# Earshot for iOS — an AI-assisted port attempt
 
-**A faster, more capable, account-free Android app for Bose QuietComfort and Ultra headphones and
-earbuds.** Built around the QC Ultra Headphones (2nd Gen), it adapts to whichever model you connect:
-QC Ultra Headphones and Earbuds (1st and 2nd Gen), QC Headphones (1st and 2nd Gen), QC SC, QC45,
-QC SE, QC Earbuds II, Ultra Open Earbuds (1st and 2nd Gen), basic support for the QC Earbuds (2020)
-and Noise Cancelling Headphones 700, and, experimentally, the Skullcandy Crusher 1080 ANC
-([see what works on each](#supported-headphones)).
+This is an **experimental, AI-assisted attempt to port the original [Earshot Android app](https://github.com/HellzYeahh/earshot) to native iOS**. The original app was created by **HellzYeahh and the Earshot contributors**. Their feature design, implementation, DSP, protocol research, tests, and documentation provide the foundation for this work. Full credit belongs to those authors; this fork does not claim to have invented Earshot.
 
-Earshot talks to the headphones directly over Bluetooth using Bose's own control protocol (BMAP),
-the same channel the official app uses. No Bose account, no cloud, no analytics, **no internet
-permission at all**. On top of everything the Bose app does for day-to-day control, it adds a
-pro equaliser with volume boost, a Bluetooth codec panel, LE Audio and latency controls, louder
-calls, a Quick Settings tile, a widget and automations.
+Brian du Preez is using AI assistance/tokens to help explore an iOS port in [bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios). AI-generated code is experimental and needs review and real-device testing. This is not an official release of upstream Earshot, Bose, or Skullcandy.
 
-> Not affiliated with or endorsed by Bose. Bose and QuietComfort are trademarks of Bose Corporation.
-> Built and tested on the QC Ultra Headphones (2nd Gen, firmware 10.x). What's new: [CHANGELOG.md](CHANGELOG.md).
+The original [MIT licence](LICENSE), copyright notice, Android source tree, and research are preserved. Read [all credits and third-party notices](THIRD_PARTY_NOTICES.md). The original Android README is preserved in [docs/ANDROID_UPSTREAM_README.md](docs/ANDROID_UPSTREAM_README.md).
 
-<p align="center">
-  <img src="docs/screenshots/01-home.png" width="23%" alt="Home: battery, modes, noise control, now playing">
-  <img src="docs/screenshots/03-sound-proeq.png" width="23%" alt="Sound: Pro EQ with the QC Ultra correction preset">
-  <img src="docs/screenshots/05-connection.png" width="23%" alt="Connection: LE Audio, codec, latency">
-  <img src="docs/screenshots/06-call-audio.png" width="23%" alt="Call audio: automatic call volume boost">
-</p>
-<p align="center">
-  <img src="docs/screenshots/02-sound.png" width="23%" alt="Sound: the headphones' own 3-band EQ">
-  <img src="docs/screenshots/04-tools.png" width="23%" alt="Tools">
-  <img src="docs/screenshots/07-more.png" width="23%" alt="More: sidetone, auto-pause, multipoint, touch controls">
-  <img src="docs/screenshots/08-more-dark.png" width="23%" alt="Dark theme">
-</p>
+## Native iOS app
 
-### New in 0.4.0: it adapts to your Bose model
+The primary development target of this fork is `ios/`: native **Swift + SwiftUI**, Core Bluetooth, AVFoundation, WidgetKit, App Intents, XCTest and XCUITest. No cross-platform wrapper, account, analytics SDK, or third-party Swift package is required.
 
-<p align="center">
-  <img src="docs/screenshots/09-earbuds.png" width="23%" alt="QC Ultra Earbuds: model and generation, left, right and case battery, the earbuds' own modes">
-  <img src="docs/screenshots/10-basic-model.png" width="23%" alt="Noise Cancelling Headphones 700: basic support, no modes, noise level slider">
-  <img src="docs/screenshots/11-whats-new.png" width="23%" alt="What's new in 0.4.0">
-</p>
+Implemented areas include:
 
-The header shows your headphones' name, model and generation; earbuds get left, right and case
-battery with listening time left; Home, Modes and Settings show only what your model has; tap the
-name to switch between your Bose products. LE Audio earbuds now connect too.
+- Five native tabs: Home, Sound, Modes, Tools, and Settings, with light/dark appearance and iPhone/iPad layouts.
+- Persistent, explicitly labelled demo profiles for the Bose models represented by upstream and the experimental Crusher interface. Demo data never establishes a physical Bluetooth connection.
+- Real Bluetooth GATT discovery and Bose BLE L2CAP control transport, with a verified BMAP reply required before reporting connected. Battery, per-part earbud battery, noise control, modes, favourites, custom-mode layouts, device settings, and diagnostics use upstream BMAP knowledge. Physical headphone interoperability remains **unverified**.
+- Native 3-band headphone EQ controls and a local-player Pro EQ: graphic/parametric filters, seven upstream presets including the AutoEq QC Ultra correction, response graph, headroom, preamp, limiter, and capped boost. JSON presets and AutoEq text import/export are supported.
+- Actual local audio playback through AVAudioEngine and a real microphone record/play/delete check using AVAudioRecorder. The microphone route is shown rather than assumed.
+- Persistent on-connect/manual rules and schedules while the app is open, low-battery notification support, Quiet/Aware App Intents, and a WidgetKit overview linking back into the app.
+- Original-project attribution in onboarding, About, diagnostics, and documentation.
 
-## Why it's better than the stock Bose app
+This is **not complete Android feature parity**. [The migration matrix](docs/IOS_MIGRATION.md) records implemented, conditional, missing, and platform-restricted features. In particular, iOS does not offer a direct public replacement for Android's arbitrary RFCOMM sockets, Shizuku codec controls, global other-app EQ, call-volume boosting, or unrestricted app/background automation. Compatible BLE control services must be tested on physical headphones. Crusher's Bragi transport remains outstanding.
 
-| | Bose app | Earshot |
-|---|---|---|
-| Account / cloud | Required; settings sync through Bose servers | None. Nothing leaves the phone (no `INTERNET` permission) |
-| Startup | Splash, sign-in checks, slow | Connected and showing live state in about a second |
-| Live state | Polls | Headphones **push** button presses, mode, noise, battery and volume changes instantly |
-| Equaliser | 3 bands on the headphones | Those 3 bands **plus** a 10-band graphic / parametric Pro EQ, presets, AutoEq import and a measured **"Tuned for QC Ultra"** correction curve |
-| Volume | Phone limits | **Volume boost** up to +12 dB with a brick-wall limiter and hearing-safety guard |
-| Calls | Often too quiet on Android | **Automatic in-call volume boost**, call-codec readout (CVSD / mSBC / LC3) |
-| Codec | Hidden in Developer options | Live codec panel; **switch AAC ↔ SBC** from the app (via Shizuku, no root) |
-| LE Audio | Buried per-device toggle | LE Audio on/off with status, phone support check, a "try anyway" option and a result check; per-device LE vs Classic view. Earbuds on LE Audio are controlled over LE |
-| Several Bose products | Pick from a list each time | **Quick switcher**: tap the name on Home |
-| Earbuds battery | Per bud in a sub-screen | Left, right and case on Home, plus **listening time left** |
-| Latency | Not shown | Reported latency, low-latency tips, experimental latency control |
-| Per-app sound | No | Different EQ per app (e.g. music vs. video) |
-| Quick access | Open the app | **Quick Settings tile**, **home-screen widget**, persistent notification with mode buttons |
-| Automation | No | Mode or EQ by **Wi-Fi network, app in front, schedule, or on connect**; low-battery alert |
-| Transparency | Hidden | Read-only **Lab** explorer and full protocol documentation in this repo |
+## Build with Xcode
 
-Everything the Bose app does for daily use is here too: your model's listening modes (for example
-Quiet / Aware / Immersion / Cinema + 7 custom slots on the QC Ultra 2, favourites), noise-cancelling
-level, Wind Block, Immersive Audio, Self Voice (sidetone), auto play/pause, auto-answer, auto-off
-timer, voice prompts, multipoint and device switching, pairing mode, shortcut-button action, touch
-controls, battery, power off.
+1. Open `ios/Earshot.xcodeproj` in Xcode.
+2. Select the shared **Earshot** scheme and an installed iPhone or iPad simulator.
+3. Run. Choose **Try demo mode** to explore without physical headphones.
 
-**What stays with the Bose app, on purpose:** firmware updates (not worth the risk of a bad flash
-from a third-party app). Things a model's firmware doesn't allow third parties to write (renaming,
-editing the built-in modes, the auto-off timer on some firmware) are shown as such instead of
-silently failing.
+Development used the installed **Xcode 26.4.1 (17E202)** and **iOS 26.4** simulators. Deployment target is iOS 17.0+. No dependency manager is needed. A simulator build can run without signing:
 
-## Supported headphones
-
-Earshot reads the model from the headphones when it connects and, like the Bose app, takes most of
-what it shows from what the headphones report: how many built-in and custom modes they have, which
-of Wind Block, Immersive Audio and the ANC switch exist, the noise-level steps, the batteries and
-which settings answer. A product table only supplies names, form factor and first guesses. Per-model
-research: [docs/bose-models.md](docs/bose-models.md).
-
-| Model | Status | Noise control | Notes |
-|---|---|---|---|
-| QC Ultra Headphones (2nd Gen) | **Tested** on our hardware | Live | Everything above |
-| QC Ultra Headphones (1st Gen) | Reported working by a user (0.3.1) | Live | Built-in Quiet / Aware / Immersion, Wind Block, up to 7 custom modes |
-| QC Ultra Earbuds (2nd Gen) | Layout verified by bosectl | Live | Left / right / case battery; Quiet / Aware / Immersion / Cinema |
-| QC Ultra Earbuds (1st Gen) | Best guess, checked while connecting | Live, or via the active custom mode | LE Audio connection fixed in 0.4.0 (user report) |
-| QC Headphones (2nd Gen) | Best guess, checked while connecting | Live | Quiet / Aware / Immersion / Cinema, Wind Block, ANC off |
-| QC Headphones (1st Gen), QC SC | Layout verified by [bosectl](https://github.com/aaronsb/bosectl) | Via the active custom mode | No ANC on/off, no Immersive Audio; built-in Quiet / Aware. Control channel 8 or 9: both are tried |
-| QC45, QC SE | Layout verified by bosectl | Via the active custom mode | No ANC on/off, no Immersive Audio; Wind Block sets the level to 0 |
-| QC Earbuds II | Best guess, checked while connecting | Via the active custom mode | Quiet / Aware + 2 custom modes; left / right / case battery |
-| Ultra Open Earbuds (1st and 2nd Gen) | Partial, unverified | None (open-ear) | Stereo / Immersion (+ Cinema on the 2nd Gen); battery, EQ, settings |
-| QC Earbuds (2020) | **Basic**, layout verified by bosectl | Direct level (0–10) | Battery, EQ, settings, noise level, mode switching; saving custom modes untested |
-| Noise Cancelling Headphones 700 | **Basic**, best guess | Direct level (0–10) | Battery, EQ, settings and noise level; no listening modes |
-| **Skullcandy Crusher 1080 ANC** | **Experimental, never run on real headphones** | Quiet / Aware / Off, with a gain slider | A different protocol (Bragi BOS-RPC, not Bose BMAP): Immersive Audio (Still / Motion), sidetone and the **Crusher bass** card. See [docs/crusher-1080.md](docs/crusher-1080.md) |
-
-**Not supported:** QuietComfort 35 and 35 II (Bose Connect era; Earshot recognises them and shows
-the battery only) and the 2024 QuietComfort Earbuds (a different protocol and a separate Bose app).
-
-**Noise control, "via the active custom mode":** some headphones have no live noise setting, so
-Earshot saves the slider and Wind Block into the custom mode you are using (as the Bose app does).
-On the built-in Quiet / Aware modes, switch to a custom mode first.
-
-Reports from owners of the unverified models are very welcome: open an issue with what works and
-what doesn't (Tools, Lab, **Copy connection report** helps most). Demo mode can show how each model
-looks without the headphones (App preferences, Demo mode).
-
-## Requirements
-
-| | |
-|---|---|
-| Android | **9.0 (API 28) or newer**. Developed and tested on Android 17 / One UI 9 (a Samsung Galaxy); also exercised on Android 16–17 emulators. |
-| CPU | Any: arm64-v8a, armeabi-v7a, x86_64. The APK contains no native code, so one ~5 MB file fits every phone. |
-| Bluetooth | Classic Bluetooth (RFCOMM) for control, or an LE channel when the phone is on LE Audio (Android 10+). LE Audio features need a phone with LE Audio support (Android 13+). |
-| Headphones | One of the [supported models](#supported-headphones), paired in Android's Bluetooth settings. QC Ultra (2nd Gen) firmware 10.x tested. |
-| Bose app | **Closed or disabled** while Earshot is in use: only one app can hold the headphones' control channel and the Bose app grabs it in the background. Keep it for firmware updates. |
-| Optional | [Shizuku](https://shizuku.rikka.app/) (free, no root; start it via Wireless debugging on Android 11+) unlocks codec switching and the absolute-volume option. Everything else works without it. |
-| Permissions | Nearby devices (Bluetooth), notifications; microphone only for the mic check; location only if you create a Wi-Fi automation; usage access only for app-based automations. **No internet permission.** |
-
-## Install
-
-Download `earshot-<version>.apk` from the [Releases](../../releases) page and open it on the phone
-(allow "install unknown apps" for your browser or file manager once). The release APK is signed with
-a development key: Android will warn that the developer is unknown, which is expected for a
-sideloaded open-source app.
-
-Or build it yourself:
-
-```bash
-git clone https://github.com/HellzYeahh/earshot.git
-cd earshot
-./gradlew assembleDebug        # Windows: .\gw.cmd assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+```sh
+xcodebuild -project ios/Earshot.xcodeproj -scheme Earshot \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
+  -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build
 ```
 
-No headphones at hand? Tap **Try demo mode** on the welcome screen: virtual Bose headphones and
-earbuds built into the app answer the real protocol, so every screen works. Pick the model in App
-preferences (QC Ultra, QC Ultra Earbuds, QC Earbuds II, QC Earbuds, QC45, NC 700, Ultra Open,
-QC35 II, Crusher).
+For a physical iPhone, select your development team for both the app and Widget extension, use unique bundle identifiers if necessary, and provision the shared App Group `group.dev.earshot.ios` consistently with `EarshotShared` and the widget provider. Bluetooth/microphone permission descriptions are included. Headphone BLE transport, App Group provisioning, background behaviour, and real Bluetooth mic routing require hardware acceptance testing.
 
-## How it works
+The checked-in project is ready to open. If Swift files are added or removed, regenerate it with:
 
-- `protocol/` — pure-Kotlin implementation of BMAP (framing, the QC Ultra 2 function catalogue,
-  parsers/builders), unit-tested against captured frames from real headphones. `BoseModel.kt` holds
-  the product table (names, form factor, first-guess channel and layout); the rest is read from the
-  headphones at connect time.
-- `app/` — Kotlin + Jetpack Compose. Bluetooth RFCOMM and LE L2CAP transports with auto-reconnect, a foreground
-  service, the sound engine (`DynamicsProcessing`), codec control through a Shizuku user service,
-  call audio, widgets, tile, automations.
-- `docs/bmap-from-bose-app-13.3.4.md` — the full BMAP function table and payload layouts, derived
-  from the official app and verified against a scan of real hardware. Useful for anyone building
-  Bose tooling.
+```sh
+python3 ios/scripts/generate_project.py
+```
 
-## Honest limitations
+## Simulator tests
 
-- **LDAC / aptX Adaptive can't be added**: a codec needs a decoder inside the headphones. The QC
-  Ultra 2 ships SBC, AAC and aptX Adaptive; Samsung phones don't offer aptX Adaptive, so the pair
-  negotiates AAC or SBC.
-- **No microphone EQ**: Android doesn't let apps process call audio and the firmware has no mic
-  processing setting. What improves how you sound is a wideband call codec (mSBC / LC3 via LE Audio).
-- Pro EQ attaches to apps that announce their audio session (Spotify, YouTube Music, most players);
-  an experimental global option covers the rest on phones that allow it.
-- LE Audio reliability is the firmware's; Earshot makes the switch deterministic and shows the state.
+The test targets run actual XCTest and XCUITest in the installed simulator; they do not merely inspect source. Tests cover BMAP frames and safety guards, parser/capability handling, DSP and real offline audio rendering, local player lifecycle, persistent model/rule state, onboarding, navigation, custom-mode persistence, presets/player UI, microphone recording/playback/deletion, attribution, and light/dark screenshots.
 
-## Privacy & safety
+```sh
+xcrun simctl list devices available
+EARSHOT_SIMULATOR_ID=YOUR_SIMULATOR_UDID ios/scripts/test-simulator.sh
+```
 
-No network access, no accounts, no analytics. The Lab explorer only reads. Volume boost is capped
-and limited; the hearing-safety warning is deliberate. Codec switching and the absolute-volume
-option run through Shizuku with the shell user's permissions and change only Bluetooth audio
-settings; both are reversible from the app or Developer options.
+Results and screenshot attachments are stored in ignored `ios/TestResults/*.xcresult` bundles. Open a result bundle in Xcode to inspect individual assertions, logs, and screenshots. See [the validation report](docs/IOS_VALIDATION.md) for actual outcomes, environment, and limitations. Simulator tests cannot validate a physical Bose Bluetooth connection, sound through headphones, hearing safety, or vendor firmware behaviour.
 
-## Credits
+## Repository map and provenance
 
-Protocol knowledge builds on [bosectl](https://github.com/aaronsb/bosectl) and
-[Quiet Rebellion](https://github.com/MadEyez/quietrebellion) (both MIT) and on the headphone
-correction curve from [AutoEq](https://github.com/jaakkopasanen/AutoEq) (MIT). Thank you.
+| Path | Purpose |
+| --- | --- |
+| `ios/Earshot/` | AI-assisted native Swift port: app, UI, models, Bluetooth/protocol, audio, platform tools |
+| `ios/EarshotWidget/` | Native WidgetKit extension |
+| `ios/EarshotTests/`, `ios/EarshotUITests/` | Native simulator tests |
+| `app/`, `protocol/`, `dsp/`, Gradle files | Preserved original Android implementation by upstream contributors; reference for the port |
+| `docs/IOS_MIGRATION.md` | iOS parity matrix, challenges, Apple API evidence, hardware acceptance plan |
+| `docs/IOS_VALIDATION.md` | Recorded iOS build/test results and simulator screenshots |
+| Other `docs/*.md`, `docs/screenshots/` | Historical upstream Android notes and screenshots, labelled as such |
+| `docs/reference/` | Preserved third-party protocol/reference research, captures and licences; not original iOS work |
 
-## Licence
+## Credits and licence
 
-MIT. See `LICENSE`.
+- **[Original Earshot — HellzYeahh and contributors](https://github.com/HellzYeahh/earshot)**: the Android app and foundation of this port (MIT).
+- **[bosectl — aaronsb and contributors](https://github.com/aaronsb/bosectl)** and **[Quiet Rebellion — MadEyez and contributors](https://github.com/MadEyez/quietrebellion)**: Bose protocol and connection research (MIT), as credited by upstream.
+- **[AutoEq — Jaakko Pasanen and contributors](https://github.com/jaakkopasanen/AutoEq)**: headphone correction data (MIT); the QC Ultra curve selected by upstream uses Rtings/B&K 5128 measurements.
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and [LICENSE](LICENSE). Preserve those notices when redistributing. Bose, QuietComfort, Skullcandy, Apple, and other product names remain their owners' trademarks. No affiliation or endorsement is implied.

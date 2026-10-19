@@ -1,3 +1,5 @@
+> **Upstream Android reference — AI-assisted iOS port fork.** The original work and research are credited to [HellzYeahh/earshot and contributors](https://github.com/HellzYeahh/earshot). This historical document describes the original Android implementation, not verified iOS functionality. See [iOS migration and current limits](IOS_MIGRATION.md) and [full credits](../THIRD_PARTY_NOTICES.md).
+
 # BMAP as seen by the Bose app 13.3.4 (derived knowledge)
 
 Source: `reference/bose-app/base.apk`, package `com.bose.bosemusic` 13.3.4 (versionCode 35696,

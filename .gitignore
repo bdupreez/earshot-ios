@@ -20,5 +20,13 @@ local.properties
 .DS_Store
 Thumbs.db
 
+# Native iOS build and local Xcode state
+ios/build/
+ios/TestResults/
+*.xcuserstate
+xcuserdata/
+*.xcresult
+ios/Signing.xcconfig
+
 # Agent worktrees and local Claude settings
 .claude/

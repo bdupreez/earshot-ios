@@ -1,3 +1,9 @@
+# AI-assisted iOS port attempt — 0.1.0 (2026-10-19)
+
+This fork explores a native Swift/SwiftUI port of [Earshot by HellzYeahh and contributors](https://github.com/HellzYeahh/earshot). Original app, protocol/DSP work, documentation and licences are credited and preserved. Added native iOS app, WidgetKit extension, App Intents, BLE L2CAP transport, local audio EQ/player, microphone tools, persistent demo profiles, and simulator XCTest/XCUITest targets. Full hardware parity is not established; see [migration](docs/IOS_MIGRATION.md) and [validation](docs/IOS_VALIDATION.md).
+
+## Original Android changelog (preserved)
+
 # Changelog
 
 ## 0.4.0 — 2026-10-18

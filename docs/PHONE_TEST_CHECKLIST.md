@@ -1,3 +1,5 @@
+> **Upstream Android reference — AI-assisted iOS port fork.** The original work and research are credited to [HellzYeahh/earshot and contributors](https://github.com/HellzYeahh/earshot). This historical document describes the original Android implementation, not verified iOS functionality. See [iOS migration and current limits](IOS_MIGRATION.md) and [full credits](../THIRD_PARTY_NOTICES.md).
+
 # Earshot — phone test checklist
 
 How to install: plug the Galaxy in (USB debugging on) or keep Wireless debugging paired, then run
