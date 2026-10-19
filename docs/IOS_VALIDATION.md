@@ -16,9 +16,9 @@ The original application is [Earshot by HellzYeahh and contributors](https://git
 | Check | Actual outcome | Evidence |
 | --- | --- | --- |
 | Native app + Widget extension build | Passed with installed Xcode | `xcodebuild ... CODE_SIGNING_ALLOWED=NO build` |
-| iPhone simulator XCTest | **40 passed, 0 failed, 0 skipped** | `ios/TestResults/UnitTestsFinal.xcresult`; verified with `xcresulttool get test-results summary` |
+| iPhone simulator XCTest | **41 passed, 0 failed, 0 skipped** | `ios/TestResults/UnitTestsVerified.xcresult`; verified with `xcresulttool get test-results summary` |
 
-The XCTest count comprises 13 DSP/audio tests, 6 app-state tests, and 21 protocol/integration tests. No tests are marked as expected failures to obtain this result.
+The XCTest count comprises 14 DSP/audio tests, 6 app-state tests, and 21 protocol/integration tests. This final run includes the complete master-bypass regression and the automation-row product fix. No tests are marked as expected failures to obtain this result.
 
 ## What the checks establish
 
@@ -32,6 +32,7 @@ Screenshot attachments are retained in the `.xcresult` bundles. Selected exporte
 - A sustained overload test found that the initial peak-only limiter graph decayed toward silence in this installed simulator. The player now uses native dynamics compression followed by peak limiting. Regression checks require audible, finite, bounded output for sustained boosted tones, plus actual amplification of a quiet signal. This is a measured simulator finding; no universal claim about Apple hardware is made.
 - An asynchronous initial Bluetooth state event could clear restored demo device controls. The handler now keeps demo state, with a regression test that yields through the asynchronous callback.
 - Connection rules could run before a requested custom-mode frame arrived and falsely log a sent request. Rules now wait for their configured target mode, and unavailable manual/scheduled modes cannot log success.
+- Actual UI test video revealed that tapping Run now also opened the automation editor: SwiftUI List's automatic button style shared an action across sibling buttons. Separate borderless actions prevent the editor action from firing on a Run now tap.
 
 Earlier failed/diagnostic `.xcresult` bundles are retained locally alongside the final runs. The final result paths below identify the authoritative outcomes.
 

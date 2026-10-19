@@ -204,6 +204,8 @@ final class EarshotUITests: XCTestCase {
         button(startingWith: "Microphone check").tap()
         let record = app.buttons["recordMic"]
         XCTAssertTrue(record.waitForExistence(timeout: 5))
+        if app.buttons["Delete"].isEnabled { app.buttons["Delete"].tap() }
+        XCTAssertFalse(app.buttons["Play recording"].isEnabled)
         record.tap()
         let permission = XCUIApplication(bundleIdentifier: "com.apple.springboard").alerts.buttons["Allow"]
         if permission.waitForExistence(timeout: 3) {
@@ -213,6 +215,10 @@ final class EarshotUITests: XCTestCase {
         let ready = NSPredicate(format: "exists == true AND enabled == true")
         expectation(for: ready, evaluatedWith: playback)
         waitForExpectations(timeout: 15)
+        let seconds = app.staticTexts.matching(NSPredicate(format: "label ENDSWITH %@", " seconds")).firstMatch.label
+        let duration = Double(seconds.split(separator: " ").first.map(String.init) ?? "") ?? 0
+        XCTAssertGreaterThanOrEqual(duration, 7.5)
+        XCTAssertLessThanOrEqual(duration, 8.5)
         playback.tap()
         XCTAssertTrue(app.buttons["Stop playback"].waitForExistence(timeout: 5))
         app.buttons["Stop playback"].tap()
