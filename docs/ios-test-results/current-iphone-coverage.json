@@ -1,11 +1,11 @@
 {
-  "description": "Derived latest per-identifier iPhone results across the stated Xcode bundles, including separate permanent widget and Control Center acceptance tests. This is not one combined-run total. Earlier failures remain exported. Temporary system probes are excluded.",
+  "description": "Derived latest per-identifier iPhone results across the stated Xcode bundles, including separate permanent small-widget, medium-widget and Control Center acceptance tests. This is not one combined-run total. Earlier test failures and the medium visual-clipping history remain documented. Temporary probes are excluded.",
   "device": "iPhone 17 Pro",
   "runtime": "iOS 26.4.1 (23E254a)",
   "latestVerifiedCounts": {
     "unit": 166,
-    "system UI": 2,
-    "app UI": 29
+    "app UI": 29,
+    "system UI": 3
   },
   "latestFailed": 0,
   "tests": [
@@ -1009,13 +1009,13 @@
       "identifier": "EarshotUITests/ControlCenterSystemUITests/testControlCenterCycleOpensAppAndAppliesDemoMode",
       "kind": "system UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/ControlCenterSystemFinal.xcresult"
+      "bundle": "ios/TestResults/SystemMediumLayoutFinal.xcresult"
     },
     {
       "identifier": "EarshotUITests/DeepScanUITests/testSelectedAndDeepScanPlansAreLocalAndCannotSendInDemo",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/FeatureGapFinalFollowups.xcresult"
+      "bundle": "ios/TestResults/NativePlatformUIFinal.xcresult"
     },
     {
       "identifier": "EarshotUITests/DeviceSettingsUITests/testSelfVoicePersistencePreservesLevelAndFiftyPercentThresholdSurvivesRelaunch",
@@ -1123,7 +1123,7 @@
       "identifier": "EarshotUITests/FeatureGapUITests/testMultiActionRuleAppliesAwareNoiseAndLocalPreset",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/FeatureGapAcceptance.xcresult"
+      "bundle": "ios/TestResults/NativePlatformUIFinal.xcresult"
     },
     {
       "identifier": "EarshotUITests/FeatureGapUITests/testNativePlayerSeeksProgressesAndComparesOriginal",
@@ -1159,13 +1159,13 @@
       "identifier": "EarshotUITests/FeatureGapUITests/testWeekdayScheduleAndReminderChoicePersistAndExplainShortcuts",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/FeatureGapAcceptance.xcresult"
+      "bundle": "ios/TestResults/NativePlatformUIFinal.xcresult"
     },
     {
       "identifier": "EarshotUITests/FeatureGapUITests/testWiFiAccessIsDisabledInDemoAndNavigationDoesNotPrompt",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/NativeUIRepairsFinal.xcresult"
+      "bundle": "ios/TestResults/NativePlatformUIFinal.xcresult"
     },
     {
       "identifier": "EarshotUITests/ModeCycleUITests/testCustomConfiguredModeCycleWrapsAndPersistsInDemo",
@@ -1189,7 +1189,13 @@
       "identifier": "EarshotUITests/WidgetSystemUITests/testSmallWidgetCycleOpensAppAndAppliesDemoMode",
       "kind": "system UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/WidgetSystemFinal.xcresult"
+      "bundle": "ios/TestResults/WidgetSmallLayoutFinal.xcresult"
+    },
+    {
+      "identifier": "EarshotUITests/WidgetSystemUITests/testWidgetMediumAwareOpensAppAndAppliesDemoMode",
+      "kind": "system UI",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SystemMediumLayoutFinal.xcresult"
     }
   ]
 }

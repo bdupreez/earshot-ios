@@ -20,7 +20,7 @@ The public iOS route available to this port is the Bose BLE connection-oriented 
 
 A Classic-only BMAP device cannot be made compatible merely by renaming a UUID or tunnelling arbitrary RFCOMM through a GATT characteristic. External Accessory is a separate MFi path that requires accessory-manufacturer cooperation and an authorized protocol; the presence of Bluetooth audio pairing alone does not grant it. The fork does not have that authorization. [Apple, External Accessory](https://developer.apple.com/documentation/externalaccessory).
 
-Skullcandy Crusher 1080 is a separate Bragi BOS-RPC stack over Classic RFCOMM, with PPP framing and optional authenticated key exchange. A Bose BMAP implementation cannot control it. Its iOS control transport and secure-session port are outstanding; demo support must remain labelled simulated.
+Skullcandy Crusher 1080 is a separate Bragi BOS-RPC stack over Classic RFCOMM, with PPP framing and optional authenticated key exchange. A Bose BMAP implementation cannot control it. Its documented RFCOMM link has no supported public iOS transport here. The secure-session implementation remains unported pending a validated manufacturer-supported accessory or LE path; demo support must remain labelled simulated.
 
 ### Audio and calls
 
@@ -46,7 +46,7 @@ Widgets and Control Center actions are feasible on iOS through WidgetKit and App
 
 ## Feature parity matrix
 
-Status meanings: **Native** is implemented for local iOS behavior; **Partial** has a working subset; **Hardware pending** has a public transport/code path but lacks physical validation; **Blocked** requires a capability unavailable to this ordinary iOS app; **Outstanding** is feasible work not delivered. Demo behavior is always simulated.
+Status meanings: **Native** is implemented for local iOS behavior; **Partial** has a working subset; **Hardware pending** has a public transport/code path but lacks physical validation; **Blocked** requires a capability unavailable to this ordinary iOS app. Demo behavior is always simulated.
 
 | Android capability | iOS status | What this means in this fork |
 |---|---|---|
@@ -87,9 +87,9 @@ Status meanings: **Native** is implemented for local iOS behavior; **Partial** h
 | Day/time background schedule | Partial | ISO weekdays, DST-safe occurrence latching and foreground execution; optional system reminders open the app after a user tap. Exact suspended command execution remains unavailable. |
 | Wi-Fi/other-app foreground triggers | Partial/blocked | Optional foreground SSID join rules with explicit precise While Using authorization, once-per-join latching and deferred capability preflight. Eight foreground Shortcuts actions support user-created Shortcuts personal automations. Signed physical SSID access is unverified; unrestricted other-app/background watchers remain unavailable. |
 | Low-battery notification | Hardware pending | Native permission/helper integrated with actual battery/charging reports and threshold recovery; Off or 5–50% in 5% steps. No alerts from demo data; physical delivery remains unverified. |
-| Widget and Quick Settings replacement | Partial | WidgetKit shows timestamped battery/per-bud/minutes snapshots with stale-state indication. Eight Shortcuts actions and iOS 18+ Quiet/Aware/Cycle ControlWidget request buttons use a bounded atomic expiring App Group queue and foreground capability validation. Actual small-widget Cycle and Control Center Cycle opened the app and applied the next demo mode in Simulator. Medium widgets, Siri and signed-device delivery remain pending. |
-| Configurable one-tap mode cycle | Partial | User-selected configured slots persist in slot order; automatic uses favorites, then presets/available modes. Widget, Control Center and Shortcut requests resolve the next slot against current foreground device reports, with stale/empty choices explained. System-surface delivery needs acceptance. |
-| Skullcandy Crusher bass/security | Outstanding/blocked | Simulated model only; Bragi secure transport is not ported and Classic transport is unavailable. |
+| Widget and Quick Settings replacement | Partial | WidgetKit shows timestamped battery/per-bud/minutes snapshots with stale-state indication. Eight Shortcuts actions and iOS 18+ Quiet/Aware/Cycle ControlWidget request buttons use a bounded atomic expiring App Group queue and foreground capability validation. Actual small-widget Cycle, medium-widget Aware and Control Center Cycle opened the app and applied their demo mode in Simulator. The medium layout now passes native viewport checks with three earbud batteries after visual review caught clipping. Siri and signed-device delivery remain pending. |
+| Configurable one-tap mode cycle | Partial | User-selected configured slots persist in slot order; automatic uses favorites, then presets/available modes. Widget, Control Center and Shortcut requests resolve the next slot against current foreground device reports, with stale/empty choices explained. Small/medium widget and Control Center actions are verified in Simulator; Siri and signed-device delivery still need acceptance. |
+| Skullcandy Crusher bass/security | Blocked / transport research | Simulated model only. [Upstream documents](crusher-1080.md) a Classic RFCOMM data-service link, unavailable to this ordinary iOS app. The Bragi security/codec path is unported; a validated manufacturer-supported iOS accessory or LE transport would be needed before revisiting physical controls. |
 | Credits/licences | Native | Original Earshot provenance, AI-assisted migration disclosure and upstream/reference acknowledgements. |
 
 The table is deliberately stricter than a screenshot checklist. A button existing in a demo does not establish a hardware feature, and an unavailable API must not be replaced with a pretend success message.

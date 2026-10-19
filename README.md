@@ -21,7 +21,7 @@ Implemented areas include:
 - Home device-name quick switching, once-per-release notes, and original-project attribution in onboarding, About, diagnostics, and documentation.
 - Read-only documented/selected/deep protocol discovery, a separately consented experimental Print console, reported latency with session-original reset, and device-reported sidetone persistence. All physical effects remain unverified.
 
-This is **not complete Android feature parity**. [The migration matrix](docs/IOS_MIGRATION.md) records implemented, conditional, missing, and platform-restricted features. In particular, iOS does not offer a direct public replacement for Android's arbitrary RFCOMM sockets, Shizuku codec controls, global other-app EQ, call-volume boosting, or unrestricted app/background automation. Compatible BLE control services must be tested on physical headphones. Crusher's Bragi transport remains outstanding.
+This is **not complete Android feature parity**. [The migration matrix](docs/IOS_MIGRATION.md) records implemented, conditional, missing, and platform-restricted features. In particular, iOS does not offer a direct public replacement for Android's arbitrary RFCOMM sockets, Shizuku codec controls, global other-app EQ, call-volume boosting, or unrestricted app/background automation. Compatible BLE control services must be tested on physical headphones. Crusher's documented Bragi link uses Classic RFCOMM; this fork has no supported iOS control transport for it.
 
 ## Actual iOS simulator captures
 
@@ -66,7 +66,9 @@ EARSHOT_SIMULATOR_ID=YOUR_SIMULATOR_UDID ios/scripts/test-simulator.sh
 
 **Baseline acceptance (before the feature-gap pass):** 53 tests passed (41 unit + 12 UI), with zero failures or skips on the installed iPhone 17 Pro simulator. See the validation report below for secondary-device checks and remaining limits.
 
-**Current feature-pass verification:** 166 native unit tests and 29 distinct app UI journeys have passing latest results across the documented installed-Xcode Simulator runs. The final repair run passed 161/161 with no failures or skips; earlier diagnostic failures remain recorded. [Per-case coverage and exact run outcomes](docs/IOS_VALIDATION.md) explain the aggregate rather than claiming a single combined green run. Separate actual small-widget and Control Center tests also passed: each opened Earshot and applied the next demo mode. Expanded iPad integration passed 168/171; focused repairs and medium-widget checks are pending at this checkpoint.
+**Current feature-pass verification:** all **166 native unit tests passed together**. Across the explicitly documented runs, **29 app UI journeys and three actual system journeys** have passing latest results: small-widget Cycle, medium-widget Aware and Control Center Cycle. The corrected medium layout also passes viewport checks with three earbud batteries. [Exact outcomes and per-case coverage](docs/IOS_VALIDATION.md) preserve earlier failures and make clear this is not one combined green run.
+
+The final iPad repair run passed **169/169** (all 166 units plus three UI cases). Twelve representative iPad app UI journeys have passing latest results across the stated integration/repair runs; the complete iPhone UI suite was not run on iPad.
 
 Results and screenshot attachments are stored in ignored `ios/TestResults/*.xcresult` bundles. Open a result bundle in Xcode to inspect individual assertions, logs, and screenshots. See [the validation report](docs/IOS_VALIDATION.md) for actual outcomes, environment, and limitations. Simulator tests cannot validate a physical Bose Bluetooth connection, sound through headphones, hearing safety, or vendor firmware behaviour.
 

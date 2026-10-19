@@ -1,0 +1,42 @@
+{
+  "devicesAndConfigurations": [
+    {
+      "device": {
+        "architecture": "arm64",
+        "deviceId": "F0735D38-82C8-4F9F-B319-410374B0B2B7",
+        "deviceName": "iPad Pro 11-inch (M5)",
+        "modelName": "iPad Pro 11-inch (M5)",
+        "osBuildNumber": "23E254a",
+        "osVersion": "26.4.1",
+        "platform": "iOS Simulator"
+      },
+      "expectedFailures": 0,
+      "failedTests": 0,
+      "passedTests": 169,
+      "skippedTests": 0,
+      "testPlanConfiguration": {
+        "configurationId": "1",
+        "configurationName": "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription": "Earshot \u00b7 Built with macOS 26.4.1",
+  "expectedFailures": 0,
+  "failedTests": 0,
+  "finishTime": 1792392389.99,
+  "passedTests": 169,
+  "result": "Passed",
+  "skippedTests": 0,
+  "startTime": 1792392049.785,
+  "statistics": [],
+  "testFailures": [],
+  "title": "Test - Earshot",
+  "topInsights": [
+    {
+      "category": "Longest Test Runs",
+      "impact": "51% of duration",
+      "text": "4 longest test runs with outlier durations exceeding 0.61s (three standard deviations)"
+    }
+  ],
+  "totalTestCount": 169
+}

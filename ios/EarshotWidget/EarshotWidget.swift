@@ -39,6 +39,19 @@ struct EarshotWidgetView: View {
     private var stale: Bool { snapshot?.isStale(at: entry.date) ?? true }
 
     var body: some View {
+        Group {
+            if family == .systemMedium { mediumLayout }
+            else { stackedLayout }
+        }
+        .foregroundStyle(Color(red: 0.04, green: 0.18, blue: 0.16))
+        .containerBackground(for: .widget) { Color(red: 0.88, green: 0.96, blue: 0.94) }
+        .widgetURL(URL(string: "earshot://home"))
+        .privacySensitive()
+    }
+
+    // Preserve the verified small-widget layout. Medium has the same short height,
+    // so its additional profile/minutes/hint/actions need horizontal space instead.
+    private var stackedLayout: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Label("earshot", systemImage: "waveform").font(.caption.weight(.bold))
@@ -84,10 +97,71 @@ struct EarshotWidgetView: View {
                     .accessibilityLabel("Cycle configured listening modes")
             }.buttonStyle(.plain)
         }
-        .foregroundStyle(Color(red: 0.04, green: 0.18, blue: 0.16))
-        .containerBackground(for: .widget) { Color(red: 0.88, green: 0.96, blue: 0.94) }
-        .widgetURL(URL(string: "earshot://home"))
-        .privacySensitive()
+    }
+
+    private var mediumLayout: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Label("earshot", systemImage: "waveform").font(.caption.weight(.bold))
+                Spacer(minLength: 3)
+                if snapshot?.demo == true { Text("DEMO").font(.caption2.weight(.bold)).foregroundStyle(.secondary) }
+            }
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(snapshot.map { $0.connected ? $0.modeName : "Disconnected" } ?? "Open Earshot")
+                        .font(.title3.bold()).lineLimit(1)
+                    if let snapshot {
+                        Text(snapshot.profileName).font(.caption2).lineLimit(2).foregroundStyle(.secondary)
+                    }
+                }
+                .frame(minWidth: 86, maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+                if !batteries.isEmpty { mediumBatteries.layoutPriority(batteries.count > 2 ? 1 : 0) }
+            }
+            Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 3) {
+                    if let snapshot {
+                        Text(stale ? "Older app snapshot" : "App snapshot")
+                        Text(snapshot.updatedAt, style: .relative)
+                    } else { Text("No saved app snapshot") }
+                }
+                .font(.caption2).lineLimit(1)
+                .foregroundStyle(stale ? Color(red: 0.50, green: 0.24, blue: 0.05) : Color(red: 0.22, green: 0.34, blue: 0.31))
+                Text(stale ? "Open app to refresh cycle" : snapshot?.cycleNextModeName.map { "Cycle snapshot next: \($0)" } ?? "Configure Mode cycle in Earshot")
+                    .font(.caption2).lineLimit(1).foregroundStyle(.secondary)
+            }
+            HStack(spacing: 8) {
+                Button(intent: OpenEarshotListeningIntent(target: .quiet)) { Label("Quiet", systemImage: "moon") }
+                Spacer(minLength: 0)
+                Button(intent: OpenEarshotListeningIntent(target: .aware)) { Label("Aware", systemImage: "sun.max") }
+                Spacer(minLength: 0)
+                Button(intent: OpenEarshotListeningIntent(target: .cycle)) { Label("Cycle", systemImage: "arrow.triangle.2.circlepath") }
+                    .accessibilityLabel("Cycle configured listening modes")
+            }
+            .font(.caption.weight(.semibold)).buttonStyle(.plain)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+    }
+
+    private var mediumBatteries: some View {
+        HStack(alignment: .top, spacing: 8) {
+            ForEach(batteries) { battery in
+                VStack(alignment: .leading, spacing: 1) {
+                    // Keep full names/minutes in accessibility while truncating long visual
+                    // labels. Values retain native readable fonts without scaling down.
+                    Text(battery.name).font(.caption2).lineLimit(1)
+                    Text(battery.validPercent.map { "\($0)%" } ?? "—")
+                        .font(.callout.weight(.semibold).monospacedDigit()).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                    if let remaining = battery.remainingDescription {
+                        Text(remaining).font(.caption2.monospacedDigit()).lineLimit(1).foregroundStyle(.secondary)
+                    }
+                }
+                .frame(minWidth: 34, maxWidth: .infinity, alignment: .leading)
+                .accessibilityElement(children: .combine)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
