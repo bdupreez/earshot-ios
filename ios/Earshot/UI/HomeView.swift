@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject var store: AppStore
+    @State private var switchingHeadphones = false
     var body: some View {
         Page {
             HStack {
@@ -16,7 +17,13 @@ struct HomeView: View {
                     if let battery = store.battery { Label("\(battery)%", systemImage: "battery.75percent").font(.subheadline.weight(.medium)).monospacedDigit() }
                 }
                 HeadphoneArtwork(earbuds: store.profile.earbuds)
-                Text(store.displayDeviceName).font(.title2.weight(.bold)).frame(maxWidth: .infinity)
+                Button { switchingHeadphones = true } label: {
+                    HStack(spacing: 8) {
+                        Text(store.displayDeviceName).font(.title2.weight(.bold))
+                        Image(systemName: "chevron.up.chevron.down").font(.caption.weight(.semibold)).accessibilityHidden(true)
+                    }.frame(maxWidth: .infinity, minHeight: 44)
+                }.buttonStyle(.plain).accessibilityIdentifier("headphoneSwitcher")
+                    .accessibilityHint("Choose another headphone or demo profile.")
                 Text(store.saved.demo ? "A virtual device. Changes stay in the demo." : store.bluetooth.status).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 if let time = store.remainingTimeDescription { Text("Reported listening time: \(time)\(store.saved.demo ? " · simulated" : "")").font(.caption).foregroundStyle(.secondary) }
                 if !store.batteries.isEmpty { HStack { ForEach(store.batteries.keys.sorted(), id: \.self) { key in VStack(spacing: 4) { Text("\(store.batteries[key]!)%").font(.headline); Text(key).font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity) } } }
@@ -59,5 +66,53 @@ struct HomeView: View {
         }.navigationTitle("earshot").navigationBarTitleDisplayMode(.inline)
             .toolbar { if store.saved.demo { Text("DEMO").font(.caption2.weight(.bold)).foregroundStyle(Color.earshot) } }
             .refreshable { store.refresh() }
+            .sheet(isPresented: $switchingHeadphones) { HomeHeadphoneSwitcher().environmentObject(store) }
+    }
+}
+
+/// AI-assisted native counterpart of HellzYeahh/earshot's Home quick switcher (MIT).
+/// Real devices retain the existing verified discovery/connection flow; demo profiles stay local.
+private struct HomeHeadphoneSwitcher: View {
+    @EnvironmentObject var store: AppStore
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            Group {
+                if store.saved.demo { demoProfiles }
+                else { ConnectionView() }
+            }
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
+    }
+
+    private var demoProfiles: some View {
+        List {
+            Section {
+                ForEach(DeviceProfile.all) { profile in
+                    Button {
+                        if store.saved.profileID != profile.id { store.selectProfile(profile.id) }
+                        dismiss()
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: profile.earbuds ? "earbuds" : "headphones").foregroundStyle(Color.earshot)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(store.saved.demoDeviceNames[profile.id] ?? profile.name).foregroundStyle(.primary)
+                                Text("Simulated demo profile").font(.caption).foregroundStyle(.secondary)
+                            }
+                            Spacer()
+                            if store.saved.profileID == profile.id {
+                                Image(systemName: "checkmark").foregroundStyle(Color.earshot).accessibilityHidden(true)
+                            }
+                        }.frame(minHeight: 44)
+                    }
+                    .accessibilityIdentifier("switchDemo.\(profile.id)")
+                    .accessibilityValue(store.saved.profileID == profile.id ? "Selected" : "Not selected")
+                }
+            } header: { Text("Demo profiles") } footer: {
+                Text("These are virtual headphones. Switching profiles changes only the demo and never starts Bluetooth discovery.")
+            }
+        }
+        .navigationTitle("Switch headphones").navigationBarTitleDisplayMode(.inline)
     }
 }

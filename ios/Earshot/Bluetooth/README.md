@@ -14,6 +14,42 @@ spaced 80 ms apart. A connection is published as usable only after a device-side
 response to GET `[0.1]`. Opening GATT or L2CAP alone never marks it connected. Every outgoing packet
 passes the write guard: firmware/authentication writes and destructive reset/wipe commands are blocked.
 
+Controls use parsed capability and status reports rather than assuming that every Bose model accepts
+the same functions. The upstream product catalogue and model-name matching supply fallback labels
+and known-absent functions; valid device reports take precedence. Refresh skips functions explicitly
+refused by the device. A queued write is not proof that a setting changed: pending operations wait for
+the relevant device report or show an error/timeout.
+
+Noise control can use the current-settings command, an editable mode, or the upstream CNC `[1.5]`
+path when supported. Direct CNC requires a valid reported step range, converts the UI's 0–10 scale
+to that range, preserves a non-toggleable enable flag and compares the reply with the quantized
+target. Optional read-only reports include microphone mute, operation mode, button events,
+LE Audio support/preference, connection availability and paired-source profiles. Unknown values
+remain hidden. These reports do not establish iOS microphone permission, the negotiated audio
+codec or an iPhone's active LE Audio transport.
+
+Protocol diagnostics offers a foreground GET-only scan of a fixed upstream address list. It does
+not probe firmware, authentication, guessed opcodes or START-only functions. Each request waits
+up to one second for a matching STATUS/ERROR/RESULT. Ordinary transport logs and shared scan
+results redact paired-source, authentication and Print blocks plus designated name/serial/mode
+fields. This is targeted protocol redaction rather than a guarantee about unknown payloads.
+
+The separate experimental Print console implements only upstream `bind`, `unbind`, `verbosity`
+and `output` packet shapes. Opening the page sends nothing; local validation sends nothing.
+Sending requires explicit confirmation and a verified live control channel. Firmware argument
+semantics remain unknown and untested on iOS hardware. Arguments are limited to 255 UTF-8 bytes
+on one line, with control characters rejected. Collection ends after a 500 ms quiet gap, a
+3-second no-response timeout, 5 seconds total or 64 response frames. The in-memory transcript is
+bounded to 100 entries/24,000 characters, with each entry limited to 1,024 characters. Leaving the
+page, backgrounding or disconnecting stops collection and clears consent. Stopping collection
+does not undo a command or disable firmware logging.
+
+Print replies are intentionally visible as readable UTF-8 or hex in that console and may contain
+private device information. Its explicit Share action warns about this; the console transcript
+is not automatically redacted or persisted. Idle Print traffic cannot fill the ordinary log or
+update app state. Demo and Simulator supply no synthetic console replies, and the console never
+reports success merely because a packet was queued.
+
 The Android app's confirmed hardware connection was a classic RFCOMM socket. There is no equivalent
 arbitrary RFCOMM socket in the iOS Core Bluetooth API. Core Bluetooth's Classic support means GATT
 over BR/EDR; it does not make an Android RFCOMM channel accessible. External Accessory is a different

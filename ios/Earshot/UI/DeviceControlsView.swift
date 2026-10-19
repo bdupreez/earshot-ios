@@ -115,6 +115,7 @@ struct DeviceControlsView: View {
                 }
                 .disabled(!canWriteLatency)
                 .accessibilityIdentifier("latencyValue")
+                .accessibilityValue("\(latencyDraft) device units")
                 Button("Review experimental latency write") { pendingLatency = latencyDraft; confirmLatency = true }
                     .disabled(!canWriteLatency || !range.contains(latencyDraft))
                     .accessibilityIdentifier("reviewLatencyWrite")

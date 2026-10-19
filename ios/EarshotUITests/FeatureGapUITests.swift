@@ -51,7 +51,10 @@ final class FeatureGapUITests: XCTestCase {
         assertValue(app.buttons["presetPicker"], contains: "Flat")
         tap(app.buttons["presetPicker"])
         XCTAssertFalse(app.buttons["Morning library"].exists)
-        dismissMenu()
+        // A SwiftUI picker menu is exposed as a collection view on this OS,
+        // rather than the confirmation popover's dismissal region. Selecting
+        // the already-active item closes that native picker without ambiguity.
+        app.buttons["Flat"].tap()
         screenshot("User preset deleted and Flat persisted after relaunch")
     }
 
@@ -344,9 +347,13 @@ final class FeatureGapUITests: XCTestCase {
         let before = reported.label
         XCTAssertTrue(before.contains("210"))
         let stepper = app.steppers["latencyValue"]
-        reveal(stepper)
+        let increment = stepper.buttons["latencyValue-Increment"]
+        XCTAssertTrue(increment.waitForExistence(timeout: 5), app.debugDescription)
+        // The Stepper container is descriptive; its native Increment button is
+        // the actionable hit target. Reveal that button rather than the label.
+        reveal(increment)
         XCTAssertTrue(stepper.isEnabled)
-        stepper.buttons["Increment"].tap()
+        increment.tap()
         tap(app.buttons["reviewLatencyWrite"])
         let confirmation = app.alerts["Send an experimental latency write?"]
         XCTAssertTrue(confirmation.waitForExistence(timeout: 5))
@@ -583,24 +590,37 @@ final class FeatureGapUITests: XCTestCase {
     private func replaceText(_ field: XCUIElement, with value: String, dismissKeyboard: Bool = true) {
         tap(field, direction: .towardTop)
         if let text = field.value as? String, !text.isEmpty, text != field.placeholderValue {
-            // A center tap can leave the caret halfway through an existing name.
-            // Use UIKit's actual selection menu rather than deleting only its prefix.
-            field.press(forDuration: 1.1)
-            let selectAllItem = app.menuItems["Select All"]
-            let selectAllButton = app.buttons["Select All"]
-            let selectAll = selectAllItem.exists ? selectAllItem : selectAllButton
-            if selectAll.waitForExistence(timeout: 2), selectAll.isHittable {
-                selectAll.tap()
-                field.typeText(XCUIKeyboardKey.delete.rawValue)
+            if app.alerts.firstMatch.exists {
+                // Wait for keyboard focus before sending public Select All keys.
+                // Selection-menu items outside UIAlert trigger XCTest's default
+                // interruption handler, so keep this action within the text field.
+                XCTAssertTrue(app.keyboards.firstMatch.waitForExistence(timeout: 5))
+                for _ in 0..<2 {
+                    field.typeKey("a", modifierFlags: .command)
+                    field.typeText(XCUIKeyboardKey.delete.rawValue)
+                    let current = field.value as? String ?? ""
+                    if current.isEmpty || current == field.placeholderValue { break }
+                }
             } else {
-                // A single-word field may already be fully selected and offer Cut
-                // instead of Select All. Verify the field is empty before entering a fixture.
-                let cutItem = app.menuItems["Cut"]
-                let cutButton = app.buttons["Cut"]
-                let cut = cutItem.exists ? cutItem : cutButton
-                XCTAssertTrue(cut.waitForExistence(timeout: 2), app.debugDescription)
-                XCTAssertTrue(cut.isHittable)
-                cut.tap()
+                // A center tap can leave the caret halfway through an existing name.
+                // Use UIKit's actual selection menu rather than deleting only its prefix.
+                field.press(forDuration: 1.1)
+                let selectAllItem = app.menuItems["Select All"]
+                let selectAllButton = app.buttons["Select All"]
+                let selectAll = selectAllItem.exists ? selectAllItem : selectAllButton
+                if selectAll.waitForExistence(timeout: 2), selectAll.isHittable {
+                    selectAll.tap()
+                    field.typeText(XCUIKeyboardKey.delete.rawValue)
+                } else {
+                    // A single-word field may already be fully selected and offer Cut
+                    // instead of Select All. Verify the field is empty before entering a fixture.
+                    let cutItem = app.menuItems["Cut"]
+                    let cutButton = app.buttons["Cut"]
+                    let cut = cutItem.exists ? cutItem : cutButton
+                    XCTAssertTrue(cut.waitForExistence(timeout: 2), app.debugDescription)
+                    XCTAssertTrue(cut.isHittable)
+                    cut.tap()
+                }
             }
             let cleared = field.value as? String ?? ""
             XCTAssertTrue(cleared.isEmpty || cleared == field.placeholderValue,

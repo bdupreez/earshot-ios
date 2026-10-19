@@ -38,7 +38,7 @@ These are native simulator captures of this AI-assisted port. Demo device values
 2. Select the shared **Earshot** scheme and an installed iPhone or iPad simulator.
 3. Run. Choose **Try demo mode** to explore without physical headphones.
 
-Development used the installed **Xcode 26.4.1 (17E202)** and **iOS 26.4** simulators. Deployment target is iOS 17.0+. No dependency manager is needed. A compilation-only simulator build can run without signing (App Group integration tests require the local ad hoc signing used by the test script):
+Development used the installed **Xcode 26.4.1 (17E202)** and **iOS 26.4.1** Simulator runtime (iOS 26.4 SDK). Deployment target is iOS 17.0+. No dependency manager is needed. A compilation-only simulator build can run without signing (App Group integration tests require the local ad hoc signing used by the test script):
 
 ```sh
 xcodebuild -project ios/Earshot.xcodeproj -scheme Earshot \
@@ -65,7 +65,7 @@ EARSHOT_SIMULATOR_ID=YOUR_SIMULATOR_UDID ios/scripts/test-simulator.sh
 
 **Baseline acceptance (before the feature-gap pass):** 53 tests passed (41 unit + 12 UI), with zero failures or skips on the installed iPhone 17 Pro simulator. See the validation report below for secondary-device checks and remaining limits.
 
-**Feature-gap checkpoint:** 125 native unit tests passed with zero failures/skips after adding preset lifecycle/seek, multi-action rules, reconnect/restoration, device management, richer widgets, Shortcuts/Control Center, reminders, Wi-Fi/latency models and actual Simulator App Group access. The expanded22-scenario UI acceptance is pending at this checkpoint; see the validation report for current scope.
+**Feature-gap checkpoint:** 136 native unit tests passed with zero failures/skips after adding preset lifecycle/seek, multi-action rules, reconnect/restoration, device management, richer widgets, Shortcuts/Control Center, reminders, Wi-Fi/latency models and actual Simulator App Group access. Final expanded UI acceptance is pending at this checkpoint; see the validation report for current scope.
 
 Results and screenshot attachments are stored in ignored `ios/TestResults/*.xcresult` bundles. Open a result bundle in Xcode to inspect individual assertions, logs, and screenshots. See [the validation report](docs/IOS_VALIDATION.md) for actual outcomes, environment, and limitations. Simulator tests cannot validate a physical Bose Bluetooth connection, sound through headphones, hearing safety, or vendor firmware behaviour.
 

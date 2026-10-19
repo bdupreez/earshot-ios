@@ -240,6 +240,19 @@ final class AutomationTests: XCTestCase {
         XCTAssertNotNil(f.store.message)
     }
 
+    @MainActor func testLegacyDemoSelectionUsesUpstreamSlotsAndEarbudWindAbsences() {
+        let f = fixture(); defer { f.defaults.removePersistentDomain(forName: f.suite) }
+        f.store.setDemo(true)
+        for id in ["qc", "qc45", "budsII", "buds2020"] {
+            f.store.selectProfile(id)
+            XCTAssertEqual(f.store.saved.modes.count, 4, "Upstream defines two presets and two custom slots for \(id).")
+            XCTAssertEqual(f.store.saved.modes.filter { !$0.builtIn }.count, 2)
+        }
+        XCTAssertFalse(f.store.profile.wind)
+        f.store.selectProfile("budsII")
+        XCTAssertFalse(f.store.profile.wind, "Legacy earbuds must not inherit the headphone Wind Block default.")
+    }
+
     @MainActor private func fixture() -> (store: AppStore, defaults: UserDefaults, suite: String) {
         let suite = "EarshotAutomationTests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suite)!
