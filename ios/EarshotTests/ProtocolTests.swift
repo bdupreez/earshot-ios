@@ -177,6 +177,121 @@ final class ProtocolTests: XCTestCase {
     }
 
     @MainActor
+    func testCompactModeDetailRequestsAreBoundedIncludingReentrantReplies() async throws {
+        let suite = "earshot.protocol-tests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let compact = compactModeReport(index: 4)
+        var sent: [BmapPacket] = []
+        var onSend: ((BmapPacket) -> Void)?
+        let store = AppStore(defaults: defaults, arguments: [], packetSender: { packet in
+            sent.append(packet); onSend?(packet)
+        })
+        await Task.yield(); await Task.yield()
+        onSend = { [weak store] packet in
+            // Bound the fixture itself so a regression fails rather than
+            // overflowing the stack on the old synchronous request/reply loop.
+            if packet.address == BmapAddress(31, 6), sent.count < 8 {
+                store?.receive(BmapPacket(block: 31, function: 6, operation: .result, payload: compact.payload))
+            }
+        }
+        for _ in 0..<300 { store.receive(compact) }
+        XCTAssertEqual(sent, [BmapPacket(block: 31, function: 6, operation: .get, payload: Data([4]))])
+        XCTAssertNil(store.liveModes[4], "A compact record cannot establish an editable wire layout")
+        onSend = nil
+        store.receive(compactModeReport(index: 5))
+        for _ in 0..<300 { store.receive(compactModeReport(index: 5)) }
+        XCTAssertEqual(sent.map(\.payload), [Data([4]), Data([5])], "Each distinct slot receives at most one automatic detail read")
+        XCTAssertFalse(store.bluetooth.isConnected, "A sender fixture must not invent a physical connection")
+    }
+
+    @MainActor
+    func testRefusedModeDetailReadsStaySuppressedUntilExplicitRefresh() async throws {
+        for code: UInt8 in [3, 4, 5] {
+            let suite = "earshot.protocol-tests.\(UUID().uuidString)"
+            let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+            defer { defaults.removePersistentDomain(forName: suite) }
+            var sent: [BmapPacket] = []
+            var onSend: ((BmapPacket) -> Void)?
+            let store = AppStore(defaults: defaults, arguments: [], packetSender: { packet in
+                sent.append(packet); onSend?(packet)
+            })
+            await Task.yield(); await Task.yield()
+            store.receive(compactModeReport(index: 4))
+            store.receive(BmapPacket(block: 31, function: 6, operation: .error, payload: Data([code])))
+            for _ in 0..<100 {
+                store.receive(compactModeReport(index: 4))
+                store.receive(compactModeReport(index: 5))
+            }
+            XCTAssertEqual(sent.filter { $0.address == BmapAddress(31, 6) }.count, 1, "Refusal \(code) must not be retried by repeated/dump reports")
+
+            onSend = { [weak store] packet in
+                if packet == BoseCommands.subscribeNotifications { store?.receive(self.compactModeReport(index: 5)) }
+            }
+            store.refresh()
+            await Task.yield(); await Task.yield()
+            // An unsupported whole block remains disabled for the connection;
+            // other refusals may be explicitly retried once by the user.
+            let expected = code == 3 ? 1 : 2
+            XCTAssertEqual(sent.filter { $0.address == BmapAddress(31, 6) && $0.operation == .get }.count, expected)
+            for _ in 0..<100 { store.receive(compactModeReport(index: 5)) }
+            XCTAssertEqual(sent.filter { $0.address == BmapAddress(31, 6) && $0.operation == .get }.count, expected)
+            onSend = nil
+        }
+    }
+
+    @MainActor
+    func testFullModeReportPreservesEditableLayoutAcrossCompactRepeats() async throws {
+        let suite = "earshot.protocol-tests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var sent: [BmapPacket] = []
+        let store = AppStore(defaults: defaults, arguments: [], packetSender: { sent.append($0) })
+        await Task.yield(); await Task.yield()
+        for (offset, length) in [44, 45, 47, 48].enumerated() {
+            let id = UInt8(offset + 4)
+            var bytes = [UInt8](repeating: 0, count: length)
+            bytes[0] = id; bytes[3] = 1; bytes[42] = 7
+            if length == 48 { bytes[47] = 1 }
+            bytes.replaceSubrange(6..<10, with: Array("Work".utf8))
+            let full = BmapPacket(block: 31, function: 6, operation: .status, payload: Data(bytes))
+            store.receive(full)
+            for _ in 0..<100 { store.receive(compactModeReport(index: id)) }
+            let retained = try XCTUnwrap(store.liveModes[Int(id)])
+            XCTAssertEqual(retained.raw, full.payload)
+            XCTAssertEqual(retained.editable, true)
+            XCTAssertNoThrow(try BoseCommands.writeMode(retained))
+        }
+        XCTAssertTrue(sent.isEmpty, "An already complete mode needs no automatic detail read")
+        XCTAssertFalse(store.canEditMode(4), "An offline fixture still cannot enable physical editing")
+    }
+
+    @MainActor
+    func testModeDetailBudgetResetsWhenLiveConnectionStateClears() async throws {
+        let suite = "earshot.protocol-tests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        var sent: [BmapPacket] = []
+        let store = AppStore(defaults: defaults, arguments: [], packetSender: { sent.append($0) })
+        // The initial disconnected publisher is deferred by AppStore. Seed a
+        // report first, then exercise its actual live-state reset callback.
+        store.receive(compactModeReport(index: 4))
+        XCTAssertEqual(sent.count, 1)
+        for _ in 0..<10 { await Task.yield() }
+        XCTAssertTrue(store.saved.modes.isEmpty)
+        store.receive(compactModeReport(index: 4))
+        store.receive(compactModeReport(index: 4))
+        XCTAssertEqual(sent.count, 2)
+    }
+
+    private func compactModeReport(index: UInt8) -> BmapPacket {
+        var bytes = [UInt8](repeating: 0, count: 40)
+        bytes[0] = index; bytes[35] = 7; bytes[39] = 1
+        bytes.replaceSubrange(3..<7, with: Array("Work".utf8))
+        return BmapPacket(block: 31, function: 6, operation: .status, payload: Data(bytes))
+    }
+
+    @MainActor
     func testLiveProductAndSettingCapturesReplaceDemoGuesses() throws {
         let suite = "earshot.protocol-tests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))

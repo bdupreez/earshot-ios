@@ -14,11 +14,86 @@ The original application is [Earshot by HellzYeahh and contributors](https://git
 
 ## Current iPhone feature-pass evidence
 
-**166 unit tests, 29 distinct app UI journeys and three system UI journeys have a passing latest result**, verified from Apple's per-case exports across the runs below. This is an aggregate of explicitly identified runs, **not a single combined green run**. [Current per-case coverage](ios-test-results/current-iphone-coverage.json) records the authoritative bundle for every identifier; earlier failures are retained rather than hidden.
+### Slider backpressure repair from device feedback
+
+The fork owner supplied a physical-iPhone screenshot showing a QC Ultra 2 connection and a
+queue-full alert while dragging ANC, then reported the same issue across sliders. This establishes
+a user-reported defect, not comprehensive model/firmware acceptance. Source inspection found
+continuous ANC/EQ writes, a default-mode retry timer that could pause during touch tracking, and
+a compact-mode reply path that could repeatedly request another detail record. The exact packet
+sequence on the user's phone was not captured.
+
+ANC, bass/mid/treble and headset volume now keep gesture drafts, commit the final value on release,
+ignore incoming thumb changes during a drag, and cancel unfinished gestures when their context
+changes. No device state is fabricated to acknowledge a write. This restores the original Android
+`NoiseControls.kt` end-of-drag behavior by HellzYeahh and contributors. Local Pro EQ sliders remain
+continuous and never enqueue headphone commands.
+
+The installed-Xcode build passed after correcting a test-only `CFRunLoopMode` SDK type mismatch
+found by the initial test build. `SliderBackpressureUnits.xcresult` passed **189/189, 0 failed,
+0 skipped, 0 expected failures**, xcodebuild exit 0. This includes 23 new regressions: 11 gesture
+state tests, eight production-queue/stream/run-loop tests, and four actual receive/follow-up mode
+tests. A thousand queued ANC changes stay bounded to the latest unsent setting plus one mode read;
+the real Foundation memory stream checks pacing, partial-frame byte integrity and completion;
+the actual production timer drains while a custom non-default common run-loop mode is active.
+Diagnostic cancellation and discrete-command/route barriers remain asserted.
+
+Evidence applies to the repair working tree following `e76e9ef`, with existing local Xcode signing
+edits preserved. Simulator commands override `DEVELOPMENT_TEAM=` and use ad hoc signing without
+changing those project settings. The project was not regenerated. The original device screenshots
+are not republished. The Bluetooth/ANC/EQ audible effects and queue behavior on the physical Bose
+still require the owner's retest; BMAP's lack of transaction identifiers remains a reply-correlation
+limitation, including multiple outstanding changes at the same address.
+
+Raw summary: [slider unit result](ios-test-results/slider-backpressure-units.json).
+
+The focused iPhone UI run finished **7 passed, 1 failed, 0 skipped** (xcodebuild exit 65).
+The new EQ case's fractional target did not reliably land on its intended discrete step. A slower
+coordinate attempt, native fractional adjustment and inside-bounds end-stop attempt each failed
+**0/1** without widening assertions. The final case carries real finger drags beyond the native
+control bounds to clamp at Bass +10 / Mid −10 / Treble +10 dB, requiring exact normalized limits,
+signed labels, no alert, continued Sound navigation and persistence after relaunch.
+`SliderEQClampedFinal.xcresult` passed **1/1, 0 failures/skips**, xcodebuild exit 0. All eight
+selected UI identifiers therefore have a passing latest result across these two runs; this is
+not one combined green eight-case run. The other seven cases cover ANC's exact 7/10 across repeated
+drags/navigation/relaunch, headset volume, mode editing, Pro EQ scope, attribution, a multi-action
+rule and actual local-player seek/A-B. Midrange EQ +6/−4/+4 targets remain exact unit assertions.
+
+Preserved raw summaries: [initial UI](ios-test-results/slider-backpressure-ui-initial.json),
+[slow coordinates](ios-test-results/slider-eq-coordinate-attempt.json),
+[native adjustment](ios-test-results/slider-eq-native-adjustment-attempt.json),
+[inside endpoint](ios-test-results/slider-eq-inside-endpoint-attempt.json),
+[final clamped drags](ios-test-results/slider-eq-clamped-final.json).
+The [ANC](ios-screenshots/slider-anc.png) and [three-band EQ](ios-screenshots/slider-headphone-eq.png)
+captures were exported unaltered and visually inspected. Both use simulated device state.
+
+The iPad follow-up, `iPadSliderBackpressureFinal.xcresult`, finished **191 passed, 1 failed,
+0 skipped**, Xcode exit 65: all 189 units plus ANC and EQ passed. The volume/playback portions
+passed, but the later LE Audio assertion read its old switch snapshot before confirmation dismissal
+settled. The test now selects the exact confirmation action, waits for dismissal and requires the
+changed switch value with a five-second bound. `iPadVolumeConfirmationFinal.xcresult` passed
+**1/1, 0 failures/skips**, Xcode exit 0. No app behavior or value assertion was relaxed. These
+results establish all three selected slider journeys on iPad across the two named runs.
+Raw summaries: [iPad integration](ios-test-results/ipad-slider-backpressure-initial.json),
+[confirmation repair](ios-test-results/ipad-volume-confirmation-final.json). The same final harness
+also passed **1/1** on iPhone, Xcode exit 0 (`iPhoneVolumeConfirmationFinal.xcresult`;
+[raw summary](ios-test-results/iphone-volume-confirmation-final.json)).
+
+Personal Apple developer edits in the tracked project were excluded from staging; existing local project
+edits were preserved byte-for-byte. Ignore rules cover signing material and user state, and the
+indexed-file privacy guard was checked with clean data and synthetic team/profile/key findings.
+The read-only commit audit found no personal signing settings or detected credential material in
+the 35 existing branch commits/896 commit-backed file versions. The guard checks the final index
+again before the explicit named-branch push; unrelated local app snapshot refs are not published.
+
+**189 unit tests, 31 distinct app UI journeys and three system UI journeys have a passing latest result**, verified from Apple's per-case exports across the runs below. This is an aggregate of explicitly identified runs, **not a single combined green run**. [Current per-case coverage](ios-test-results/current-iphone-coverage.json) records the authoritative bundle for every identifier; earlier failures are retained rather than hidden.
 
 | Run | Exact Xcode outcome | What it establishes |
 | --- | --- | --- |
-| `DiagnosticIsolationUnitsFinal.xcresult` | **166 passed, 0 failed, 0 skipped**, xcodebuild exit 0 | Complete final native unit suite, including seven diagnostic isolation/partial-frame/late-reply regressions. |
+| `SliderBackpressureUnits.xcresult` | **189 passed, 0 failed, 0 skipped**, xcodebuild exit 0 | Complete current native unit suite, including 23 new slider draft, queue/pacing, and compact-mode follow-up regressions. |
+| `SliderBackpressureUI.xcresult` | **7 passed, 1 failed, 0 skipped** | Seven focused UI regressions passed; fractional EQ gesture target failed and is retained above. |
+| `SliderEQClampedFinal.xcresult` | **1 passed, 0 failed, 0 skipped**, xcodebuild exit 0 | Repeated real drags across all three EQ bands, exact signed end stops and relaunch persistence. |
+| `DiagnosticIsolationUnitsFinal.xcresult` | **166 passed, 0 failed, 0 skipped**, xcodebuild exit 0 | Then-current native unit suite, including seven diagnostic isolation/partial-frame/late-reply regressions. |
 | `NativePlatformUIFinal.xcresult` | **6 passed, 0 failed, 0 skipped**, xcodebuild exit 0 | Four focused app regressions and both widget actions; later visual review found medium clipping, repaired and verified below. |
 | `SystemMediumLayoutFinal.xcresult` | **2 passed, 0 failed, 0 skipped**, xcodebuild exit 0 | Rebuilt extension: actual Control Center Cycle plus medium-widget Aware, three-part earbud battery labels and fully contained header/action geometry. |
 | `WidgetSmallLayoutFinal.xcresult` | **1 passed, 0 failed, 0 skipped**, xcodebuild exit 0 | Final small-widget rendering and real Cycle delivery, including resizing from the installed medium tile. |
@@ -30,15 +105,15 @@ The failed broad-run cases were a localized deep-plan count checked without reve
 
 Visual review used the actual exported PNGs. It found faint demo-profile captions inheriting Button tint; native plain rows with explicit primary/secondary text colours corrected them, and the final switcher UI rerun passed. The Shortcuts help now includes Cycle. [Native captures and precise provenance](ios-screenshots/README.md) distinguish captures from passing cases from whole-run results.
 
-**Actual system surfaces:** small-widget Cycle, medium-widget Aware and Control Center Cycle each opened Earshot and applied the requested demo mode. Every test explicitly waits for system-driven foreground activation without activating the app on its behalf. Widget size menus and the Control Center gallery were actually operated; the three Control Center entries were visually inspected in the unlocked installed Simulator. Final captures show Earshot’s own native tile/control and resulting app state, without unrelated Home Screen apps. These are three separate system journeys, outside the 29 in-app journeys. Temporary probes were removed and are excluded from coverage.
+**Actual system surfaces:** small-widget Cycle, medium-widget Aware and Control Center Cycle each opened Earshot and applied the requested demo mode. Every test explicitly waits for system-driven foreground activation without activating the app on its behalf. Widget size menus and the Control Center gallery were actually operated; the three Control Center entries were visually inspected in the unlocked installed Simulator. Final captures show Earshot’s own native tile/control and resulting app state, without unrelated Home Screen apps. These are three separate system journeys, outside the 31 in-app journeys. Temporary probes were removed and are excluded from coverage.
 
 The initial medium action passed but its exported image exposed clipped header/buttons. The corrected medium layout uses horizontal mode/profile and battery columns. The final test selects QC Earbuds II, requires Left/Right/Case labels, and asserts the header and all three button frames lie inside the actual native widget viewport; visual inspection confirmed readable, unclipped content. The final small rendering/action also passed separately after resizing from medium. Home Screen Widget Gallery search, Siri and signed-iPhone delivery remain unverified.
 
 ## Diagnostic isolation and secondary-device follow-up
 
-The final native unit suite passed **166/166, 0 failures, 0 skipped**, Xcode exit 0 (`DiagnosticIsolationUnitsFinal.xcresult`). A parity review found that a scan GET refusal could enter ordinary capability/write failure handling. The corrected transport labels diagnostic frames, begins its eight-second late-reply isolation only after full transmission, refuses overlapping mutations, preserves genuine unrelated errors and valid status pushes, and discards unsent diagnostic traffic on cancellation/completion. A partial frame finishes without corrupting the stream. Seven regressions cover these boundaries; arbitrarily later BMAP replies remain ambiguous because the protocol has no transaction ID. No physical scanner behavior is inferred.
+The diagnostic-isolation unit run passed **166/166, 0 failures, 0 skipped**, Xcode exit 0 (`DiagnosticIsolationUnitsFinal.xcresult`). A parity review found that a scan GET refusal could enter ordinary capability/write failure handling. The corrected transport labels diagnostic frames, begins its eight-second late-reply isolation only after full transmission, refuses overlapping mutations, preserves genuine unrelated errors and valid status pushes, and discards unsent diagnostic traffic on cancellation/completion. A partial frame finishes without corrupting the stream. Seven regressions cover these boundaries; arbitrarily later BMAP replies remain ambiguous because the protocol has no transaction ID. No physical scanner behavior is inferred.
 
-`iPadFeatureAcceptance.xcresult` finished **168 passed, 3 failed, 0 skipped**: 159 units and nine of 12 UI journeys passed. Actual AX located the foreground rule Form at x127…707, while the failing test dragged at x8 outside its centered sheet. The helper now derives the actual foreground scroll viewport and clips navigation/keyboard occlusion. Exact assertions remain. The focused iPhone run passed all four app cases plus both system-widget actions. The final iPad repair run, `iPadNativeRepairsFinal.xcresult`, then passed **169/169, 0 failures, 0 skipped**, Xcode exit 0: all 166 final units and the three previously failing UI cases. [Current iPad per-case coverage](ios-test-results/current-ipad-coverage.json) records **166 units + 12 representative app UI journeys**, all latest Passed across those two iPad runs; this is an aggregate, not a single 178-test green run or the complete iPhone UI suite. Microphone playback progress and native release-note credit captures come from individually passing iPad cases.
+`iPadFeatureAcceptance.xcresult` finished **168 passed, 3 failed, 0 skipped**: 159 units and nine of 12 UI journeys passed. Actual AX located the foreground rule Form at x127…707, while the failing test dragged at x8 outside its centered sheet. The helper now derives the actual foreground scroll viewport and clips navigation/keyboard occlusion. Exact assertions remain. The focused iPhone run passed all four app cases plus both system-widget actions. The final iPad repair run, `iPadNativeRepairsFinal.xcresult`, then passed **169/169, 0 failures, 0 skipped**, Xcode exit 0: all 166 final units and the three previously failing UI cases. [Current iPad per-case coverage](ios-test-results/current-ipad-coverage.json) now records **189 units + 15 representative app UI journeys**, all latest Passed after the slider follow-up below; this is an aggregate, not a single 204-test green run or the complete iPhone UI suite. Microphone playback progress and native release-note credit captures come from individually passing iPad cases.
 
 ## Baseline outcomes (before the feature-gap pass)
 

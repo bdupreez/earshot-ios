@@ -25,9 +25,9 @@ struct SoundView: View {
             if page == 0 {
                 Panel(title: "A little more you", subtitle: "Saved on your headphones. Applies to every audio source.") {
                     ForEach(0..<3) { index in
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack { Text(["Bass", "Mid", "Treble"][index]).font(.headline); Spacer(); Text(String(format: "%+.0f dB", store.saved.eq[index])).monospacedDigit().foregroundStyle(Color.earshot) }
-                            Slider(value: Binding(get: { store.saved.eq[index] }, set: { store.setEQ(index, value: $0) }), in: -10...10, step: 1).accessibilityLabel(["Bass", "Mid", "Treble"][index])
+                        CommittedBluetoothSlider(title: ["Bass", "Mid", "Treble"][index], reportedValue: store.saved.eq[index], range: -10...10,
+                            contextID: "\(store.saved.demo)|\(store.profile.id)|\(store.saved.currentMode)|\(store.bluetooth.connectedDeviceID?.uuidString ?? "none")", valueFormat: "%+.0f dB") {
+                            store.setEQ(index, value: $0)
                         }
                     }.disabled(!store.connected || !store.supports(1, 7) || store.profile.unsupported)
                     Button("Reset headphone EQ") { for index in 0..<3 { store.setEQ(index, value: 0) } }.disabled(!store.connected || !store.supports(1, 7))

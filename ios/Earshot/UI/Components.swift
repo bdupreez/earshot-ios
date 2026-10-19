@@ -79,18 +79,139 @@ struct HeadphoneArtwork: View {
     }
 }
 
+/// Restores the local dragLevel/onValueChangeFinished behavior in HellzYeahh and
+/// contributors' original Android NoiseControls (MIT), missed by this AI-assisted port.
+/// A device report remains authoritative; a drag never writes the reported state.
+struct SliderValueDraft {
+    private(set) var value: Double?
+    private(set) var isEditing = false
+    private var cancelled = false
+    private var lastCommittedValue: Double?
+
+    mutating func begin(reportedValue: Double, canEdit: Bool) {
+        isEditing = true
+        cancelled = !canEdit
+        value = canEdit ? reportedValue : nil
+        lastCommittedValue = nil
+    }
+
+    mutating func update(_ candidate: Double, reportedValue: Double, range: ClosedRange<Double>, canEdit: Bool) -> Double? {
+        guard canEdit else { cancel(); return nil }
+        guard candidate.isFinite else { return nil }
+        let rounded = min(range.upperBound, max(range.lowerBound, candidate.rounded()))
+        if isEditing {
+            if !cancelled { value = rounded }
+            return nil
+        }
+        // VoiceOver and keyboard adjustments may have no touch-editing callbacks.
+        return request(rounded, reportedValue: reportedValue)
+    }
+
+    mutating func finish(reportedValue: Double, canEdit: Bool) -> Double? {
+        defer { isEditing = false; value = nil; cancelled = false }
+        guard isEditing, !cancelled, canEdit, let value else { return nil }
+        return request(value, reportedValue: reportedValue)
+    }
+
+    mutating func cancel() {
+        // Keep the cancelled gesture marked until its end callback: late value
+        // callbacks must not become immediate accessibility-style commits.
+        if isEditing { cancelled = true }
+        value = nil
+        lastCommittedValue = nil
+    }
+
+    mutating func reportChanged() { lastCommittedValue = nil }
+    mutating func reset() { self = Self() }
+
+    private mutating func request(_ value: Double, reportedValue: Double) -> Double? {
+        guard value != reportedValue, value != lastCommittedValue else { return nil }
+        lastCommittedValue = value
+        return value
+    }
+}
+
+struct NoiseLevelDraft {
+    private var scalar = SliderValueDraft()
+    var level: Double? { scalar.value }
+    var isEditing: Bool { scalar.isEditing }
+    mutating func begin(reportedLevel: Double, canEdit: Bool) { scalar.begin(reportedValue: reportedLevel, canEdit: canEdit) }
+    mutating func update(_ value: Double, latest: NoiseState, canEdit: Bool) -> NoiseState? {
+        guard let level = scalar.update(value, reportedValue: latest.level, range: 0...10, canEdit: canEdit) else { return nil }
+        var requested = latest; requested.level = level; return requested
+    }
+    mutating func finish(latest: NoiseState, canEdit: Bool) -> NoiseState? {
+        guard let level = scalar.finish(reportedValue: latest.level, canEdit: canEdit) else { return nil }
+        var requested = latest; requested.level = level; return requested
+    }
+    mutating func cancel() { scalar.cancel() }
+    mutating func reportChanged() { scalar.reportChanged() }
+    mutating func reset() { scalar.reset() }
+}
+
+/// Bluetooth absolute settings commit at gesture completion; local audio controls
+/// deliberately keep their continuous bindings for responsive DSP and preview.
+struct CommittedBluetoothSlider: View {
+    let title: String
+    let reportedValue: Double
+    let range: ClosedRange<Double>
+    let contextID: String
+    var valueFormat: String? = nil
+    let onCommit: (Double) -> Void
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.scenePhase) private var phase
+    @State private var draft = SliderValueDraft()
+    private var canEdit: Bool { isEnabled && phase == .active }
+    private var displayedValue: Double { draft.value ?? reportedValue }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let valueFormat {
+                HStack {
+                    Text(title).font(.headline)
+                    Spacer()
+                    Text(String(format: valueFormat, displayedValue)).monospacedDigit().foregroundStyle(Color.earshot)
+                }
+            }
+            Slider(value: Binding(get: { displayedValue }, set: { value in
+                if let requested = draft.update(value, reportedValue: reportedValue, range: range, canEdit: canEdit) { onCommit(requested) }
+            }), in: range, step: 1, onEditingChanged: { editing in
+                if editing { draft.begin(reportedValue: reportedValue, canEdit: canEdit) }
+                else if let requested = draft.finish(reportedValue: reportedValue, canEdit: canEdit) { onCommit(requested) }
+            }).accessibilityLabel(title)
+        }
+        .onAppear { draft.reset() }
+        .onDisappear { draft.cancel() }
+        .onChange(of: canEdit) { _, canEdit in if !canEdit { draft.cancel() } }
+        .onChange(of: contextID) { _, _ in draft.cancel() }
+        .onChange(of: range) { _, _ in draft.cancel() }
+        .onChange(of: reportedValue) { _, _ in draft.reportChanged() }
+        .onChange(of: phase) { _, phase in if phase == .active { draft.reset() } else { draft.cancel() } }
+    }
+}
+
 struct NoiseControls: View {
     @Binding var noise: NoiseState
+    @Environment(\.isEnabled) private var isEnabled
+    @Environment(\.scenePhase) private var phase
+    @State private var levelDraft = NoiseLevelDraft()
     var profile: DeviceProfile
     var ancToggle = true
     private var ancOn: Bool { noise.enabled || !ancToggle }
+    private var canEditLevel: Bool { isEnabled && phase == .active && profile.noise && ancOn && !noise.wind }
+    private var displayedLevel: Double { levelDraft.level ?? noise.level }
     var body: some View {
         VStack(spacing: 18) {
             if profile.noise {
                 if ancToggle { Toggle("Noise cancellation", isOn: $noise.enabled) }
                 VStack(spacing: 8) {
-                    HStack { Text("Cancellation level").font(.subheadline); Spacer(); Text("\(Int(noise.level))/10").monospacedDigit().foregroundStyle(Color.earshot) }
-                    Slider(value: $noise.level, in: 0...10, step: 1).accessibilityIdentifier("noiseLevel")
+                    HStack { Text("Cancellation level").font(.subheadline); Spacer(); Text("\(Int(displayedLevel))/10").monospacedDigit().foregroundStyle(Color.earshot) }
+                    Slider(value: Binding(get: { displayedLevel }, set: { value in
+                        if let requested = levelDraft.update(value, latest: noise, canEdit: canEditLevel) { noise = requested }
+                    }), in: 0...10, step: 1, onEditingChanged: { editing in
+                        if editing { levelDraft.begin(reportedLevel: noise.level, canEdit: canEditLevel) }
+                        else if let requested = levelDraft.finish(latest: noise, canEdit: canEditLevel) { noise = requested }
+                    }).accessibilityIdentifier("noiseLevel")
                     HStack { Text("Aware"); Spacer(); Text("Quiet") }.font(.caption).foregroundStyle(.secondary)
                 }.disabled(!ancOn || noise.wind)
                 if noise.wind {
@@ -106,5 +227,11 @@ struct NoiseControls: View {
                 VStack(alignment: .leading, spacing: 10) { Text("Immersive Audio").font(.subheadline); Picker("Immersive Audio", selection: $noise.spatial) { Text("Off").tag(0); Text("Still").tag(1); Text("Motion").tag(2) }.pickerStyle(.segmented) }
             }
         }
+        .onAppear { levelDraft.reset() }
+        .onDisappear { levelDraft.cancel() }
+        .onChange(of: canEditLevel) { _, canEdit in if !canEdit { levelDraft.cancel() } }
+        .onChange(of: profile) { _, _ in levelDraft.cancel() }
+        .onChange(of: phase) { _, phase in if phase == .active { levelDraft.reset() } else { levelDraft.cancel() } }
+        .onChange(of: noise.level) { _, _ in levelDraft.reportChanged() }
     }
 }

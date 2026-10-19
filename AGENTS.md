@@ -6,6 +6,12 @@ Native implementation is `ios/`, Swift/SwiftUI, without third-party packages. Op
 
 Push progress checkpoints regularly, with detailed commit messages and current validation/remaining-work notes in `docs/IOS_PROGRESS.md`. Push **only** to the user's fork, `git@github.com:bdupreez/earshot-ios.git` (or the equivalent HTTPS URL). Verify the push URL before each push. Never push to `HellzYeahh/earshot`, add an upstream push destination, or open an upstream pull request. Work on a `codex/` branch unless the user requests another branch.
 
+Keep personal Apple developer-account identifiers, signing identities, provisioning profiles, keys,
+local Xcode user settings and private configuration out of commits. Preserve local signing edits
+without staging them; never regenerate the project over those edits. Before each push, run
+`python3 ios/scripts/check-push-privacy.py` against the index and inspect the exact staged paths.
+Ignore rules do not protect an already-tracked project file: inspect its staged contents explicitly.
+
 Use actual `xcodebuild test` on an installed simulator and inspect screenshots for UI changes. `ios/scripts/test-simulator.sh` runs both XCTest and XCUITest; select a local device using `EARSHOT_SIMULATOR_ID`. Never equate simulator demo tests with headphone-hardware validation. Record results and outstanding limitations in `docs/IOS_VALIDATION.md` and `docs/IOS_MIGRATION.md`.
 
 The retained Android sources and historical docs are upstream provenance/reference; their Android-only ownership/build instructions in `CLAUDE.md` apply to that retained implementation. Do not remove the Android implementation just to make this fork appear original. iOS is the primary development target of this fork.

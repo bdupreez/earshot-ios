@@ -5,7 +5,6 @@ struct DeviceControlsView: View {
     @State private var confirmLEAudio = false
     @State private var nextLEAudio = false
     @State private var confirmPower = false
-    @State private var volumeDraft = 0.0
     @State private var nameDraft = ""
     @State private var nextPairing = false
     @State private var confirmPairing = false
@@ -37,8 +36,7 @@ struct DeviceControlsView: View {
             powerSection
         }
         .navigationTitle("Device controls").navigationBarTitleDisplayMode(.inline)
-        .onAppear { volumeDraft = store.deviceVolume; nameDraft = store.displayDeviceName; latencyDraft = store.deviceLatencyValue ?? 0 }
-        .onChange(of: store.deviceVolume) { _, value in volumeDraft = value }
+        .onAppear { nameDraft = store.displayDeviceName; latencyDraft = store.deviceLatencyValue ?? 0 }
         .onChange(of: store.displayDeviceName) { _, value in nameDraft = value }
         .onChange(of: store.deviceLatencyValue) { _, value in if let value { latencyDraft = value } }
         .onChange(of: store.deviceLatencyRange) { _, _ in if let value = store.deviceLatencyValue { latencyDraft = value } }
@@ -84,9 +82,10 @@ struct DeviceControlsView: View {
     private var volumeSection: some View {
         Section("Headphone volume") {
             if store.deviceVolumeMaximum > 0 {
-                Slider(value: $volumeDraft, in: 0...Double(store.deviceVolumeMaximum), step: 1) { editing in
-                    if !editing { store.setDeviceVolume(volumeDraft) }
-                }.disabled(!store.connected || !store.supports(5, 5)).accessibilityLabel("Headphone volume")
+                CommittedBluetoothSlider(title: "Headphone volume", reportedValue: store.deviceVolume, range: 0...Double(store.deviceVolumeMaximum),
+                    contextID: "\(store.saved.demo)|\(store.profile.id)|\(store.saved.currentMode)|\(store.bluetooth.connectedDeviceID?.uuidString ?? "none")") {
+                    store.setDeviceVolume($0)
+                }.disabled(!store.connected || !store.supports(5, 5) || store.profile.unsupported)
                 LabeledContent("Reported volume", value: "\(Int(store.deviceVolume)) / \(store.deviceVolumeMaximum)")
             } else { Text("Connect headphones that report their volume range.").foregroundStyle(.secondary) }
         }

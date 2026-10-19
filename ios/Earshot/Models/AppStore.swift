@@ -60,6 +60,7 @@ import Combine
     var observedWiFiSSID: String?
     var firedWiFiRuleIDs = Set<String>()
     private let defaults: UserDefaults
+    private let packetSender: ((BmapPacket) throws -> Void)?
     private var cancellables = Set<AnyCancellable>()
     private var refreshTask: Task<Void, Never>?
     private var lastConnected = false
@@ -71,6 +72,8 @@ import Combine
     private var charging = false
     private var unavailableBlocks: Set<UInt8> = []
     private var refusedFunctions: Set<BmapAddress> = []
+    private var requestedModeDetails: Set<UInt8> = []
+    private var modeDetailReadsRefused = false
     private var pendingWrites: Set<BmapAddress> = []
     private var eqRanges: [UInt8: ClosedRange<Int>] = [:]
     private var subscribed = false
@@ -79,8 +82,10 @@ import Combine
     private var connectionRulesPending = false
     private var firedConnectionRuleIDs = Set<String>()
 
-    init(defaults: UserDefaults = .standard, arguments: [String] = ProcessInfo.processInfo.arguments) {
+    init(defaults: UserDefaults = .standard, arguments: [String] = ProcessInfo.processInfo.arguments,
+         packetSender: ((BmapPacket) throws -> Void)? = nil) {
         self.defaults = defaults
+        self.packetSender = packetSender
         if arguments.contains("--uitesting") { defaults.removeObject(forKey: "earshot.ios.state") ; defaults.removeObject(forKey: "earshot.welcomed") }
         welcome = !defaults.bool(forKey: "earshot.welcomed")
         let originalData = defaults.data(forKey: "earshot.ios.state")
@@ -327,6 +332,7 @@ import Combine
     func refresh() {
         guard !saved.demo else { hydrateDemo(); return }
         refreshTask?.cancel()
+        requestedModeDetails.removeAll(); modeDetailReadsRefused = false
         refreshTask = Task { [weak self] in
             self?.send(BoseCommands.subscribeNotifications)
             for packet in BoseCommands.refresh {
@@ -343,7 +349,10 @@ import Combine
     }
     func send(_ packet: BmapPacket) {
         do {
-            try bluetooth.send(packet)
+            // The default path always uses the verified Bluetooth transport. A
+            // sender fixture can exercise receive/follow-up logic without a fake link.
+            if let packetSender { try packetSender(packet) }
+            else { try bluetooth.send(packet) }
             trackSentRequest(packet)
         } catch {
             commandFailureVersion += 1; message = error.localizedDescription
@@ -377,6 +386,9 @@ import Combine
             else { sourceCommandSupport.remove(capability.action) }
         }
         if p.operation == .error {
+            if p.address == BmapAddress(31, 6), [3, 4, 5].contains(p.errorCode ?? 0) {
+                modeDetailReadsRefused = true
+            }
             if pendingDeviceOperation?.address == p.address {
                 deviceRequestStatus = BmapFailure.device(p.address, p.errorCode ?? 0).localizedDescription
                 deviceOperationTask?.cancel(); pendingDeviceOperation = nil
@@ -460,7 +472,13 @@ import Combine
                     favorite: favorites.contains(id), configured: !mode.isEmpty, noise: noiseState(mode.settings))
                 saved.modes.removeAll { $0.id == id }; saved.modes.append(display); saved.modes.sort { $0.id < $1.id }
                 if id == saved.currentMode, !supports(31, 10) { saved.noise = display.noise }
-                if mode.raw.count < 44 { send(BmapPacket(block: 31, function: 6, operation: .get, payload: Data([mode.index]))) }
+                // Some firmware answers a detail GET with the same compact
+                // record. Never turn that reply (or an unsolicited repeat) into
+                // another GET. Mark before sending, including reentrant replies.
+                if mode.raw.count < 44, liveModes[id] == nil, !modeDetailReadsRefused,
+                   !unavailableBlocks.contains(31), requestedModeDetails.insert(mode.index).inserted {
+                    send(BmapPacket(block: 31, function: 6, operation: .get, payload: Data([mode.index])))
+                }
                 valid = true
             }
         case (31, 8):
@@ -575,6 +593,7 @@ import Combine
         batteryMinutes = nil; batteryReadings = []; modelFacts = nil; reportedModeIDs = []
         liveFunctions = []; liveModes = [:]; modesCapabilities = nil; liveProfile = nil; voiceLanguage = nil
         liveDeviceName = "Bose headphones · identifying"; unavailableBlocks = []; refusedFunctions = []; pendingWrites = []
+        requestedModeDetails.removeAll(); modeDetailReadsRefused = false
         eqRanges = [:]; favorites = []; favoriteTotal = 0; subscribed = false; lePreferenceRequested = false; connectionRulesPending = false
         charging = false; firedConnectionRuleIDs = []
         deviceVolume = 0; deviceVolumeMaximum = 0; playbackStatus = "Not reported"; playbackActions = []

@@ -22,6 +22,116 @@ struct BmapOutgoingFrame {
     }
 }
 
+/// Paced, bounded output for the AI-assisted port of HellzYeahh/earshot's BMAP transport.
+/// Only absolute ANC settings may replace an entirely unsent setting. Discrete actions,
+/// diagnostics, EQ bands and partially written frames retain their original wire order.
+struct BmapOutputQueue {
+    static let capacity = 256
+    static let minFrameInterval: TimeInterval = 0.08
+    private(set) var frames: [BmapOutgoingFrame] = []
+    private(set) var partialWriteOffset = 0
+    private(set) var lastFrameSent = Date.distantPast
+
+    private struct NoiseKey: Equatable {
+        let address: BmapAddress
+        let deviceID: UInt8
+        let port: UInt8
+    }
+
+    private func noiseKey(_ frame: BmapOutgoingFrame) -> NoiseKey? {
+        guard frame.diagnosticID == nil, let packet = BmapPacket.decodeOne(frame.data),
+              frame.data.count == 4 + packet.payload.count, frame.address == packet.address, frame.operation == packet.operation,
+              packet.operation == .setGet,
+              (packet.address == BmapAddress(31, 10) && packet.payload.count == 5 ||
+               packet.address == BmapAddress(1, 5) && packet.payload.count == 2) else { return nil }
+        return NoiseKey(address: packet.address, deviceID: packet.deviceID, port: packet.port)
+    }
+
+    private func isModeRead(_ frame: BmapOutgoingFrame, for key: NoiseKey) -> Bool {
+        guard frame.diagnosticID == nil, let packet = BmapPacket.decodeOne(frame.data) else { return false }
+        return frame.data.count == 4 + packet.payload.count && frame.address == packet.address && frame.operation == packet.operation &&
+            packet.address == BmapAddress(31, 3) && packet.operation == .get && packet.payload.isEmpty &&
+            packet.deviceID == key.deviceID && packet.port == key.port
+    }
+
+    @discardableResult
+    mutating func enqueue(_ frame: BmapOutgoingFrame, priority: Bool = false) throws -> Bool {
+        let firstUnsent = partialWriteOffset > 0 ? 1 : 0
+        if !priority, let key = noiseKey(frame) {
+            // Consume only a contiguous suffix of same-route writes and their adjacent
+            // current-mode reads. An unrelated command is an ordering barrier.
+            var start = frames.count
+            var retainedRead: BmapOutgoingFrame?
+            while start > firstUnsent {
+                let last = start - 1
+                if noiseKey(frames[last]) == key {
+                    start = last
+                } else if last > firstUnsent, isModeRead(frames[last], for: key), noiseKey(frames[last - 1]) == key {
+                    if retainedRead == nil { retainedRead = frames[last] }
+                    start = last - 1
+                } else { break }
+            }
+            if start < frames.count {
+                frames.replaceSubrange(start..., with: [frame] + (retainedRead.map { [$0] } ?? []))
+                return true
+            }
+        } else if !priority, frames.count >= firstUnsent + 2,
+                  let key = noiseKey(frames[frames.count - 2]),
+                  isModeRead(frames[frames.count - 1], for: key), isModeRead(frame, for: key) {
+            // AppStore follows each modern ANC write with a mode read. Keep one read
+            // after the newest unsent setting, without deduplicating arbitrary GETs.
+            return false
+        }
+        // Replacement happens before this limit, so a full queue can still accept the
+        // final unsent ANC value. Other traffic retains the explicit bounded failure.
+        guard frames.count < Self.capacity else {
+            throw BmapFailure.unavailable("The headphone command queue is full. Wait for the current changes to finish.")
+        }
+        if priority { frames.insert(frame, at: firstUnsent) }
+        else { frames.append(frame) }
+        return true
+    }
+
+    /// Calls the real stream writer with only the remaining bytes. Completion is
+    /// reported exactly once, so diagnostic quarantine begins at actual transmission.
+    mutating func writeNext(at now: Date, write: (Data) -> Int) throws -> BmapOutgoingFrame? {
+        guard let frame = frames.first,
+              partialWriteOffset > 0 || now.timeIntervalSince(lastFrameSent) >= Self.minFrameInterval else { return nil }
+        let remaining = frame.data.subdata(in: partialWriteOffset..<frame.data.count)
+        let count = write(remaining)
+        guard count >= 0, count <= remaining.count else {
+            throw BmapFailure.unavailable("The headphone output stream failed.")
+        }
+        partialWriteOffset += count
+        guard partialWriteOffset == frame.data.count else { return nil }
+        frames.removeFirst(); partialWriteOffset = 0; lastFrameSent = now
+        return frame
+    }
+
+    mutating func cancelDiagnostics() -> [UUID] {
+        let retained = BmapOutgoingFrame.retainingAfterDiagnosticCancel(frames, partialWriteOffset: partialWriteOffset)
+        let retainedIDs = Set(retained.compactMap(\.diagnosticID))
+        let dropped = frames.compactMap(\.diagnosticID).filter { !retainedIDs.contains($0) }
+        frames = retained
+        return dropped
+    }
+
+    mutating func reset() {
+        frames.removeAll(); partialWriteOffset = 0; lastFrameSent = .distantPast
+    }
+}
+
+enum BmapOutputPumpTimer {
+    static func make(interval: TimeInterval = BmapOutputQueue.minFrameInterval, runLoop: RunLoop = .main,
+                     handler: @escaping (Timer) -> Void) -> Timer {
+        let timer = Timer(timeInterval: interval, repeats: true, block: handler)
+        // A scheduledTimer uses default mode and can stop draining during a slider
+        // gesture. Both L2CAP streams and their retry pump must run in common modes.
+        runLoop.add(timer, forMode: .common)
+        return timer
+    }
+}
+
 /// AI-assisted native port of the MIT-licensed HellzYeahh/earshot Bluetooth contract.
 /// Core Bluetooth connection to the BMAP LE connection-oriented channel advertised by Bose.
 /// A GATT connection alone is not a working control connection: the [0.1] probe must answer.
@@ -50,9 +160,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
     private var selected: CBPeripheral?
     private var channel: CBL2CAPChannel?
     private var frameBuffer = BmapFrameBuffer()
-    private var outgoing: [BmapOutgoingFrame] = []
-    private var outputOffset = 0
-    private var lastFrameSent = Date.distantPast
+    private var outputQueue = BmapOutputQueue()
     private var timeout: Timer?
     private var scanTimeout: Timer?
     private var writeTimer: Timer?
@@ -83,7 +191,7 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
         protocolScanner.onCancel = { [weak self] in self?.discardUnsentDiagnosticFrames() }
         protocolScanner.preflightError = { [weak self] in
             guard let self else { return "The headphone control channel is unavailable." }
-            if self.printConsole.isRunning || self.outgoing.contains(where: { $0.operation != .get }) {
+            if self.printConsole.isRunning || self.outputQueue.frames.contains(where: { $0.operation != .get }) {
                 return "Wait for the current headphone command or console collection to finish before scanning."
             }
             return self.diagnosticPreflightError?()
@@ -365,51 +473,41 @@ final class HeadphoneBluetooth: NSObject, ObservableObject {
             channel.outputStream.remove(from: .main, forMode: .common)
         }
         channel = nil
-        outgoing.removeAll(); outputOffset = 0
+        outputQueue.reset()
         protocolScanner.resetDiagnosticConnection()
         frameBuffer.reset()
     }
 
     private func enqueue(_ packet: BmapPacket, priority: Bool = false, diagnosticID: UUID? = nil) throws {
         try BmapWriteGuard.check(packet)
-        guard outgoing.count < 256 else { throw BmapFailure.unavailable("The headphone command queue is full. Wait for the current changes to finish.") }
         let encoded = try packet.encode()
         let frame = BmapOutgoingFrame(data: encoded, address: packet.address, diagnosticID: diagnosticID, operation: packet.operation)
+        guard try outputQueue.enqueue(frame, priority: priority) else { return }
         if let diagnosticID { protocolScanner.queuedDiagnosticRead(id: diagnosticID, address: packet.address) }
-        if priority { outgoing.insert(frame, at: outputOffset > 0 && !outgoing.isEmpty ? 1 : 0) }
-        else { outgoing.append(frame) }
         appendLog("→ \(packetLog(packet))")
         flushOutput()
     }
 
     private func flushOutput() {
-        guard let stream = channel?.outputStream, stream.hasSpaceAvailable, !outgoing.isEmpty else { return }
-        // The Android transport spaces requests too. Preserve whole-frame order even on partial writes.
-        guard outputOffset > 0 || Date().timeIntervalSince(lastFrameSent) >= 0.08 else { return }
-        let frame = outgoing[0]
-        let data = frame.data
-        let written = data.withUnsafeBytes { buffer -> Int in
-            guard let base = buffer.bindMemory(to: UInt8.self).baseAddress else { return 0 }
-            return stream.write(base.advanced(by: outputOffset), maxLength: data.count - outputOffset)
-        }
-        if written < 0 { fail(stream.streamError?.localizedDescription ?? "The headphone output stream failed."); return }
-        outputOffset += written
-        if outputOffset == data.count {
+        guard let stream = channel?.outputStream, stream.hasSpaceAvailable else { return }
+        do {
+            guard let frame = try outputQueue.writeNext(at: Date(), write: { remaining in
+                remaining.withUnsafeBytes { buffer in
+                    guard let base = buffer.bindMemory(to: UInt8.self).baseAddress else { return 0 }
+                    return stream.write(base, maxLength: remaining.count)
+                }
+            }) else { return }
             if let id = frame.diagnosticID { protocolScanner.transmittedDiagnosticRead(id: id) }
-            if isConnected, let packet = BmapPacket.decodeOne(data), packet.address != BmapAddress(0, 1) {
+            if isConnected, let packet = BmapPacket.decodeOne(frame.data), packet.address != BmapAddress(0, 1) {
                 liveness.sentRequest(at: Date())
             }
-            outgoing.removeFirst(); outputOffset = 0; lastFrameSent = Date()
-        }
+        } catch { fail(stream.streamError?.localizedDescription ?? error.localizedDescription) }
     }
 
     private func discardUnsentDiagnosticFrames() {
-        let retained = BmapOutgoingFrame.retainingAfterDiagnosticCancel(outgoing, partialWriteOffset: outputOffset)
-        let retainedIDs = Set(retained.compactMap(\.diagnosticID))
-        for id in outgoing.compactMap(\.diagnosticID) where !retainedIDs.contains(id) {
+        for id in outputQueue.cancelDiagnostics() {
             protocolScanner.discardedDiagnosticRead(id: id)
         }
-        outgoing = retained
     }
 
     /// Called after transport liveness verification. Only errors matching an actually
@@ -612,13 +710,13 @@ extension HeadphoneBluetooth: @preconcurrency CBPeripheralDelegate {
         guard let channel else { fail("The headphones refused the LE L2CAP channel."); return }
         self.channel = channel
         frameBuffer.reset()
-        lastFrameSent = .distantPast
+        outputQueue.reset()
         channel.inputStream.delegate = self; channel.outputStream.delegate = self
         channel.inputStream.schedule(in: .main, forMode: .common)
         channel.outputStream.schedule(in: .main, forMode: .common)
         channel.inputStream.open(); channel.outputStream.open()
         status = "Verifying the headphone control protocol…"
-        writeTimer = Timer.scheduledTimer(withTimeInterval: 0.08, repeats: true) { [weak self] _ in
+        writeTimer = BmapOutputPumpTimer.make { [weak self] _ in
             Task { @MainActor in self?.flushOutput() }
         }
         armTimeout(seconds: 3, message: "The channel opened but no BMAP reply arrived. Close the Bose app and reconnect; this firmware may not support iOS control.")

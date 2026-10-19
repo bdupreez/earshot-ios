@@ -1,0 +1,49 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "670AA0BD-A1DF-4768-835F-966A0D09E7B3",
+        "deviceName" : "iPhone 17 Pro",
+        "modelName" : "iPhone 17 Pro",
+        "osBuildNumber" : "23E254a",
+        "osVersion" : "26.4.1",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 0,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Earshot · Built with macOS 26.4.1",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1792396417.18,
+  "passedTests" : 0,
+  "result" : "Failed",
+  "skippedTests" : 0,
+  "startTime" : 1792396374.026,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertEqualWithAccuracy failed: (\"0.05000000074505806\") is not equal to (\"0.0\") +/- (\"0.001\") - Mid should retain its exact final committed demo limit; frame (40.0, 483.3333333333333, 322.0, 30.999999999999943), AX value Optional(-9).\nOptional(Attributes: Application, 0x11285fc00, pid: 87452, label: 'Earshot'\nElement subtree:\n →Application, 0x11285fc00, pid: 87452, label: 'Earshot'\n    Window (Main), 0x11285cdc0, {{0.0, 0.0}, {402.0, 874.0}}\n      Other, 0x11285cf00, {{0.0, 0.0}, {402.0, 874.0}}\n        Other, 0x11285d040, {{0.0, 0.0}, {402.0, 874.0}}\n          Other, 0x11285df40, {{0.0, 0.0}, {402.0, 874.0}}\n            Other, 0x11285e080, {{0.0, 0.0}, {402.0, 874.0}}\n              Other, 0x11285de00, {{0.0, 0.0}, {402.0, 874.0}}\n                Other, 0x11285e1c0, {{0.0, 0.0}, {402.0, 874.0}}\n                  Other, 0x11285e300, {{0.0, 0.0}, {402.0, 874.0}}\n                    Other, 0x11285d400, {{0.0, 0.0}, {402.0, 874.0}}\n                      Other, 0x11285c500, {{0.0, 0.0}, {402.0, 874.0}}\n                        Other, 0x11285ea80, {{0.0, 0.0}, {402.0, 874.0}}\n                          Other, 0x11285d180, {{0.0, 0.0}, {402.0, 874.0}}\n                            NavigationBar, 0x11285e440, {{0.0, 62.0}, {402.0, 106.0}}, identifier: 'Sound'\n                              StaticText, 0x11285d540, {{16.0, 119.7}, {102.3, 40.7}}, label: 'Sound'\n                            Other, 0x11285d680, {{0.0, 0.0}, {402.0, 874.0}}\n                              Other, 0x11285ed00, {{0.0, 0.0}, {402.0, 874.0}}\n                                Other, 0x11285c000, {{0.0, 0.0}, {402.0, 874.0}}\n                                  Other, 0x11285f980, {{0.0, 0.0}, {402.0, 874.0}}\n                                    ScrollView, 0x11285fac0, {{0.0, 0.0}, {402.0, 874.0}}\n                                      Other, 0x11285da40, {{0.0, 0.0}, {402.0, 874.0}}\n                                        Other, 0x11285dcc0, {{0.0, 0.0}, {402.0, 170.8}}\n                                        Other, 0x11285c280, {{0.0, 726.2}, {402.0, 147.8}}\n                                      Other, 0x11285c3c0, {{0.0, 0.0}, {402.0, 874.0}}\n                                      Other, 0x11285e580, {{0.0, 168.0}, {402.0, 490.0}}\n                                        StaticText, 0x11285e6c0, {{20.0, 180.0}, {209.3, 26.3}}, label: 'Find your frequency.'\n                                        SegmentedControl, 0x11285e800, {{20.0, 222.3}, {362.0, 31.0}}\n                                          Button, 0x11285e940, {{20.0, 222.3}, {181.0, 32.0}}, label: 'Headphone EQ', Selected\n                                          Button, 0x10323b5c0, {{201.0, 222.3}, {181.0, 32.0}}, label: 'Pro EQ'\n                                        StaticText, 0x10323b700, {{40.0, 289.3}, {129.0, 20.3}}, label: 'A little more you'\n                                        StaticText, 0x10323b480, {{40.0, 325.7}, {308.3, 38.0}}, label: 'Saved on your headphones. Applies to every audio source.'\n                                        StaticText, 0x10323b980, {{40.0, 379.7}, {38.3, 20.3}}, label: 'Bass'\n                                        StaticText, 0x10323bac0, {{306.0, 379.7}, {56.0, 20.3}}, label: '+10 dB'\n                                        Slider, 0x10323b0c0, {{40.0, 408.0}, {322.0, 31.0}}, label: 'Bass', value: 10\n                                        StaticText, 0x10323bd40, {{40.0, 455.0}, {29.7, 20.3}}, label: 'Mid'\n                                        StaticText, 0x10323be80, {{319.0, 455.0}, {43.0, 20.3}}, label: '-9 dB'\n                                        Slider, 0x10323bc00, {{40.0, 483.3}, {322.0, 31.0}}, label: 'Mid', value: -9\n                                        StaticText, 0x10323ae40, {{40.0, 530.3}, {50.0, 20.3}}, label: 'Treble'\n                                        StaticText, 0x10323af80, {{316.3, 530.3}, {45.7, 20.3}}, label: '+0 dB'\n                                        Slider, 0x10323b840, {{40.0, 558.7}, {322.0, 31.0}}, label: 'Treble', value: 0\n                                        Button, 0x10323b200, {{40.0, 605.7}, {160.0, 20.3}}, label: 'Reset headphone EQ'\n                                      Other, 0x10323b340, {{369.0, 116.0}, {30.0, 675.0}}, label: 'Vertical scroll bar, 1 page', value: 0%\n                                        Other, 0x112ad7700, {{396.0, 252.0}, {3.0, 536.0}}\n                                      Other, 0x112ad7840, {{369.0, 116.0}, {30.0, 675.0}}, label: 'Vertical scroll bar, 1 page', value: 0%\n                                        Other, 0x112ad6d00, {{396.0, 252.0}, {3.0, 536.0}}\n                            Other, 0x112ad4b40, {{0.0, 0.0}, {402.0, 874.0}}\n                              Other, 0x112ad7c00, {{0.0, 0.0}, {402.0, 874.0}}\n                Other, 0x112ad7d40, {{0.0, 791.0}, {402.0, 83.0}}\n                  Other, 0x112ad4dc0, {{0.0, 0.0}, {402.0, 874.0}}\n                    TabBar, 0x112ad6940, {{0.0, 791.0}, {402.0, 83.0}}, label: 'Tab Bar'\n                      Other, 0x112ad5680, {{21.0, 791.0}, {360.0, 62.0}}\n                        Other, 0x112ad4f00, {{21.0, 791.0}, {77.0, 54.0}}\n                        Other, 0x112ad5040, {{21.0, 791.0}, {360.0, 62.0}}\n                          Button, 0x112ad4a00, {{25.0, 795.0}, {77.0, 54.0}}, label: 'Home'\n                            Image, 0x112ad4000, {{47.0, 801.0}, {33.3, 28.0}}, identifier: 'house.fill', label: 'home'\n                          Button, 0x112ad4140, {{93.8, 795.0}, {77.0, 54.0}}, label: 'Sound', Selected\n                            Image, 0x112ad7340, {{117.8, 802.7}, {29.3, 24.0}}, identifier: 'slider.horizontal.3', label: 'edit'\n                          Button, 0x112ad4500, {{162.5, 795.0}, {77.0, 54.0}}, label: 'Modes'\n                            Image, 0x112ad4640, {{187.5, 801.0}, {27.0, 28.0}}, identifier: 'waveform', label: 'waveform'\n                          Button, 0x112ad4780, {{231.2, 795.0}, {77.0, 54.0}}, label: 'Tools'\n                            Image, 0x112ad48c0, {{253.2, 799.3}, {32.7, 31.7}}, identifier: 'wrench.and.screwdriver', label: 'wrench.and.screwdriver'\n                          Button, 0x112ad75c0, {{300.0, 795.0}, {77.0, 54.0}}, label: 'Settings'\n                            Image, 0x112ad57c0, {{325.0, 801.0}, {28.0, 28.0}}, identifier: 'gearshape.fill', label: 'gearshape.fill'\n                        Other, 0x112ad6bc0, {{93.8, 795.0}, {77.0, 54.0}}\n                          Other, 0x112ad7e80, {{93.8, 795.0}, {77.0, 54.0}}\n                            Other, 0x112ad5900, {{93.8, 795.0}, {77.0, 54.0}}\n                            Other, 0x112ad5a40, {{93.8, 795.0}, {77.0, 54.0}}\n                              Other, 0x112ad6a80, {{93.8, 795.0}, {77.0, 54.0}}\n                                Other, 0x112ad7480, {{93.8, 795.0}, {77.0, 54.0}}\n                                  Other, 0x112ad4c80, {{93.8, 795.0}, {77.0, 54.0}}\n                                Other, 0x112ad4280, {{93.8, 795.0}, {77.0, 54.0}}\n                              Other, 0x112ad43c0, {{93.8, 795.0}, {77.0, 54.0}}\n                  Other, 0x112ad7980, {{0.0, 791.0}, {402.0, 83.0}}\n                    Other, 0x112ad7ac0, {{0.0, 791.0}, {402.0, 83.0}}\n                      Other, 0x112ad6e40, {{0.0, 791.0}, {402.0, 83.0}}\n                        Other, 0x112ad7200, {{0.0, 791.0}, {402.0, 83.0}}\n                          Other, 0x112ad5b80, {{0.0, 791.0}, {402.0, 83.0}}\n                            Other, 0x112ad5cc0, {{0.0, 791.0}, {402.0, 83.0}}\n                        Other, 0x112ad5e00, {{0.0, 791.0}, {402.0, 83.0}}\n                          Other, 0x112ad5f40, {{0.0, 791.0}, {402.0, 83.0}}\nPath to element:\n →Application, 0x11285fc00, pid: 87452, label: 'Earshot'\nQuery chain:\n →Find: Target Application 'dev.earshot.ios'\n  Output: {\n    Application, 0x112ad6080, pid: 87452, label: 'Earshot'\n  }\n)",
+      "targetName" : "EarshotUITests",
+      "testIdentifier" : 1,
+      "testIdentifierString" : "EarshotUITests/testAllHeadphoneEQBandDragsCommitAndPersistFinalDemoValues()",
+      "testIdentifierURL" : "test://com.apple.xcode/Earshot/EarshotUITests/EarshotUITests/testAllHeadphoneEQBandDragsCommitAndPersistFinalDemoValues",
+      "testName" : "testAllHeadphoneEQBandDragsCommitAndPersistFinalDemoValues()"
+    }
+  ],
+  "title" : "Test - Earshot",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 1
+}

@@ -53,6 +53,9 @@ struct HomeView: View {
                 if store.profile.noise || store.profile.spatial {
                     Panel(title: "Let the world in. Or out.") {
                         NoiseControls(noise: Binding(get: { store.saved.noise }, set: { store.changeNoise($0) }), profile: store.noiseProfile(), ancToggle: store.canToggleANC())
+                            // A drag belongs to one device and listening mode. Discard its
+                            // uncommitted value if either changes before finger-up.
+                            .id("\(store.saved.demo)-\(store.profile.id)-\(store.saved.currentMode)-\(store.bluetooth.connectedDeviceID?.uuidString ?? "none")")
                             .disabled(!store.canControlNoise)
                         if !store.canControlNoise { Text("Noise control becomes available when the headphones report support. Older models may need a custom mode selected.").font(.caption).foregroundStyle(.secondary) }
                     }

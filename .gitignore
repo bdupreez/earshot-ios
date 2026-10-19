@@ -15,6 +15,17 @@ local.properties
 # Signing / secrets
 *.jks
 *.keystore
+*.p8
+*.p12
+*.pfx
+*.pem
+*.key
+*.cer
+*.mobileprovision
+*.provisionprofile
+ExportOptions.plist
+.env
+.env.*
 
 # OS
 .DS_Store
@@ -27,6 +38,9 @@ ios/TestResults/
 xcuserdata/
 *.xcresult
 ios/Signing.xcconfig
+ios/Signing*.xcconfig
+*.local.xcconfig
+*.xcsettings
 
 # Agent worktrees and local Claude settings
 .claude/

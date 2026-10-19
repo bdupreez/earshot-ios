@@ -28,6 +28,86 @@ final class EarshotUITests: XCTestCase {
         attachScreenshot("Home — demo with Quiet selected")
     }
 
+    func testHomeANCRepeatedDragsCommitFinalDemoLevelAndPersist() throws {
+        launchDemo()
+        let level = app.sliders["noiseLevel"]
+        XCTAssertTrue(level.waitForExistence(timeout: 5))
+        for target: CGFloat in [0.2, 0.9, 0.3, 0.8, 0.7] {
+            reveal(level)
+            let frame = level.frame
+            let inset = min(CGFloat(18), frame.width / 4)
+            let travel = frame.width - 2 * inset
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: frame.minX + inset + travel * level.normalizedSliderPosition, dy: frame.midY))
+            let end = origin.withOffset(CGVector(dx: frame.minX + inset + travel * target, dy: frame.midY))
+            start.press(forDuration: 0.15, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+            XCTAssertFalse(app.alerts.firstMatch.exists, "A native Home gesture should complete without a command error in demo.")
+        }
+        let finalLevel = NSPredicate(format: "label == %@", "7/10")
+        XCTAssertTrue(app.staticTexts.matching(finalLevel).firstMatch.waitForExistence(timeout: 5), app.debugDescription)
+        selectTab("Tools")
+        selectTab("Home")
+        reveal(level)
+        XCTAssertTrue(app.staticTexts["7/10"].exists)
+        app.terminate()
+        app.launchArguments = []
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Demo device"].waitForExistence(timeout: 5))
+        reveal(app.sliders["noiseLevel"])
+        XCTAssertTrue(app.staticTexts["7/10"].exists)
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        attachScreenshot("Home ANC gesture final level persists in demo — hardware queue behavior requires device testing")
+    }
+
+    func testAllHeadphoneEQBandDragsCommitAndPersistFinalDemoValues() throws {
+        launchDemo()
+        selectTab("Sound")
+        XCTAssertTrue(app.buttons["Headphone EQ"].waitForExistence(timeout: 5))
+        func dragBand(_ slider: XCUIElement, to position: CGFloat) {
+            reveal(slider)
+            let frame = slider.frame
+            XCTAssertGreaterThan(frame.width, 50)
+            let inset = min(CGFloat(18), frame.width / 4)
+            let track = frame.width - 2 * inset
+            let origin = app.coordinate(withNormalizedOffset: .zero)
+            let start = origin.withOffset(CGVector(dx: frame.minX + inset + track * slider.normalizedSliderPosition, dy: frame.midY))
+            // Carry the finger beyond the native control bounds for a clamped
+            // end stop, allowing for the thumb's expanded tracking appearance.
+            let targetX = position == 0 ? max(2, frame.minX - 30) : position == 1 ? min(app.frame.maxX - 2, frame.maxX + 30) : frame.minX + inset + track * position
+            let end = origin.withOffset(CGVector(dx: targetX, dy: frame.midY))
+            print("EQ finger drag \(slider.label): frame \(frame), target fraction \(position), endpoint x\(targetX)")
+            // Intermediate drags exercise repeated changes. Exact assertions use
+            // physical end stops beyond the thumb's travel, without assuming that
+            // an estimated pixel position maps to a precise midrange integer tick.
+            start.press(forDuration: 0.15, thenDragTo: end, withVelocity: .slow, thenHoldForDuration: 0.3)
+            XCTAssertTrue(app.navigationBars["Sound"].exists, "The EQ finger drag must remain on Sound.\n\(app.debugDescription)")
+        }
+        let bands: [(String, CGFloat)] = [("Bass", 1), ("Mid", 0), ("Treble", 1)]
+        for (name, finalPosition) in bands {
+            let slider = app.sliders[name]
+            XCTAssertTrue(slider.waitForExistence(timeout: 5))
+            for position: CGFloat in [0.2, 0.85, finalPosition] {
+                dragBand(slider, to: position)
+                XCTAssertFalse(app.alerts.firstMatch.exists, "Demo \(name) gestures should not show command errors.")
+            }
+            XCTAssertEqual(slider.normalizedSliderPosition, finalPosition, accuracy: 0.001, "\(name) should retain its exact final committed demo limit; frame \(slider.frame), AX value \(String(describing: slider.value)).\n\(app.debugDescription)")
+            XCTAssertTrue(app.staticTexts[String(format: "%+.0f dB", Double(finalPosition) * 20 - 10)].exists)
+        }
+        app.terminate()
+        app.launchArguments = []
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Demo device"].waitForExistence(timeout: 5))
+        selectTab("Sound")
+        for (name, finalPosition) in bands {
+            let slider = app.sliders[name]
+            reveal(slider)
+            XCTAssertEqual(slider.normalizedSliderPosition, finalPosition, accuracy: 0.001, "\(name)'s exact limit must persist after relaunch.")
+            XCTAssertTrue(app.staticTexts[String(format: "%+.0f dB", Double(finalPosition) * 20 - 10)].exists)
+        }
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        attachScreenshot("Native EQ finger drags preserve exact signed limits after relaunch in demo — Bluetooth requires device testing")
+    }
+
     func testRealConnectionExplainsSimulatorHardwareLimit() throws {
         app.launch()
         let connect = app.buttons["connectHeadphones"]
@@ -214,13 +294,18 @@ final class EarshotUITests: XCTestCase {
         let prior = leAudio.value as? String
         attachScreenshot("Device controls before requesting LE Audio")
         tapSwitchKnob(leAudio)
-        let restart = app.buttons.matching(NSPredicate(format: "label CONTAINS[c] %@", "restart")).firstMatch
+        let restart = app.buttons["Change LE Audio and restart"]
         XCTAssertTrue(restart.waitForExistence(timeout: 5), app.debugDescription)
         dismissConfirmation(restart)
         XCTAssertEqual(leAudio.value as? String, prior)
         tapSwitchKnob(leAudio)
         XCTAssertTrue(restart.waitForExistence(timeout: 5))
         restart.tap()
+        XCTAssertTrue(restart.waitForNonExistence(timeout: 5))
+        // Popover dismissal can leave one stale switch snapshot on iPad. Wait
+        // for its actual reported value rather than weakening the change check.
+        let changedLEAudio = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value != %@", prior ?? "1"), object: leAudio)
+        XCTAssertEqual(XCTWaiter.wait(for: [changedLEAudio], timeout: 5), .completed, app.debugDescription)
         XCTAssertNotEqual(leAudio.value as? String, prior)
         let power = app.buttons["Power off headphones"]
         reveal(power)

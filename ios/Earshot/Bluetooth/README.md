@@ -14,6 +14,21 @@ spaced 80 ms apart. A connection is published as usable only after a device-side
 response to GET `[0.1]`. Opening GATT or L2CAP alone never marks it connected. Every outgoing packet
 passes the write guard: firmware/authentication writes and destructive reset/wipe commands are blocked.
 
+Following a user report of queue-full alerts on a connected QC Ultra 2, all Bluetooth-backed sliders
+(ANC, bass/mid/treble and reported headset volume) keep a local thumb value during a drag and commit
+the final value on release, restoring upstream's original end-of-drag noise behavior. Device reports
+remain authoritative after release; reports during a gesture do not move its thumb. Context changes,
+disablement, navigation and inactivity cancel an unfinished gesture. Accessibility/keyboard value
+changes can commit without touch callbacks. Local audio/DSP sliders do not send Bluetooth commands.
+
+The output pump runs in common run-loop modes so touch tracking cannot pause its paced retries.
+Only wholly unsent, contiguous absolute ANC writes (`[31.10]` or `[1.5]`) to the same device/port
+can replace an older unsent value, retaining one associated `[31.3]` read. Partially transmitted
+frames, EQ-band commands, discrete actions, diagnostic traffic and unrelated commands are ordering
+barriers. The 256-frame bound and 80 ms spacing remain. Compact `[31.6]` mode records trigger at most
+one automatic detail read per slot until explicit refresh/reconnect; a repeated compact reply must
+not cause a request/reply loop. Complete editable mode records remain authoritative.
+
 Controls use parsed capability and status reports rather than assuming that every Bose model accepts
 the same functions. The upstream product catalogue and model-name matching supply fallback labels
 and known-absent functions; valid device reports take precedence. Refresh skips functions explicitly
@@ -75,8 +90,10 @@ Reconnect is explicitly opt-in and remembers only the selected peripheral. Retry
 
 The simulator exercises the actual SwiftUI app and deterministic protocol models. Real Bluetooth
 headphone compatibility, secure-channel requirements, background connection recovery and device
-firmware quirks require an actual iPhone and headphones. This implementation has not been verified
-against physical headphones on an iPhone. Discovery in Simulator gives an explicit hardware message.
+firmware quirks require an actual iPhone and headphones. The fork owner supplied a physical-iPhone
+screenshot showing QC Ultra 2 connected and a queue-full alert while dragging; this is user-reported
+evidence, not a controlled hardware acceptance run. The slider/queue repair still needs their device
+retest, including audible changes and reconnect behavior. Discovery in Simulator gives an explicit hardware message.
 
 Official Apple references checked for this port:
 

@@ -14,7 +14,7 @@ Implemented areas include:
 
 - Five native tabs: Home, Sound, Modes, Tools, and Settings, with light/dark appearance and iPhone/iPad layouts.
 - Persistent, explicitly labelled demo profiles for the Bose models represented by upstream and the experimental Crusher interface. Demo data never establishes a physical Bluetooth connection.
-- Real Bluetooth GATT discovery and Bose BLE L2CAP control transport, with a verified BMAP reply required before reporting connected. Battery, per-part earbud battery, noise control, modes, favourites, custom-mode layouts, device settings, and diagnostics use upstream BMAP knowledge. Physical headphone interoperability remains **unverified**.
+- Real Bluetooth GATT discovery and Bose BLE L2CAP control transport, with a verified BMAP reply required before reporting connected. Battery, per-part earbud battery, noise control, modes, favourites, custom-mode layouts, device settings, and diagnostics use upstream BMAP knowledge. The fork owner reports a QC Ultra 2 connection; controlled hardware acceptance and the slider-fix retest remain pending.
 - Native 3-band headphone EQ controls and a local-player Pro EQ: graphic/parametric filters, seven upstream presets including the AutoEq QC Ultra correction, response graph, headroom, preamp, limiter, and capped boost. JSON and AutoEq import/export, safe custom-preset editing/rename/delete, bounded deduplicated imports, recovery exports, seek/progress, and A/B bypass are supported.
 - Actual local audio playback through AVAudioEngine and a real microphone record/play/delete check using AVAudioRecorder. The microphone route is shown rather than assumed.
 - Persistent multi-action mode/noise/local-EQ rules, optional foreground Wi-Fi join triggers with explicit permission, weekday schedules while the app is open, optional tap-to-run notification reminders, low-battery notifications, eight Shortcuts actions, configurable mode cycling, rich battery/staleness widgets and iOS 18+ Quiet/Aware/Cycle Control Center buttons. Signed-device delivery remains unverified.
@@ -22,6 +22,18 @@ Implemented areas include:
 - Read-only documented/selected/deep protocol discovery, a separately consented experimental Print console, reported latency with session-original reset, and device-reported sidetone persistence. All physical effects remain unverified.
 
 This is **not complete Android feature parity**. [The migration matrix](docs/IOS_MIGRATION.md) records implemented, conditional, missing, and platform-restricted features. In particular, iOS does not offer a direct public replacement for Android's arbitrary RFCOMM sockets, Shizuku codec controls, global other-app EQ, call-volume boosting, or unrestricted app/background automation. Compatible BLE control services must be tested on physical headphones. Crusher's documented Bragi link uses Classic RFCOMM; this fork has no supported iOS control transport for it.
+
+**Apple Music and EQ:** Pro EQ's parametric filters, preamp and limiter process only Earshot's
+local, unprotected audio files. For other apps' playback on supported Bose headphones, use
+**Sound → Headphone EQ**, which controls the hardware's three bands. Apple Music also offers
+its own [EQ settings](https://support.apple.com/en-ie/guide/iphone/iph5643d2c85/ios).
+Adding a streaming-service player does not supply a public systemwide effects hook.
+
+**Slider device-feedback repair:** ANC, hardware EQ and headset volume keep a local drag value
+and send the final setting on release. Paced output continues during touch tracking, eligible
+unsent ANC values coalesce without crossing commands, and compact mode replies cannot repeatedly
+request themselves. This restores noise-slider behavior already present in upstream Earshot.
+The [validation report](docs/IOS_VALIDATION.md) separates Simulator regressions from device retesting.
 
 ## Actual iOS simulator captures
 
@@ -49,6 +61,11 @@ xcodebuild -project ios/Earshot.xcodeproj -scheme Earshot \
 
 For a physical iPhone, select your development team for both the app and Widget extension, use unique bundle identifiers if necessary, and provision the shared App Group `group.dev.earshot.ios` consistently with `EarshotShared` and the widget provider. Bluetooth/microphone and optional Wi-Fi location-permission descriptions are included. Enable Access Wi-Fi Information on the app to validate foreground SSID rules. Headphone BLE transport, App Group provisioning, background behaviour, and real Bluetooth mic routing require hardware acceptance testing.
 
+Keep personal team selections, provisioning profiles, signing keys and Xcode user settings local.
+Do not stage personal signing edits in the tracked project file. Ignore rules cover local signing
+files and user state, and `python3 ios/scripts/check-push-privacy.py` checks the Git index before
+a push without displaying credential values. This is a targeted guard, not a universal secret scanner.
+
 The checked-in project is ready to open. If Swift files are added or removed, regenerate it with:
 
 ```sh
@@ -66,9 +83,9 @@ EARSHOT_SIMULATOR_ID=YOUR_SIMULATOR_UDID ios/scripts/test-simulator.sh
 
 **Baseline acceptance (before the feature-gap pass):** 53 tests passed (41 unit + 12 UI), with zero failures or skips on the installed iPhone 17 Pro simulator. See the validation report below for secondary-device checks and remaining limits.
 
-**Current feature-pass verification:** all **166 native unit tests passed together**. Across the explicitly documented runs, **29 app UI journeys and three actual system journeys** have passing latest results: small-widget Cycle, medium-widget Aware and Control Center Cycle. The corrected medium layout also passes viewport checks with three earbud batteries. [Exact outcomes and per-case coverage](docs/IOS_VALIDATION.md) preserve earlier failures and make clear this is not one combined green run.
+**Current feature-pass verification:** all **189 native unit tests passed together**. Across the explicitly documented runs, **31 app UI journeys and three actual system journeys** have passing latest results. The focused slider/rule/player/credits checks cover eight UI identifiers across the initial run and final EQ repair. Small-widget Cycle, medium-widget Aware and Control Center Cycle retain their prior passing results. [Exact outcomes and per-case coverage](docs/IOS_VALIDATION.md) preserve earlier failures and make clear this is not one combined green run.
 
-The final iPad repair run passed **169/169** (all 166 units plus three UI cases). Twelve representative iPad app UI journeys have passing latest results across the stated integration/repair runs; the complete iPhone UI suite was not run on iPad.
+On iPad, all **189 units** passed and all three focused slider journeys have passing latest results after the documented confirmation-wait repair. The aggregate covers **15 representative iPad app UI journeys** across named runs; the complete iPhone UI suite was not run on iPad.
 
 Results and screenshot attachments are stored in ignored `ios/TestResults/*.xcresult` bundles. Open a result bundle in Xcode to inspect individual assertions, logs, and screenshots. See [the validation report](docs/IOS_VALIDATION.md) for actual outcomes, environment, and limitations. Simulator tests cannot validate a physical Bose Bluetooth connection, sound through headphones, hearing safety, or vendor firmware behaviour.
 

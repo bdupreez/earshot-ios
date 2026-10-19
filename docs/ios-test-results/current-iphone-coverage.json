@@ -3,1014 +3,12 @@
   "device": "iPhone 17 Pro",
   "runtime": "iOS 26.4.1 (23E254a)",
   "latestVerifiedCounts": {
-    "unit": 166,
-    "app UI": 29,
+    "unit": 189,
+    "app UI": 31,
     "system UI": 3
   },
   "latestFailed": 0,
   "tests": [
-    {
-      "identifier": "EarshotTests/AppGroupIntegrationTests/testInstalledSimulatorAppCanAccessItsDeclaredGroupAndReopenQueue",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AppStoreTests/testConnectionRuleRunsAndScheduleFiresOnlyOncePerDay",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AppStoreTests/testDemoHydratesModesAndEarbudCapabilities",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AppStoreTests/testDemoStateAndUserPresetPersistAcrossLaunches",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AppStoreTests/testDisconnectedRuleRequiresAConnectionAndProfileIDsAreUnique",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AppStoreTests/testModeNamesValidateUTF8ByteLength",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AppStoreTests/testUnconfiguredAndUnknownModesCannotBecomeActive",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testActionOrderIsCanonicalEvenForDecodedOutOfOrderRules",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testCombinedDemoRuleAppliesAllActionsAndPreservesThemOnRelaunch",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testCorruptIndividualRecordsDoNotEraseOtherSavedSettings",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testDeviceConfirmationRequiresFreshRelevantReport",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testDirectNoiseUsesReportedQuantizationAndTogglePermission",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testFallBackRepeatedHourDoesNotRunTwice",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testInformationalStartRefusalDoesNotFailAnUnrelatedHardwareMutation",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testLatencyDemoStillUsesReportedRangeAndNeverSendsBluetooth",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testLegacyDemoSelectionUsesUpstreamSlotsAndEarbudWindAbsences",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testLocalPresetRuleWorksOfflineButMissingPresetRejectsWholeCombination",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testNoiseFallbackMustBelongToDestinationMode",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testOldSavedStateRetainsPreferencesAndModeRuleWhileNewOptionsDefault",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testQuietAwareSemanticRequestsCannotSelectOpenEarbudSpatialModes",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testRecoveryExportSurvivesRepairAndCleanRelaunch",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testRememberedSSIDCannotRunRulesAfterObservationIsDisabled",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testReportedCapabilitiesOverrideCatalogueDefaults",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testReportedProductIdentityOverridesNameFallbackAndLaterRename",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testScheduleUsesISOWeekdaysAndStableWallClockOccurrence",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testUnsupportedCombinationDoesNotConsumeScheduleOccurrence",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/AutomationTests/testWiFiRuleUsesUpstreamMatchingWithoutUnknownNetworkFallback",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testDeviceInfoRecognizesTheControlPhoneAndPrivacyRedaction",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testFunctionEvidenceDoesNotInventRoutingSupportFromEmptyTable",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testInstalledLanguagesAndRemainingBatteryMinutesUseCapturedLayouts",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testModelCatalogueAdaptsBuiltInNamesToReportedCounts",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testMuteOpenChannelIsProbedBeforeBeingDeclaredDisconnected",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testReadOnlyScannerUsesOnlyVettedGETsAndRecordsRealResponses",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testReconnectBudgetAndExplicitUserStop",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testReconnectRequiresOptInRememberedDeviceAndActiveMode",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testRememberedPreferenceRestorationDoesNotFakeAConnection",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testRestartedScanCannotBeClearedByOldCancelledTask",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/BluetoothDeviceTests/testSourceCommandsMatchUpstreamBoseLayouts",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testAllBuiltInPresetsAndQCAttributionMatchAndroid",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testAutoEQClampsValuesSupportsAliasesAndRejectsUnusableInput",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testAutoEQTypesDisabledBandsCRLFAndRoundTrip",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testCombinedResponseSkipsDisabledBandsAndIncludesPreamp",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testDemoAudioLoadsPlaysPausesAndStops",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testDisablingProEQRestoresUnprocessedPlaybackAtEveryLevel",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testHeadroomAccountsForOverlappingBoosts",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testNativeAudioEQReallyChangesRenderedSamples",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testNativeBoostActuallyAmplifiesAQuietSource",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testNativeLimiterContainsBoostedFullScaleTone",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testOriginalAndroidJSONAndFutureFieldsAreCompatible",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testPeakingFiltersHitRequestedGain",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testShelvesReachTheirPlateausAndHalfGainAtCorner",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DSPTests/testZeroGainIsUnityAndNyquistClampsSafely",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testBroaderPlanSendsOnlyGETAndDistinguishesReplyFromRefusal",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testCancellationDropsUnsentReadsButFinishesPartialFrameWithoutCorruptingWire",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testDeepPlanPreservesUpstream64By64BoundsAndEverySafetyExclusion",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testDiagnosticCorrelationStartsAtActualTransmissionAndExpires",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testEchoOnlyTimesOutAndCannotClaimSuccess",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testForegroundLossAndCancellationStopFurtherQueries",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testKnownPrivateDiscoveryFieldsRemainRedacted",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testMutationGuardCoversActiveScanAndLateCancelledReadWithoutBlockingOtherAddresses",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testScanCannotStartWhileARealMutationIsAwaitingItsReply",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testScanErrorCannotPoisonSupportOrHideAnUnrelatedWriteFailure",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testSelectedPlanUsesCanonicalBlockOrderAndRejectsOutOfRangeInputs",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testTimedOutScanCompletionDiscardsUnsentBackpressuredRead",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeepScanTests/testValidStatusPushStillUpdatesStoreDuringDiagnosticQuarantine",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeviceSettingsTests/testDemoSidetoneLevelChangePreservesChosenPersistenceFlag",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeviceSettingsTests/testRealSidetoneFlagRequiresValidReportAndOfflineWritesCannotInventState",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeviceSettingsTests/testSidetoneLevelAndPersistenceHaveIndependentExactWireBytes",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeviceStatusTests/testButtonEventsNeedOnlyDocumentedThreeBytesAndRetainReceiptTime",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeviceStatusTests/testDeviceStatusAcceptsOnlyValidReadOnlyReports",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeviceStatusTests/testExtendedPairedProfilesAreReadFromReportedMACAndRedactedInDiagnostics",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/DeviceStatusTests/testLEPreferenceUsesStartOnlyInformationCheckAndRemainsDistinctFromPhoneTransport",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ListeningControlIntentTests/testControlDestinationsRoundTripToSemanticRequestsWithoutAssumingSlotNumbers",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ListeningControlIntentTests/testLatestControlRequestReplacesOlderModeAndIsConsumedOnce",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ModeCycleTests/testAutomaticCycleFallsBackThroughFavoritesPresetsAndOtherConfiguredModes",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ModeCycleTests/testConfiguredCustomCycleExecutesInDemoAndPersistsAcrossRelaunch",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ModeCycleTests/testCycleRequestsRetainDistinctTapsAtMostOnceAndExpireNormally",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ModeCycleTests/testNextWrapsAndRecoversFromUnsavedOrUnknownCurrentMode",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ModeCycleTests/testOldPayloadSnapshotsAndPreferencesDecodeWithoutCycleFields",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ModeCycleTests/testPreferredCycleKeepsOrderDeduplicatesAndFiltersUnconfiguredSlots",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ModeCycleTests/testStaleEmptyUnsupportedAndInvalidCyclesAreActionableWithoutChangingMode",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/NoiseSemanticsTests/testCompactRuleDoesNotRewriteOtherLayoutsOrWindOff",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/NoiseSemanticsTests/testCompactWindEchoUsesEffectiveLevelWithoutChangingWrittenLevel",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/NoiseSemanticsTests/testDirectCNCQuantizationAndProtectedEnableFlagUseActualReportedState",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/NoiseSemanticsTests/testDirectCNCRejectsMalformedReportsAndPreservesLevelEndpoints",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/NoiseSemanticsTests/testLiveNoiseKeepsRequestedLevelWhileWindOrANCOffMasksIt",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/NoiseSemanticsTests/testRoutingCanBeRecheckedReadOnlyAndCurrentModeCanBeReread",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testAutomaticHeadroomCanCompensateMoreThanThirtyDecibels",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testCreateEditAndRenameCustomPresetPreserveIdentityAndProtectBuiltIns",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testDeleteUsesSafeFallbackAndLeavesOtherSelectionAlone",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testDeletingReferencedPresetLeavesActionableRuleReference",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testDisplayedPreampUsesTheSameSafetyPlanAsActualAudioOutput",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testDraftChangeDetectionProtectsEditsButAllowsUnmodifiedCancellation",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testGraphicConversionPreservesCanonicalGainsAndCanRestoreParametricExactly",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testImportRegeneratesCollidingIDsAndSkipsRepeatedContent",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testImportRejectsOversizedTextCollectionsAndFilterArrays",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testImportValidationAndLibraryCapAreAtomic",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testLocalPlayerDurationSeekBoundsAndABComparison",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testMalformedSavedPresetDoesNotEraseValidPresetsOrUnrelatedPreferences",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testNaturalCompletionStopsHardwareAndReplayStartsANewTimeline",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testNormalizationBoundsActiveLibraryButBacksUpEveryOriginalRecord",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testNormalizationRepairsIdentityAndRetainsRecoveryDataBeforeExclusion",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testPauseResumeStopAndSeekToEndReleaseAudioHardware",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testPresetEditsAndAudioOptionsPersistAndLegacyStateGetsDefaults",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testRemoveAndReorderPreserveRemainingFiltersAndKeepOneBand",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testSeekingDuringPlaybackResumesAndPauseFreezesProgress",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testSessionReleaseConsultsSharedMicrophoneOwnershipGuard",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PresetLifecycleTests/testValidationRejectsInvalidAndUnsafeEdits",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PrintConsoleTests/testConsoleCollectionHasDeadlineEvenBeforeAQuietGap",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PrintConsoleTests/testConsoleCollectsOnlyRealInjectedPrintResponsesAndFinishesAfterQuietGap",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PrintConsoleTests/testConsoleRendersDeviceErrorsAndTransportSuspensionCancelsCollection",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PrintConsoleTests/testConsoleRequiresConsentVerifiedLinkAndKnownVerbBeforeSend",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PrintConsoleTests/testConsoleStopsAtFrameLimitAndBoundsTranscriptAcrossManyCommands",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PrintConsoleTests/testConsoleTimeoutCancellationClearAndNewGenerationDoNotInventReplies",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PrintConsoleTests/testOnlyOneWhitelistedCommandAndBoundedUTF8ArgumentsCanBeSent",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PrintConsoleTests/testPrintReplyRendererUsesTextOnlyForPrintableValidUTF8",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/PrintConsoleTests/testPrintVerbsUseExactUpstreamPacketShapes",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testBatteryUsesComponentIDsAndUnknownSentinels",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testBigEndianFavoritesAndCapabilities",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testCustomDemoResetActuallyClearsConfiguredFlag",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testDeviceControlsUseReportedRangesAndBigEndianMasks",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testFlagsRoundTripAllOperations",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testFragmentedConcatenatedFrames",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testGoldenCommandFrames",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testInvalidHeaderCannotPassLiveness",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testLEPSMRejectsInvalidAndAcceptsObservedByteOrders",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testLiveDeviceControlsRequireValidReports",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testLiveProductAndSettingCapturesReplaceDemoGuesses",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testLiveStateValidatesPayloadBeforeEnablingUI",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testMissingAutomationModeDoesNotLogSuccess",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testModeLayoutAdaptsToObservedFirmwareLength",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testModeStatusUsesWindAt46AndPreservesPrompt",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testNoiseInversionAndStepCount",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testPersistedDemoControlsSurviveDeferredBluetoothInitialState",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testSettingsRespectPackedAndInvertedFlags",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testSignedEQCaptureAndWrite",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testSingleOutboundSafetyGuard",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ProtocolTests/testStandbyAsymmetricWireLayoutAndUTF8Bounds",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ReleaseNotesTests/testDismissalPersistsAcrossStoreRelaunchAndNextVersionStillShows",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ReleaseNotesTests/testFreshInstallSilentlyRecordsCurrentVersionWhileExistingInstallShowsNotes",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ReleaseNotesTests/testManualViewingMarksSeenWithoutChangingPreferencesOrOnboarding",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ReleaseNotesTests/testOnboardingDoesNotGetObscuredOrShowNotesImmediatelyAfterFinishing",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ReleaseNotesTests/testUndismissedUpdateRemainsEligibleOnNextLaunch",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ReleaseNotesTests/testUpdateDefersUntilOnboardingAndBlockingPresentationHaveFinished",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ScheduleReminderTests/testDailyPlanUsesOneRepeatingCalendarTriggerAndForegroundContent",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ScheduleReminderTests/testDisabledInvalidUnoptedAndNonScheduleRulesCreateNoRequests",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ScheduleReminderTests/testISOWeekdaysMapToNativeSundayBasedWeekdays",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ScheduleReminderTests/testIdentifiersSurviveRenamesAndDuplicateIDsCannotMultiplyReminders",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ScheduleReminderTests/testNativeCalendarComponentsKeepWallClockTimeAcrossDST",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ScheduleReminderTests/testOnlyForegroundRunAndDefaultTapCanRequestRule",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/ScheduleReminderTests/testPlanReportsCapacityOverflowRatherThanTruncating",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testAllCommandPayloadsRoundTripAndValidate",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testConcurrentWritersDoNotLoseCommands",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testConsumedRequestIDCannotReplayButNewInvocationCanRun",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testExpiredRequestNeverExecutesAndDiscardCountIsConsumedOnce",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testFutureAndDuplicateWireRequestsAreRejected",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testInvalidParametersCannotEnterQueue",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testLatestSettingReplacesOldRequestAndDoubleTapDeduplicates",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testQueueCapacityRejectsNewRequestWithoutLosingExistingRules",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testSnapshotAndShortcutCatalogRoundTripWithoutInventingBatteryValues",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/SharedIntegrationTests/testUnreadableQueueIsQuarantinedAndDoesNotPoisonNewRequests",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/WiFiLatencyTests/testExperimentalLatencyUsesSigned16BigEndianAndReportedRange",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/WiFiLatencyTests/testForegroundSSIDRulesFireOncePerObservedJoin",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/WiFiLatencyTests/testLatencyOriginalIsFirstValidReportForThisSessionOnly",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/WiFiLatencyTests/testLatencyRejectsMalformedRangeOrCurrentValue",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotTests/WiFiLatencyTests/testWiFiObserverDoesNotReadOrRequestAccessDuringInitialization",
-      "kind": "unit",
-      "result": "Passed",
-      "bundle": "ios/TestResults/DiagnosticIsolationUnitsFinal.xcresult"
-    },
-    {
-      "identifier": "EarshotUITests/ControlCenterSystemUITests/testControlCenterCycleOpensAppAndAppliesDemoMode",
-      "kind": "system UI",
-      "result": "Passed",
-      "bundle": "ios/TestResults/SystemMediumLayoutFinal.xcresult"
-    },
     {
       "identifier": "EarshotUITests/DeepScanUITests/testSelectedAndDeepScanPlansAreLocalAndCannotSendInDemo",
       "kind": "app UI",
@@ -1024,6 +22,12 @@
       "bundle": "ios/TestResults/FeatureGapFinalFollowups.xcresult"
     },
     {
+      "identifier": "EarshotUITests/EarshotUITests/testAllHeadphoneEQBandDragsCommitAndPersistFinalDemoValues",
+      "kind": "app UI",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderEQClampedFinal.xcresult"
+    },
+    {
       "identifier": "EarshotUITests/EarshotUITests/testAutomationRunsChosenMode",
       "kind": "app UI",
       "result": "Passed",
@@ -1033,25 +37,31 @@
       "identifier": "EarshotUITests/EarshotUITests/testCreditsAcknowledgeUpstreamAndAIAssistance",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/FeatureGapAcceptance.xcresult"
+      "bundle": "ios/TestResults/SliderBackpressureUI.xcresult"
     },
     {
       "identifier": "EarshotUITests/EarshotUITests/testCustomModeEditsSurviveRelaunch",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/FeatureGapAcceptance.xcresult"
+      "bundle": "ios/TestResults/SliderBackpressureUI.xcresult"
     },
     {
       "identifier": "EarshotUITests/EarshotUITests/testDeviceControlsVolumePlaybackAndRestartConfirmation",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/FeatureGapAcceptance.xcresult"
+      "bundle": "ios/TestResults/iPhoneVolumeConfirmationFinal.xcresult"
     },
     {
       "identifier": "EarshotUITests/EarshotUITests/testEarbudDemoShowsSeparateBatteryReadings",
       "kind": "app UI",
       "result": "Passed",
       "bundle": "ios/TestResults/FeatureGapAcceptance.xcresult"
+    },
+    {
+      "identifier": "EarshotUITests/EarshotUITests/testHomeANCRepeatedDragsCommitFinalDemoLevelAndPersist",
+      "kind": "app UI",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUI.xcresult"
     },
     {
       "identifier": "EarshotUITests/EarshotUITests/testLightAndDarkAppearance",
@@ -1081,7 +91,7 @@
       "identifier": "EarshotUITests/EarshotUITests/testSoundAndAutomationScreens",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/FeatureGapAcceptance.xcresult"
+      "bundle": "ios/TestResults/SliderBackpressureUI.xcresult"
     },
     {
       "identifier": "EarshotUITests/EarshotUITests/testToolsAndCompatibilityNavigation",
@@ -1123,13 +133,13 @@
       "identifier": "EarshotUITests/FeatureGapUITests/testMultiActionRuleAppliesAwareNoiseAndLocalPreset",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/NativePlatformUIFinal.xcresult"
+      "bundle": "ios/TestResults/SliderBackpressureUI.xcresult"
     },
     {
       "identifier": "EarshotUITests/FeatureGapUITests/testNativePlayerSeeksProgressesAndComparesOriginal",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/FeatureGapAcceptance.xcresult"
+      "bundle": "ios/TestResults/SliderBackpressureUI.xcresult"
     },
     {
       "identifier": "EarshotUITests/FeatureGapUITests/testPastedAutoEQImportReportsDuplicatesAndKeepsActualFilters",
@@ -1186,6 +196,12 @@
       "bundle": "ios/TestResults/FeatureGapAcceptance.xcresult"
     },
     {
+      "identifier": "EarshotUITests/ControlCenterSystemUITests/testControlCenterCycleOpensAppAndAppliesDemoMode",
+      "kind": "system UI",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SystemMediumLayoutFinal.xcresult"
+    },
+    {
       "identifier": "EarshotUITests/WidgetSystemUITests/testSmallWidgetCycleOpensAppAndAppliesDemoMode",
       "kind": "system UI",
       "result": "Passed",
@@ -1196,6 +212,1140 @@
       "kind": "system UI",
       "result": "Passed",
       "bundle": "ios/TestResults/SystemMediumLayoutFinal.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AppGroupIntegrationTests/testInstalledSimulatorAppCanAccessItsDeclaredGroupAndReopenQueue",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AppStoreTests/testConnectionRuleRunsAndScheduleFiresOnlyOncePerDay",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AppStoreTests/testDemoHydratesModesAndEarbudCapabilities",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AppStoreTests/testDemoStateAndUserPresetPersistAcrossLaunches",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AppStoreTests/testDisconnectedRuleRequiresAConnectionAndProfileIDsAreUnique",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AppStoreTests/testModeNamesValidateUTF8ByteLength",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AppStoreTests/testUnconfiguredAndUnknownModesCannotBecomeActive",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testActionOrderIsCanonicalEvenForDecodedOutOfOrderRules",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testCombinedDemoRuleAppliesAllActionsAndPreservesThemOnRelaunch",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testCorruptIndividualRecordsDoNotEraseOtherSavedSettings",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testDeviceConfirmationRequiresFreshRelevantReport",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testDirectNoiseUsesReportedQuantizationAndTogglePermission",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testFallBackRepeatedHourDoesNotRunTwice",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testInformationalStartRefusalDoesNotFailAnUnrelatedHardwareMutation",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testLatencyDemoStillUsesReportedRangeAndNeverSendsBluetooth",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testLegacyDemoSelectionUsesUpstreamSlotsAndEarbudWindAbsences",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testLocalPresetRuleWorksOfflineButMissingPresetRejectsWholeCombination",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testNoiseFallbackMustBelongToDestinationMode",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testOldSavedStateRetainsPreferencesAndModeRuleWhileNewOptionsDefault",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testQuietAwareSemanticRequestsCannotSelectOpenEarbudSpatialModes",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testRecoveryExportSurvivesRepairAndCleanRelaunch",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testRememberedSSIDCannotRunRulesAfterObservationIsDisabled",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testReportedCapabilitiesOverrideCatalogueDefaults",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testReportedProductIdentityOverridesNameFallbackAndLaterRename",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testScheduleUsesISOWeekdaysAndStableWallClockOccurrence",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testUnsupportedCombinationDoesNotConsumeScheduleOccurrence",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/AutomationTests/testWiFiRuleUsesUpstreamMatchingWithoutUnknownNetworkFallback",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testANCCoalescingPreservesDistinctRoutesAddressesAndNonabsoluteFrames",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testANCReplacementNeverCrossesDiscreteReadOrDiagnosticBarriers",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testANCValueBurstsKeepOnlyNewestUnsentValueAndTrailingModeRead",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testDeviceInfoRecognizesTheControlPhoneAndPrivacyRedaction",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testDiagnosticCancelDropsOnlyUnstartedReadsAndResetClearsPumpState",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testFunctionEvidenceDoesNotInventRoutingSupportFromEmptyTable",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testInstalledLanguagesAndRemainingBatteryMinutesUseCapturedLayouts",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testModelCatalogueAdaptsBuiltInNamesToReportedCounts",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testMuteOpenChannelIsProbedBeforeBeingDeclaredDisconnected",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testPartialCNCFrameAndPriorityProbePreserveDecodableWireOrder",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testProductionPumpTimerDrainsMemoryStreamInNondefaultCommonRunLoopMode",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testQueueReplacesAtCapacityAndRejectsUnrelatedOverflowAtomically",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testReadOnlyScannerUsesOnlyVettedGETsAndRecordsRealResponses",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testRealMemoryStreamPacesWholeFramesAndCompletesPartialDiagnosticOnlyOnce",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testReconnectBudgetAndExplicitUserStop",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testReconnectRequiresOptInRememberedDeviceAndActiveMode",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testRememberedPreferenceRestorationDoesNotFakeAConnection",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testRestartedScanCannotBeClearedByOldCancelledTask",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/BluetoothDeviceTests/testSourceCommandsMatchUpstreamBoseLayouts",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testAllBuiltInPresetsAndQCAttributionMatchAndroid",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testAutoEQClampsValuesSupportsAliasesAndRejectsUnusableInput",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testAutoEQTypesDisabledBandsCRLFAndRoundTrip",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testCombinedResponseSkipsDisabledBandsAndIncludesPreamp",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testDemoAudioLoadsPlaysPausesAndStops",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testDisablingProEQRestoresUnprocessedPlaybackAtEveryLevel",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testHeadroomAccountsForOverlappingBoosts",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testNativeAudioEQReallyChangesRenderedSamples",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testNativeBoostActuallyAmplifiesAQuietSource",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testNativeLimiterContainsBoostedFullScaleTone",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testOriginalAndroidJSONAndFutureFieldsAreCompatible",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testPeakingFiltersHitRequestedGain",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testShelvesReachTheirPlateausAndHalfGainAtCorner",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DSPTests/testZeroGainIsUnityAndNyquistClampsSafely",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testBroaderPlanSendsOnlyGETAndDistinguishesReplyFromRefusal",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testCancellationDropsUnsentReadsButFinishesPartialFrameWithoutCorruptingWire",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testDeepPlanPreservesUpstream64By64BoundsAndEverySafetyExclusion",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testDiagnosticCorrelationStartsAtActualTransmissionAndExpires",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testEchoOnlyTimesOutAndCannotClaimSuccess",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testForegroundLossAndCancellationStopFurtherQueries",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testKnownPrivateDiscoveryFieldsRemainRedacted",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testMutationGuardCoversActiveScanAndLateCancelledReadWithoutBlockingOtherAddresses",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testScanCannotStartWhileARealMutationIsAwaitingItsReply",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testScanErrorCannotPoisonSupportOrHideAnUnrelatedWriteFailure",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testSelectedPlanUsesCanonicalBlockOrderAndRejectsOutOfRangeInputs",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testTimedOutScanCompletionDiscardsUnsentBackpressuredRead",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeepScanTests/testValidStatusPushStillUpdatesStoreDuringDiagnosticQuarantine",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeviceSettingsTests/testDemoSidetoneLevelChangePreservesChosenPersistenceFlag",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeviceSettingsTests/testRealSidetoneFlagRequiresValidReportAndOfflineWritesCannotInventState",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeviceSettingsTests/testSidetoneLevelAndPersistenceHaveIndependentExactWireBytes",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeviceStatusTests/testButtonEventsNeedOnlyDocumentedThreeBytesAndRetainReceiptTime",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeviceStatusTests/testDeviceStatusAcceptsOnlyValidReadOnlyReports",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeviceStatusTests/testExtendedPairedProfilesAreReadFromReportedMACAndRedactedInDiagnostics",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/DeviceStatusTests/testLEPreferenceUsesStartOnlyInformationCheckAndRemainsDistinctFromPhoneTransport",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ListeningControlIntentTests/testControlDestinationsRoundTripToSemanticRequestsWithoutAssumingSlotNumbers",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ListeningControlIntentTests/testLatestControlRequestReplacesOlderModeAndIsConsumedOnce",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ModeCycleTests/testAutomaticCycleFallsBackThroughFavoritesPresetsAndOtherConfiguredModes",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ModeCycleTests/testConfiguredCustomCycleExecutesInDemoAndPersistsAcrossRelaunch",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ModeCycleTests/testCycleRequestsRetainDistinctTapsAtMostOnceAndExpireNormally",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ModeCycleTests/testNextWrapsAndRecoversFromUnsavedOrUnknownCurrentMode",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ModeCycleTests/testOldPayloadSnapshotsAndPreferencesDecodeWithoutCycleFields",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ModeCycleTests/testPreferredCycleKeepsOrderDeduplicatesAndFiltersUnconfiguredSlots",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ModeCycleTests/testStaleEmptyUnsupportedAndInvalidCyclesAreActionableWithoutChangingMode",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testAccessibilityAndKeyboardChangesCommitImmediatelyWithoutTouchCallbacks",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testBluetoothSliderAccessibilityUpdatesStayImmediateAndRejectInvalidNumbers",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testBluetoothSliderCancellationAndUnchangedTargetsDoNotWrite",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testCancellationRejectsLateDragUpdatesAndEndButAllowsANewGesture",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testCompactRuleDoesNotRewriteOtherLayoutsOrWindOff",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testCompactWindEchoUsesEffectiveLevelWithoutChangingWrittenLevel",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testDirectCNCQuantizationAndProtectedEnableFlagUseActualReportedState",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testDirectCNCRejectsMalformedReportsAndPreservesLevelEndpoints",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testDisabledControlCancelsDragEvenIfItIsEnabledAgainBeforeRelease",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testEveryEQBandKeepsItsOwnDraftAndCommitsOneSignedFinalValue",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testIncomingReportKeepsDragDraftAndFinalCommitMergesLatestFlags",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testLifecycleResetCannotReplayAPreviousGesture",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testLiveNoiseKeepsRequestedLevelWhileWindOrANCOffMasksIt",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testRoutingCanBeRecheckedReadOnlyAndCurrentModeCanBeReread",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testSliderBurstWritesOnlyOneFinalRequestedLevel",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testUnchangedSliderGestureAndInvalidValuesNeverCommit",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/NoiseSemanticsTests/testVolumeDraftKeepsUserTargetAcrossReportsAndUsesReportedRange",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testAutomaticHeadroomCanCompensateMoreThanThirtyDecibels",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testCreateEditAndRenameCustomPresetPreserveIdentityAndProtectBuiltIns",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testDeleteUsesSafeFallbackAndLeavesOtherSelectionAlone",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testDeletingReferencedPresetLeavesActionableRuleReference",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testDisplayedPreampUsesTheSameSafetyPlanAsActualAudioOutput",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testDraftChangeDetectionProtectsEditsButAllowsUnmodifiedCancellation",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testGraphicConversionPreservesCanonicalGainsAndCanRestoreParametricExactly",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testImportRegeneratesCollidingIDsAndSkipsRepeatedContent",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testImportRejectsOversizedTextCollectionsAndFilterArrays",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testImportValidationAndLibraryCapAreAtomic",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testLocalPlayerDurationSeekBoundsAndABComparison",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testMalformedSavedPresetDoesNotEraseValidPresetsOrUnrelatedPreferences",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testNaturalCompletionStopsHardwareAndReplayStartsANewTimeline",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testNormalizationBoundsActiveLibraryButBacksUpEveryOriginalRecord",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testNormalizationRepairsIdentityAndRetainsRecoveryDataBeforeExclusion",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testPauseResumeStopAndSeekToEndReleaseAudioHardware",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testPresetEditsAndAudioOptionsPersistAndLegacyStateGetsDefaults",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testRemoveAndReorderPreserveRemainingFiltersAndKeepOneBand",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testSeekingDuringPlaybackResumesAndPauseFreezesProgress",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testSessionReleaseConsultsSharedMicrophoneOwnershipGuard",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PresetLifecycleTests/testValidationRejectsInvalidAndUnsafeEdits",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PrintConsoleTests/testConsoleCollectionHasDeadlineEvenBeforeAQuietGap",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PrintConsoleTests/testConsoleCollectsOnlyRealInjectedPrintResponsesAndFinishesAfterQuietGap",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PrintConsoleTests/testConsoleRendersDeviceErrorsAndTransportSuspensionCancelsCollection",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PrintConsoleTests/testConsoleRequiresConsentVerifiedLinkAndKnownVerbBeforeSend",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PrintConsoleTests/testConsoleStopsAtFrameLimitAndBoundsTranscriptAcrossManyCommands",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PrintConsoleTests/testConsoleTimeoutCancellationClearAndNewGenerationDoNotInventReplies",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PrintConsoleTests/testOnlyOneWhitelistedCommandAndBoundedUTF8ArgumentsCanBeSent",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PrintConsoleTests/testPrintReplyRendererUsesTextOnlyForPrintableValidUTF8",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/PrintConsoleTests/testPrintVerbsUseExactUpstreamPacketShapes",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testBatteryUsesComponentIDsAndUnknownSentinels",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testBigEndianFavoritesAndCapabilities",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testCompactModeDetailRequestsAreBoundedIncludingReentrantReplies",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testCustomDemoResetActuallyClearsConfiguredFlag",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testDeviceControlsUseReportedRangesAndBigEndianMasks",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testFlagsRoundTripAllOperations",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testFragmentedConcatenatedFrames",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testFullModeReportPreservesEditableLayoutAcrossCompactRepeats",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testGoldenCommandFrames",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testInvalidHeaderCannotPassLiveness",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testLEPSMRejectsInvalidAndAcceptsObservedByteOrders",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testLiveDeviceControlsRequireValidReports",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testLiveProductAndSettingCapturesReplaceDemoGuesses",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testLiveStateValidatesPayloadBeforeEnablingUI",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testMissingAutomationModeDoesNotLogSuccess",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testModeDetailBudgetResetsWhenLiveConnectionStateClears",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testModeLayoutAdaptsToObservedFirmwareLength",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testModeStatusUsesWindAt46AndPreservesPrompt",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testNoiseInversionAndStepCount",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testPersistedDemoControlsSurviveDeferredBluetoothInitialState",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testRefusedModeDetailReadsStaySuppressedUntilExplicitRefresh",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testSettingsRespectPackedAndInvertedFlags",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testSignedEQCaptureAndWrite",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testSingleOutboundSafetyGuard",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ProtocolTests/testStandbyAsymmetricWireLayoutAndUTF8Bounds",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ReleaseNotesTests/testDismissalPersistsAcrossStoreRelaunchAndNextVersionStillShows",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ReleaseNotesTests/testFreshInstallSilentlyRecordsCurrentVersionWhileExistingInstallShowsNotes",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ReleaseNotesTests/testManualViewingMarksSeenWithoutChangingPreferencesOrOnboarding",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ReleaseNotesTests/testOnboardingDoesNotGetObscuredOrShowNotesImmediatelyAfterFinishing",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ReleaseNotesTests/testUndismissedUpdateRemainsEligibleOnNextLaunch",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ReleaseNotesTests/testUpdateDefersUntilOnboardingAndBlockingPresentationHaveFinished",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ScheduleReminderTests/testDailyPlanUsesOneRepeatingCalendarTriggerAndForegroundContent",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ScheduleReminderTests/testDisabledInvalidUnoptedAndNonScheduleRulesCreateNoRequests",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ScheduleReminderTests/testISOWeekdaysMapToNativeSundayBasedWeekdays",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ScheduleReminderTests/testIdentifiersSurviveRenamesAndDuplicateIDsCannotMultiplyReminders",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ScheduleReminderTests/testNativeCalendarComponentsKeepWallClockTimeAcrossDST",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ScheduleReminderTests/testOnlyForegroundRunAndDefaultTapCanRequestRule",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/ScheduleReminderTests/testPlanReportsCapacityOverflowRatherThanTruncating",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testAllCommandPayloadsRoundTripAndValidate",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testConcurrentWritersDoNotLoseCommands",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testConsumedRequestIDCannotReplayButNewInvocationCanRun",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testExpiredRequestNeverExecutesAndDiscardCountIsConsumedOnce",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testFutureAndDuplicateWireRequestsAreRejected",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testInvalidParametersCannotEnterQueue",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testLatestSettingReplacesOldRequestAndDoubleTapDeduplicates",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testQueueCapacityRejectsNewRequestWithoutLosingExistingRules",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testSnapshotAndShortcutCatalogRoundTripWithoutInventingBatteryValues",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/SharedIntegrationTests/testUnreadableQueueIsQuarantinedAndDoesNotPoisonNewRequests",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/WiFiLatencyTests/testExperimentalLatencyUsesSigned16BigEndianAndReportedRange",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/WiFiLatencyTests/testForegroundSSIDRulesFireOncePerObservedJoin",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/WiFiLatencyTests/testLatencyOriginalIsFirstValidReportForThisSessionOnly",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/WiFiLatencyTests/testLatencyRejectsMalformedRangeOrCurrentValue",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
+    },
+    {
+      "identifier": "EarshotTests/WiFiLatencyTests/testWiFiObserverDoesNotReadOrRequestAccessDuringInitialization",
+      "kind": "unit",
+      "result": "Passed",
+      "bundle": "ios/TestResults/SliderBackpressureUnits.xcresult"
     }
   ]
 }

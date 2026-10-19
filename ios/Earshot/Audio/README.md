@@ -22,4 +22,13 @@ User presets support edit, copy, rename, delete, filter removal and reordering; 
 
 iOS does not let this app process other apps' output, phone calls, or protected streaming tracks. Headphone hardware EQ is a separate control path. File playback does not require microphone permission. The generated listening sample is a quiet, 12-second test source rather than imported commercial audio.
 
+For Spotify, Apple Music and other sources, use **Sound → Headphone EQ** to request the Bose
+hardware's three-band settings on supported headphones. These settings are applied by the headphones,
+independently of which app supplies music; their audible effect must be checked on the actual device.
+The full Pro EQ filters, preamp, limiter and boost are available only to Earshot's local player.
+An audio session's `mixWithOthers` option permits simultaneous playback; it does not give this graph
+another app's samples. See Apple's [audio-engine](https://developer.apple.com/documentation/AVFAudio/audio-engine)
+and [mixing-option](https://developer.apple.com/documentation/avfaudio/avaudiosession/categoryoptions-swift.struct/mixwithothers)
+documentation. Bluetooth sliders commit at the end of a drag; local Pro EQ/preview sliders remain continuous.
+
 `DSPTests` verifies the original model, math, presets and interchange formats, including actual offline `AVAudioEngine` waveforms for boost, bypass, sustained audibility and peak limiting. `PresetLifecycleTests` covers preset identity, atomic imports, persistence/recovery, exact filter restoration, dirty drafts, shared gain calculations, real seek/progress, engine idling, session ownership and replay after natural completion. `AppStoreTests` covers isolated persistence, profile capabilities, mode validation and automation state. Simulator execution verifies the native software path; it does not measure headphones, Bluetooth latency, perceived loudness, or hardware fidelity.

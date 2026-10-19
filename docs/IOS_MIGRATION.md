@@ -10,6 +10,13 @@ The Android audit covered `README.md`, `CLAUDE.md`, the core repository contract
 
 The retained Android directories are reference material for this migration. Old Android QA records describe upstream Android builds. They do not establish iOS compatibility.
 
+**Device feedback (19 October):** the fork owner supplied a physical-iPhone screenshot showing
+QC Ultra 2 connected, with a command-queue-full alert while dragging ANC, and reported similar
+slider behavior elsewhere. The repair covers ANC, all three hardware EQ bands and headset volume,
+common-mode stream pacing, bounded unsent ANC replacement and compact-mode detail-read loops.
+This user report is narrower than controlled physical acceptance; the repaired build still requires
+device retesting. Original Earshot's local-draft/end-of-drag noise behavior is explicitly credited.
+
 ## Platform challenges
 
 ### Bluetooth transport
@@ -123,8 +130,8 @@ Physical-device acceptance remains required:
 1. Install a signed build on an iPhone using Xcode. Record iPhone model/iOS version, headphone model, firmware and whether the official vendor app was closed. Test Bluetooth denied/off/on and fresh permission states.
 2. Pair audio in iOS Settings. Discover the device in Earshot. Log advertised services, the PSM bytes, L2CAP open/error, liveness reply, product ID and capabilities. Do not treat audio pairing as a control connection.
 3. Read battery, per-bud/case state, firmware, current mode and EQ. Compare with the vendor application, used separately. Unknown values must stay unknown rather than demo defaults.
-4. Select Quiet/Aware/custom modes, change ANC level and wind/spatial controls, and listen for each change. Confirm that a STATUS/RESULT matches the requested value. Exercise firmware refusals and legacy/no-block-31 models before advertising those models as supported.
-5. Change hardware EQ and sidetone, then reconnect and re-read. Verify supported switches individually. For custom slots, physically validate each reported complete status/write layout and the resulting saved mode before claiming support; the UI enables writes only when it receives a complete supported layout.
+4. Select Quiet/Aware/custom modes, change ANC level and wind/spatial controls, and listen for each change. Repeat long back-and-forth ANC drags and release at distinct levels: no queue-full alert, one final requested setting per gesture, no incoming report moving the thumb mid-drag. Confirm that a STATUS/RESULT matches the requested value. Exercise firmware refusals and legacy/no-block-31 models before advertising those models as supported.
+5. Repeat drags on bass, mid, treble and headset volume; verify final reported values, audible hardware EQ while Apple Music plays, and no queue-full alerts. Change sidetone, reconnect and re-read. Verify supported switches individually. For custom slots, physically validate each reported complete status/write layout and the resulting saved mode before claiming support; the UI enables writes only when it receives a complete supported layout.
 6. Subscribe to pushes; change modes/volume on headset controls and connect charging power. Confirm timely UI updates without aggressive polling. Test dropped streams, busy vendor app, radio loss and reconnect.
 7. If offering the LE Audio switch, obtain the in-app restart confirmation, observe interruption/reconnect and verify the resulting state. Treat latency writes as experimental: record the reported range/units, obtain the in-app confirmation, verify the fresh report, and establish a repeatable audible result before claiming useful latency control.
 8. Record with the phone mic and the headset mic separately. Confirm reported input routes, meter movement, 8-second auto-stop, playback, delete, microphone denial, incoming-call interruption and route removal. Compare device behavior to simulator behavior without equating them.

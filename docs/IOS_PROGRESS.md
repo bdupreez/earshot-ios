@@ -124,6 +124,56 @@ The final iPad run passed **169/169, 0 failures/skips**, Xcode exit 0 (`iPadNati
 
 Updated current validation, migration matrix, changelog, widget architecture, reproduction instructions, screenshots and provenance. Original HellzYeahh/Earshot contributor credits, third-party research notices and AI-assisted port disclosure remain prominent. Clarified that the documented Crusher Classic RFCOMM link is blocked without a supported iOS transport; no physical headset, signed-device SSID/provisioning, Siri, exact background execution or full Android parity is claimed. Checkpoint 12 was pushed as [`525050d`](https://github.com/bdupreez/earshot-ios/commit/525050d) only to the fork. This final checkpoint follows the same fork-only push policy.
 
+## Checkpoint 14 — device-reported slider backpressure and private signing (19 October 2026)
+
+The fork owner reported a queue-full alert on a physically connected QC Ultra 2 when dragging
+ANC, then similar slider problems elsewhere. Restored the original Android noise control's
+local-draft/end-of-drag behavior (HellzYeahh and contributors, MIT) and applied guarded release
+commits to bass, mid, treble and headset volume. Device reports stay authoritative, active thumbs
+ignore report changes, and context changes cancel unfinished gestures. Local Pro EQ and player
+sliders remain continuous. These source repairs are an AI-assisted port correction, not a claim
+to have invented upstream Earshot's design.
+
+The paced L2CAP output timer now runs in common run-loop modes during touch tracking. A bounded
+production queue coalesces only a wholly unsent suffix of same-address/device/port absolute ANC
+settings and its associated current-mode read. Partial frames, diagnostics, discrete commands and
+EQ bands keep their wire order; the 256-frame bound and 80 ms spacing remain. Compact mode reports
+can request one detail record per slot until refresh/reconnect, preventing identical compact
+replies from causing an automatic GET loop. The exact traffic causing the user's alert was not
+captured; physical audible/queue acceptance remains theirs to retest.
+
+Installed Xcode built the actual app, extension and test targets. All **189 native units passed**,
+including 23 new regressions for gesture drafts, real queue/stream/run-loop behavior and actual
+mode receive/follow-up handling. The focused iPhone UI run passed **7/8**; the new EQ case exposed
+unreliable exact-step targeting in coordinate and native fractional adjustments. Subsequent
+attempts are preserved in raw summaries. The final case uses real repeated finger drags to
+unambiguous clamped limits and exact signed-value/relaunch assertions; arbitrary midrange signed
+values remain required by the pure gesture regressions. The final EQ case passed **1/1**, Xcode
+exit 0; all eight selected iPhone UI identifiers now have a passing latest result across the
+initial and final runs. This is not one green eight-case run. Current iPhone coverage aggregates
+**189 units + 31 app UI + three system UI** latest Passed results; native captures were visually inspected.
+
+The iPad slider integration passed **191/192**: all 189 units plus ANC and EQ. Volume/playback
+passed within its third UI journey, followed by a stale LE Audio switch assertion during popover
+dismissal. Exact action selection and a bounded dismissal/value wait repaired the harness; the
+focused iPad rerun passed **1/1**, Xcode exit 0. The current iPad aggregate is **189 units + 15
+representative app UI** latest Passed results, including the three slider cases. Failed summaries
+remain exported; this is not a single combined 204-test run. The final confirmation harness
+also passed **1/1** on iPhone (`iPhoneVolumeConfirmationFinal.xcresult`), Xcode exit 0.
+
+Preserved the owner's local Xcode project/signing edits byte-for-byte and excluded that file
+from the commit. Added ignore rules and an indexed-file privacy guard for signing/account/key
+material; synthetic clean/failing checks verify that it blocks findings without printing values.
+Read-only audit of the 35 existing branch commits and 896 commit-backed file versions found no
+personal signing-team settings, private keys or common credential patterns. Local Codex snapshot
+refs are outside the named branch and are not pushed. A targeted pattern audit is not a guarantee
+about arbitrary opaque secrets. Only the explicit fork branch may receive this progress push.
+
+Clarified Apple Music: supported Bose hardware three-band EQ can affect other apps' music;
+Earshot's parametric Pro EQ/limiter/preamp require its own unprotected local playback. Updated
+README, migration/acceptance plan, Bluetooth/audio documentation and changelog with original
+credits and the physical-device retest boundary intact.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.
