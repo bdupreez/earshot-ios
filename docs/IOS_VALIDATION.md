@@ -8,6 +8,9 @@ Repository maintenance on **23 October 2026** made the iOS branch the fork defau
 manual upstream checker. All **18 Python regressions** passed; the actual public API comparison
 reported **42 commits ahead, zero behind** at upstream `9e6c4912531ec6e159eded862d1b6ffa55094199`.
 See [upstream checks](UPSTREAM_UPDATES.md) and [checkpoint 15](IOS_PROGRESS.md).
+The actual fork-hosted [workflow run](https://github.com/bdupreez/earshot-ios/actions/runs/39867056544)
+also passed all 18 tests, the live comparison and summary publication at `12ecb2d`.
+The comparison hit GitHub's 300-file reporting limit, flagged as possibly incomplete.
 These tooling checks do not rerun or extend the native Simulator acceptance recorded below.
 
 - Validation date: 19 October 2026 (Australia/Melbourne).

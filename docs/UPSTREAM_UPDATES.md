@@ -38,6 +38,12 @@ to GitHub's public rate limit. An existing `GH_TOKEN` environment variable can a
 GET requests; the checker never writes that value into the report. The local output path is
 ignored by Git. Open the Markdown report to inspect commits, changed areas and comparison links.
 
+The first hosted [verification run](https://github.com/bdupreez/earshot-ios/actions/runs/39867056544)
+passed on 23 October 2026: 18 regression tests, the live upstream check and summary publication.
+The same checker also passed locally. Its initial live comparison found 42 newer commits, with
+300 changed files returned and possible file-list truncation explicitly flagged. This is a dated
+observation; run the check again for current information.
+
 ## What the report means
 
 The imported baseline is pinned in [upstream-baseline.json](upstream-baseline.json), initially

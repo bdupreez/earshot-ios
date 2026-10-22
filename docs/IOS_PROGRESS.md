@@ -196,7 +196,10 @@ upstream `main` to `9e6c4912531ec6e159eded862d1b6ffa55094199`: **42 commits ahea
 the imported baseline. All 42 commits were listed; the API returned its **300-file limit**, which
 the report flags as possibly incomplete. The local report is ignored under `ios/TestResults/`. Upstream changes
 are reported for later review, not silently imported into this native port. Actual hosted workflow
-verification follows publication of the workflow on the fork's default branch.
+verification was then completed on the fork's default branch: [run 39867056544](https://github.com/bdupreez/earshot-ios/actions/runs/39867056544)
+at commit `12ecb2d59be18e762ca7b1b3289ccaf6f9b3593a` passed all 18 tests, the actual upstream
+API check and summary-publication step. The workflow completed successfully with read-only
+permissions and no automatically imported upstream code.
 
 Updated README, branch/update instructions and migration guidance while preserving HellzYeahh,
 Earshot contributors, MIT and research credits. Clarified that MIT permits covered-code commercial
