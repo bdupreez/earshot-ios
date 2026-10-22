@@ -6,6 +6,24 @@ Brian du Preez is using AI assistance/tokens to help explore an iOS port in [bdu
 
 The original [MIT licence](LICENSE), copyright notice, Android source tree, and research are preserved. Read [all credits and third-party notices](THIRD_PARTY_NOTICES.md). The original Android README is preserved in [docs/ANDROID_UPSTREAM_README.md](docs/ANDROID_UPSTREAM_README.md).
 
+## Default branch and upstream updates
+
+This fork's default branch is **`codex/native-ios-port`**, containing the native iOS work.
+Its retained **`main`** branch is the original Android 0.4.0 reference. This fork's branch settings
+do not change [HellzYeahh/earshot](https://github.com/HellzYeahh/earshot).
+
+To check for upstream changes, open [Actions → Check upstream updates](https://github.com/bdupreez/earshot-ios/actions/workflows/check-upstream-updates.yml),
+choose **Run workflow**, and read the run's Summary. Or run locally:
+
+```sh
+python3 ios/scripts/check-upstream-updates.py --output ios/TestResults/upstream-update-check.md
+```
+
+The check compares the credited imported snapshot with upstream's current default-branch tip.
+It reads public metadata and writes a report; it does not merge code, advance the imported baseline,
+change remotes, or push upstream. There is no automatic schedule. See [the update workflow](docs/UPSTREAM_UPDATES.md)
+for report limits and the deliberate porting process.
+
 ## Native iOS app
 
 The primary development target of this fork is `ios/`: native **Swift + SwiftUI**, Core Bluetooth, AVFoundation, WidgetKit, App Intents, XCTest and XCUITest. No cross-platform wrapper, account, analytics SDK, or third-party Swift package is required.

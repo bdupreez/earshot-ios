@@ -6,6 +6,12 @@ Native implementation is `ios/`, Swift/SwiftUI, without third-party packages. Op
 
 Push progress checkpoints regularly, with detailed commit messages and current validation/remaining-work notes in `docs/IOS_PROGRESS.md`. Push **only** to the user's fork, `git@github.com:bdupreez/earshot-ios.git` (or the equivalent HTTPS URL). Verify the push URL before each push. Never push to `HellzYeahh/earshot`, add an upstream push destination, or open an upstream pull request. Work on a `codex/` branch unless the user requests another branch.
 
+The fork's default is `codex/native-ios-port`; `main` retains the original Android snapshot.
+Check upstream using `ios/scripts/check-upstream-updates.py` or the manual Actions workflow.
+`docs/upstream-baseline.json` records the last deliberately imported snapshot, not the last check.
+Never advance it just because an update check ran. Review/port upstream changes separately, with
+original credits, meaningful tests and fork-only pushes. Do not automatically sync upstream over iOS.
+
 Keep personal Apple developer-account identifiers, signing identities, provisioning profiles, keys,
 local Xcode user settings and private configuration out of commits. Preserve local signing edits
 without staging them; never regenerate the project over those edits. Before each push, run

@@ -2,6 +2,7 @@
 .gradle/
 build/
 .kotlin/
+__pycache__/
 local.properties
 
 # IDE

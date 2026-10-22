@@ -4,6 +4,12 @@ The original application is [Earshot by HellzYeahh and contributors](https://git
 
 ## Environment
 
+Repository maintenance on **23 October 2026** made the iOS branch the fork default and added a
+manual upstream checker. All **18 Python regressions** passed; the actual public API comparison
+reported **42 commits ahead, zero behind** at upstream `9e6c4912531ec6e159eded862d1b6ffa55094199`.
+See [upstream checks](UPSTREAM_UPDATES.md) and [checkpoint 15](IOS_PROGRESS.md).
+These tooling checks do not rerun or extend the native Simulator acceptance recorded below.
+
 - Validation date: 19 October 2026 (Australia/Melbourne).
 - Installed Xcode: **26.4.1**, build **17E202**, `/Applications/Xcode.app`.
 - Simulator SDK: **iOS 26.4**; the test result reports runtime **iOS 26.4.1 (23E254a)**.

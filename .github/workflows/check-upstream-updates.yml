@@ -1,0 +1,34 @@
+name: Check upstream updates
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    if: github.repository == 'bdupreez/earshot-ios'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check out this fork without persisting credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Verify the update checker
+        env:
+          PYTHONDONTWRITEBYTECODE: '1'
+        run: python3 -m unittest discover -s ios/scripts/tests -p 'test_check_upstream_updates.py' -v
+      - name: Read upstream metadata and compare the imported snapshot
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 ios/scripts/check-upstream-updates.py --output "$RUNNER_TEMP/earshot-upstream-update.md"
+      - name: Publish the read-only report in this run's summary
+        if: always()
+        run: |
+          if [ -f "$RUNNER_TEMP/earshot-upstream-update.md" ]; then
+            cat "$RUNNER_TEMP/earshot-upstream-update.md" >> "$GITHUB_STEP_SUMMARY"
+          else
+            printf 'The upstream check did not complete. See the failed step; no upstream code was imported.\n' >> "$GITHUB_STEP_SUMMARY"
+          fi

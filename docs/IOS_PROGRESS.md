@@ -174,6 +174,41 @@ Earshot's parametric Pro EQ/limiter/preamp require its own unprotected local pla
 README, migration/acceptance plan, Bluetooth/audio documentation and changelog with original
 credits and the physical-device retest boundary intact.
 
+## Checkpoint 15 — iOS default branch and manual upstream checks (23 October 2026)
+
+Made `codex/native-ios-port` the default branch of **bdupreez/earshot-ios** and verified GitHub's
+setting and local `origin/HEAD`. The fork's Android `main` remains at imported upstream 0.4.0
+commit `d6ceffa7a028f2809840160bf8323715d24384cb`; HellzYeahh/earshot's default remains `main`.
+No original-repository settings/branches were changed, and no upstream push destination was added.
+
+Added a standard-library, GET-only upstream checker and manual fork-gated GitHub Actions workflow.
+The imported baseline is explicit and read-only. Each check discovers upstream's default branch,
+resolves one immutable tip, reports ancestry/commits/changed areas and flags API truncation. It
+never synchronizes code, advances the baseline, runs upstream code or creates an automatic schedule.
+Remote text is bounded/escaped, requests and redirects are restricted, and optional authentication
+stays in request headers. The workflow uses a temporary read-only GitHub token, pinned official
+checkout and no persisted credentials or personal developer secrets.
+
+All **18 Python regressions passed**, including identical/ahead/behind/diverged histories,
+pagination/limits, renamed files, API errors, credential-safe output and remote markup injection.
+An independent read-only source review found no blocking issue. A real public API check resolved
+upstream `main` to `9e6c4912531ec6e159eded862d1b6ffa55094199`: **42 commits ahead, zero behind**
+the imported baseline. All 42 commits were listed; the API returned its **300-file limit**, which
+the report flags as possibly incomplete. The local report is ignored under `ios/TestResults/`. Upstream changes
+are reported for later review, not silently imported into this native port. Actual hosted workflow
+verification follows publication of the workflow on the fork's default branch.
+
+Updated README, branch/update instructions and migration guidance while preserving HellzYeahh,
+Earshot contributors, MIT and research credits. Clarified that MIT permits covered-code commercial
+distribution with retained notices, while App Store branding approval and App Review are separate:
+Apple's current 4.1(c) requires permission for another developer's name/icon/brand, so publishing
+as Earshot needs that approval or distinct branding with original credits retained.
+
+This checkpoint changes repository tooling/documentation only. Native Swift/UI and the Xcode
+project are untouched; prior Simulator results are not presented as a new native run. Personal
+signing edits remain local and excluded. Index privacy checks and explicit fork-only destination
+verification are required before each push.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

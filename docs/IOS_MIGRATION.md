@@ -19,6 +19,27 @@ device retesting. Original Earshot's local-draft/end-of-drag noise behavior is e
 
 ## Platform challenges
 
+### MIT distribution and the App Store
+
+Checked 23 October 2026: the retained MIT licence permits modification, redistribution and sale
+of this covered software, with its copyright and permission notice retained. A derivative iOS app
+can therefore be distributed commercially under those conditions. This does not transfer original
+authorship, remove third-party obligations or automatically establish rights to every included
+asset. The full original MIT notice is bundled in the iOS resources, and upstream/research credits
+remain prominent. [MIT licence](https://opensource.org/license/mit).
+
+Apple's current guideline 4.1(c) separately requires approval to use another developer's icon,
+brand or product name in an app's name/icon. Before submitting this fork as **Earshot**, obtain
+that branding approval or choose distinct branding while keeping truthful original-project
+attribution. Guidelines 4.1 and 5.2 also prohibit impersonation and require rights to included
+material. MIT code permission is not a guarantee of App Review approval.
+[Apple's branding/copycat guidance](https://developer.apple.com/help/app-review/guideline-reference/4-1-prevent-copycat-rejection),
+[App Review intellectual-property rules](https://developer.apple.com/app-store/review/guidelines/#intellectual-property).
+
+A release still needs a proper submission review, accurate supported-headphone claims, physical
+device acceptance, complete third-party notices, privacy information and appropriate provisioning.
+The existing Simulator results establish software behavior within their documented scope.
+
 ### Bluetooth transport
 
 Bose's Android implementation primarily opens an arbitrary Bluetooth Classic RFCOMM channel and probes BMAP. Core Bluetooth's Classic support is **GATT over BR/EDR**; it does not expose Android's arbitrary RFCOMM channel sockets. This distinction follows Apple's description of its Classic support. [Apple, What's New in Core Bluetooth](https://developer.apple.com/videos/play/wwdc2019/901/).
