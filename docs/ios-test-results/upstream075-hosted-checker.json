@@ -1,0 +1,75 @@
+{
+  "conclusion": "success",
+  "headSha": "5ad2e373943555c9f2c203a858d3d9fac78795b8",
+  "jobs": [
+    {
+      "completedAt": "2026-10-23T02:55:10Z",
+      "conclusion": "success",
+      "databaseId": 120214223972,
+      "name": "check",
+      "startedAt": "2026-10-23T02:55:02Z",
+      "status": "completed",
+      "steps": [
+        {
+          "completedAt": "2026-10-23T02:55:03Z",
+          "conclusion": "success",
+          "name": "Set up job",
+          "number": 1,
+          "startedAt": "2026-10-23T02:55:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-23T02:55:06Z",
+          "conclusion": "success",
+          "name": "Check out this fork without persisting credentials",
+          "number": 2,
+          "startedAt": "2026-10-23T02:55:03Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-23T02:55:07Z",
+          "conclusion": "success",
+          "name": "Verify updater and project/privacy guards",
+          "number": 3,
+          "startedAt": "2026-10-23T02:55:06Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-23T02:55:08Z",
+          "conclusion": "success",
+          "name": "Read upstream metadata and compare the reviewed baseline",
+          "number": 4,
+          "startedAt": "2026-10-23T02:55:07Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-23T02:55:08Z",
+          "conclusion": "success",
+          "name": "Publish the read-only report in this run's summary",
+          "number": 5,
+          "startedAt": "2026-10-23T02:55:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-23T02:55:08Z",
+          "conclusion": "success",
+          "name": "Post Check out this fork without persisting credentials",
+          "number": 10,
+          "startedAt": "2026-10-23T02:55:08Z",
+          "status": "completed"
+        },
+        {
+          "completedAt": "2026-10-23T02:55:08Z",
+          "conclusion": "success",
+          "name": "Complete job",
+          "number": 11,
+          "startedAt": "2026-10-23T02:55:08Z",
+          "status": "completed"
+        }
+      ],
+      "url": "https://github.com/bdupreez/earshot-ios/actions/runs/39892166974/job/120214223972"
+    }
+  ],
+  "status": "completed",
+  "url": "https://github.com/bdupreez/earshot-ios/actions/runs/39892166974"
+}

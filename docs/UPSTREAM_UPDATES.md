@@ -49,8 +49,12 @@ The complete 42-commit range was deliberately reconciled and simulator-tested in
 `9e6c4912531ec6e159eded862d1b6ffa55094199`, while the retained Android import remains 0.4.0.
 The actual [23 October local report](UPSTREAM_075_CHECK.md) resolved that same upstream tip:
 **identical, zero ahead/behind**. Future checks start after this reviewed range. The expanded
-workflow runs all checker and project/privacy regressions; its new hosted result is recorded
-when actually observed, independently of the historical 18-test run above.
+workflow runs all checker and project/privacy regressions. Actual fork-hosted
+[run 39892166974](https://github.com/bdupreez/earshot-ios/actions/runs/39892166974) at
+`5ad2e373943555c9f2c203a858d3d9fac78795b8` passed: 36 Python cases passed, two macOS project-parser
+cases were skipped on Ubuntu (both passed locally on macOS), and the live reviewed comparison
+returned **identical**. Summary publication also succeeded. This verifies the new reviewed
+boundary independently of the historical 18-test run above.
 
 ## What the report means
 

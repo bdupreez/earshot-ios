@@ -308,7 +308,7 @@ hardware/platform boundaries. Check privacy and the exact fork push URL before p
 
 ## Checkpoint 18 — Tablet repair and completed reviewed boundary (23 October 2026)
 
-The installed iPad Pro 11-inch (M5), iOS26.4.1 pass finished **288/290**: all 278 units and
+The installed iPad Pro 11-inch (M5), iOS 26.4.1 pass finished **288/290**: all 278 units and
 10 of 12 representative UI cases passed. Exact EQ gestures succeeded, but first-upgrade release
 notes covered the later tab selection; expanded saved-output disclosure AX bounds also covered
 the otherwise-visible Forget action. Preserve the actual failed summary rather than calling the
@@ -316,7 +316,7 @@ whole run green. The repair dismisses real notes before subsequent tab interacti
 the wrapping disclosure with an independent 44-point native expansion button and sibling actions.
 Captured-ID confirmation, cancellation and scoped forgetting remain unchanged.
 
-The final **Upstream075-iPad-Repairs passed 281/281**, zero failures/skips, Xcode exit0: all
+The final **Upstream075-iPad-Repairs passed 281/281**, zero failures/skips, Xcode exit 0: all
 278 units, exact three-band EQ/relaunch, nickname save/relaunch/cancel/confirmed-forget, and
 real memo finalization before local playback. The two affected companion journeys then passed
 **2/2 on iPhone** in `Upstream075-iPhone-OutputFinal`. All 12 iPad UI identifiers selected for
@@ -334,13 +334,31 @@ ANC/EQ/slider effects, external mic/route delivery, BAS/Apple payloads and signe
 still require hardware; inaccessible Classic RFCOMM, global EQ, call interception and Android
 assistant/codec/background privileges remain explicit platform boundaries.
 
-Advanced **only the reviewed boundary** to9e6c491/0.75.0, preserving imported d6ceffa/0.4.0.
+Advanced **only the reviewed boundary** to 9e6c491/0.75.0, preserving imported d6ceffa/0.4.0.
 The actual GET-only local checker resolved the same upstream tip: **identical, zero ahead/behind**;
 [unaltered public report](UPSTREAM_075_CHECK.md). The checker never merges or advances metadata.
-Future manual checks therefore identify changes after the completed42-commit review. Hosted
-workflow verification of all38 Python cases and the reviewed comparison follows this fork push.
+Future manual checks therefore identify changes after the completed 42-commit review. Hosted
+workflow verification of all 38 Python cases and the reviewed comparison follows this fork push.
 No original-repository write, upstream push destination or upstream PR is created. Local signing
 settings remain preserved outside commits; inspect exact indexed paths and privacy before pushing.
+
+## Checkpoint 19 — Hosted reviewed-boundary verification (23 October 2026)
+
+After fork-only push `5ad2e37`, explicitly dispatched the manual checker on
+`bdupreez/earshot-ios`, branch `codex/native-ios-port`. Actual [run 39892166974](https://github.com/bdupreez/earshot-ios/actions/runs/39892166974)
+completed successfully at exact commit `5ad2e373943555c9f2c203a858d3d9fac78795b8`: all 38 Python
+cases were discovered, 36 passed and the two macOS-only project-parser cases were skipped on
+Ubuntu. Both pass in the actual local macOS 38/38 run. The live reviewed-baseline comparison
+returned **identical**, and read-only report publication succeeded. Saved the actual bounded
+public [run metadata](ios-test-results/upstream075-hosted-checker.json); full logs remain ignored.
+
+The workflow stays manual, fork-restricted, `contents: read`, pinned official checkout and
+`persist-credentials: false`; it uses a temporary built-in token and never imports upstream code.
+This is a tooling/documentation verification, not an additional native or hardware test. All
+required work for the pinned 42-commit reconciliation is complete at the documented public-iOS
+scope. Physical acceptance and unavailable capabilities remain in the migration plan. Original
+credits/notices and local signing edits are preserved. This final evidence-only push must again
+pass exact staged-path/privacy inspection and target only the user's named fork branch.
 
 ## Push policy
 

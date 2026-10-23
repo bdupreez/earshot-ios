@@ -79,8 +79,11 @@ The [current iPhone manifest](ios-test-results/current-iphone-coverage.json) rec
 39 app UI and three system UI** identifiers, all latest Passed across named runs, not one combined run.
 
 All **38 offline Python tests passed** locally: 23 GET-only checker regressions and 15 synthetic
-project/privacy tests. Both project-parser tests require macOS; the hosted Ubuntu workflow should
-run 36 and skip those two, with actual hosted verification still pending. Existing local project,
+project/privacy tests. The actual fork-hosted Ubuntu [workflow 39892166974](https://github.com/bdupreez/earshot-ios/actions/runs/39892166974)
+at `5ad2e373943555c9f2c203a858d3d9fac78795b8` passed: **36 passed, two macOS parser tests skipped**
+(`Ran 38`, `OK (skipped=2)`), the reviewed-boundary comparison returned **identical**, and report
+publication succeeded. Both skipped parser tests passed locally on macOS. [Actual run metadata](ios-test-results/upstream075-hosted-checker.json).
+Existing local project,
 target and configuration dictionaries were compared before/after membership reconciliation and
 are unchanged. Generated resource IDs are now relative and reproducible across checkout paths;
 personal signing/account keys are not committed configuration or test fixtures. The actual guard
@@ -113,8 +116,9 @@ physical acceptance and explicitly unavailable platform features remain separate
 
 The separate reviewed-upstream boundary is now 0.75.0/9e6c491, preserving the retained Android
 0.4.0/d6ceffa provenance. The actual [GET-only live check](UPSTREAM_075_CHECK.md) resolved the
-same upstream tip on 23 October: **identical, zero ahead/behind**. Hosted Ubuntu verification
-of the expanded Python test discovery and reviewed comparison will be recorded after dispatch.
+same upstream tip on 23 October: **identical, zero ahead/behind**. The hosted Ubuntu workflow
+also passed the expanded Python discovery, actual reviewed comparison and summary publication,
+as recorded above. This read-only workflow does not import or merge upstream source.
 
 ## Environment
 
