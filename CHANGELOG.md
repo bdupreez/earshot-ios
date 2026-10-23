@@ -15,11 +15,17 @@ unavailable through public iOS; unknown layouts stay read-only. Corrected Bose t
 independent per-button masks/echoes and generic QCE(2024) routing. Added native Field/System styling,
 Dynamic Type-relative OFL typography and opaque light/dark/tinted Strike icon adaptations.
 
-The first checkpoint passed 263/263 actual iPhone Simulator tests (258 unit/integration + 5 new UI)
-and 23 offline Python regressions, preserving initial failures and inspected screenshots. Further
-source review adds explicit save/import preset memory, app-only output nicknames and saved-output
-preference management. Broader existing UI/system/iPad/large-text verification and privacy-tool
-hardening are recorded as they complete; no physical vendor/headset acceptance is inferred.
+Further source review adds explicit save/import preset memory, app-only output nicknames,
+confirmed saved-output management and a generic audio-output Home identity separate from control.
+Fixed an iPad disclosure header that covered child actions; selected vendor menu values remain
+accessible separately from their labels. All 278 units pass on iPhone and iPad. All 39 iPhone
+app UI and three actual system UI identifiers have passing latest results across named runs;
+12 representative tablet journeys were rerun, with failures and repairs preserved. Final focused
+unit/UI runs passed281/281 on each device; final companion layout also passed2/2 on iPhone.
+All38 local Python regressions pass, including project/signing/privacy protection. The separately
+reviewed0.75 boundary now follows the complete42-commit audit while Android0.4 provenance stays
+unchanged. The actual live check is identical/zero ahead. See validation for precise aggregate
+scope, older iPad evidence and inspected captures; no physical headset acceptance is inferred.
 
 ---
 

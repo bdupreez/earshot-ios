@@ -134,7 +134,9 @@ lifecycle and output-nickname persistence/removal. This is an aggregate, not one
 UI run. See [the audit](docs/IOS_UPSTREAM_075_AUDIT.md),
 [actual run outcomes](docs/IOS_VALIDATION.md) and [per-case evidence](docs/ios-test-results/current-iphone-coverage.json).
 The actual Control Center and small/medium-widget follow-up also passed, alongside three
-vendor/large-text checks (**6/6**). iPad follow-up is being recorded separately; the earlier figures below are historical.
+vendor/large-text checks (**6/6**). The iPad repair pass passed **281/281** (all 278 units plus
+three focused UI journeys); all 12 representative app journeys selected for this 0.75 pass
+have passing latest results across its documented runs. The earlier figures below are historical.
 
 **Historical 19 October feature-pass verification:** all **189 native unit tests passed together**. Across the explicitly documented runs, **31 app UI journeys and three actual system journeys** have passing latest results. The focused slider/rule/player/credits checks cover eight UI identifiers across the initial run and final EQ repair. Small-widget Cycle, medium-widget Aware and Control Center Cycle retain their prior passing results. [Exact outcomes and per-case coverage](docs/IOS_VALIDATION.md) preserve earlier failures and make clear this is not one combined green run.
 

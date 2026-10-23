@@ -41,6 +41,9 @@ local playback started; no physical headset input is inferred.
 | `Upstream075-iPhone-Final` | **282 passed, 2 failed, 0 skipped**: all **278 units** and four UI cases passed, including the repaired full preset lifecycle, Field/System persistence, neutral Home and vendor settings. Nickname assertion used the standalone value rather than its combined labelled row; full flicks still oscillated the large-text control. [Summary](ios-test-results/upstream075-iphone-final-attempt.json). |
 | `Upstream075-iPhone-Repairs` | **281/281 passed**, Xcode exit 0, no skips/expected failures: all **278 units**, nickname save/relaunch/cancel/confirmed-forget, neutral disconnected Home and actual Soundcore menu selection at Accessibility XXXL. [Summary](ios-test-results/upstream075-iphone-repairs.json). |
 | `Upstream075-iPhone-SystemAndValues` | **6/6 passed**, Xcode exit 0, zero failures/skips: actual Control Center Cycle, small-widget Cycle and medium-widget Aware, plus Sennheiser/Soundcore selected accessibility values and the Accessibility XXXL interaction. [Summary](ios-test-results/upstream075-iphone-system-and-values.json). |
+| `Upstream075-iPad-Final` | **288 passed, 2 failed, 0 skipped**: all **278 units** and 10 of 12 representative app UI cases passed. First-upgrade notes covered the tab after EQ relaunch; expanded disclosure header bounds covered the Forget child. [Summary](ios-test-results/upstream075-ipad-initial.json). |
+| `Upstream075-iPad-Repairs` | **281/281 passed**, Xcode exit 0, zero failures/skips: all **278 units**, exact three-band EQ/relaunch, nickname cancel/confirmed-forget and real memo finalization on the repaired native disclosure layout. [Summary](ios-test-results/upstream075-ipad-repairs.json). |
+| `Upstream075-iPhone-OutputFinal` | **2/2 passed**, Xcode exit 0, zero failures/skips: nickname save/relaunch/cancel/confirmed-forget and real memo finalization repeated on iPhone with the final disclosure layout. [Summary](ios-test-results/upstream075-iphone-output-final.json). |
 
 The final test helper directly edits the native alert field and requires its dismissal; exact
 rename/relaunch/delete-to-Flat assertions remain. Short gutter drags near the target prevent
@@ -82,9 +85,36 @@ target and configuration dictionaries were compared before/after membership reco
 are unchanged. Generated resource IDs are now relative and reproducible across checkout paths;
 personal signing/account keys are not committed configuration or test fixtures. The actual guard
 also flagged an ambiguous empty-team spelling in historical Markdown; it now uses an explicitly
-quoted empty assignment, and the full indexed-file check passes. iPad follow-up remains pending
-in this checkpoint. Older evidence below remains historical.
+quoted empty assignment, and the full indexed-file check passes. Older evidence below remains historical.
 No physical headphone acceptance is inferred from this work.
+
+The actual **iPad Pro 11-inch (M5), iOS 26.4.1 (23E254a)** pass reran all 278 units and 12
+representative app journeys. All 12 have passing latest results across the two stated iPad runs;
+the containing 290-test attempt remains Failed. The repair uses a separate 44-point native
+expansion button with sibling Forget actions, rather than the expanded DisclosureGroup button
+whose actual AX bounds covered its child action. Confirmation still operates on the captured
+output ID; cancellation and exact preference removal remain asserted. Slider relaunch tests
+dismiss real upgrade notes before tab interaction; notes are neither disabled nor suppressed.
+
+Inspected unaltered iPad captures show [Field light](ios-screenshots/upstream075-ipad-field-light.png),
+[Accessibility XXXL](ios-screenshots/upstream075-ipad-accessibility-xxxl.png),
+[exact demo EQ endpoints](ios-screenshots/upstream075-ipad-eq.png),
+[independent saved-output actions](ios-screenshots/upstream075-ipad-output-preferences.png) and
+[a finalized real Simulator memo](ios-screenshots/upstream075-ipad-memo.png). No audio recording
+files are committed. The [iPad manifest](ios-test-results/current-ipad-coverage.json) records
+**278 units + 24 representative app UI identifiers**, all latest Passed: 12 app journeys rerun in
+this 0.75 pass plus 12 retaining earlier named evidence. It is not the full 39-case iPhone app UI
+suite, a single combined run, or a claim that all 24 were rerun on this source revision.
+
+The final companion layout also passed both affected journeys again on iPhone. The updated
+[phone preference capture](ios-screenshots/upstream075-output-preferences.png) comes from that
+final 2/2 run. Native implementation/testing for the pinned range is complete at this scope;
+physical acceptance and explicitly unavailable platform features remain separate.
+
+The separate reviewed-upstream boundary is now 0.75.0/9e6c491, preserving the retained Android
+0.4.0/d6ceffa provenance. The actual [GET-only live check](UPSTREAM_075_CHECK.md) resolved the
+same upstream tip on 23 October: **identical, zero ahead/behind**. Hosted Ubuntu verification
+of the expanded Python test discovery and reviewed comparison will be recorded after dispatch.
 
 ## Environment
 

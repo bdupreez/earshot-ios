@@ -2,7 +2,7 @@
 
 **This is an AI-assisted attempt to port [the original Earshot Android app by HellzYeahh and Earshot contributors](https://github.com/HellzYeahh/earshot) to native iOS.** The original app, feature design, protocol research, captured hardware evidence and Kotlin implementations belong to those upstream contributors. This fork does not claim to have invented their work. The upstream MIT licence, reference licences and acknowledgements remain applicable. See [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-Audit date: 19 October 2026. The iOS application uses Swift, SwiftUI, Core Bluetooth and AVFoundation. It is a port in progress. A working simulator experience is evidence about the iOS application, not proof that real headphones work or that Android feature parity has been reached.
+Initial audit: 19 October 2026; upstream 0.75 reconciliation: 23 October 2026. The iOS application uses Swift, SwiftUI, Core Bluetooth and AVFoundation. A working simulator experience is evidence about the iOS application, not proof that real headphones work or that Android feature parity has been reached.
 
 ## Evidence and scope
 
@@ -28,7 +28,7 @@ records each source and platform decision. Upstream Android test evidence does n
 | Upstream feature | Native adaptation / evidence boundary |
 | --- | --- |
 | Per-headset EQ memory | Per public audio-output UID, including explicit Off. Only explicit picks, selected preset saves and imports replace memory; route restore/rules/cycle are temporary. No claim that a UID equals a globally paired device identity. |
-| Any-headset companion | Public system route picker/output volume, app-only output nicknames, local EQ, foreground actions and microphone recordings. A route never marks vendor control connected. No paired-device enumeration, alias/forget/disconnect API is invented. |
+| Any-headset companion | Home shows the current external audio output/name or app-only nickname separately from verified control identity; route-only state gets no Bose telemetry/capabilities. Public route picker/output volume, local EQ, actions, memos and confirmed local preference removal are implemented, including saved offline outputs. No system paired-device enumeration, alias/unpair/disconnect API is invented. |
 | Voice memo action | Persistent protected AAC files, actual selected input route, playback/share/confirmed deletion, capacity and interruption handling. Recorder/player session ownership is exclusive. Background recording is stopped and saved. |
 | Shortcut remapper | Native foreground App Intents for EQ cycle/memo and existing modes/presets/rules. User-created Shortcuts may chain Open App. Global assistant/press-hold interception and arbitrary app-use observation remain unavailable. |
 | Standard BLE battery | User-initiated 180F discovery and explicit source selection; only 2A19 reads, bounded timeout/teardown, no vendor writes. Public iOS/hardware must actually expose the service. |

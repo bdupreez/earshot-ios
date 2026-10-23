@@ -306,6 +306,42 @@ iPad and hosted-workflow results will follow.
 Physical Bose touch/buttons/slider effects, BAS/Apple delivery and vendor transports remain
 hardware/platform boundaries. Check privacy and the exact fork push URL before publishing.
 
+## Checkpoint 18 — Tablet repair and completed reviewed boundary (23 October 2026)
+
+The installed iPad Pro 11-inch (M5), iOS26.4.1 pass finished **288/290**: all 278 units and
+10 of 12 representative UI cases passed. Exact EQ gestures succeeded, but first-upgrade release
+notes covered the later tab selection; expanded saved-output disclosure AX bounds also covered
+the otherwise-visible Forget action. Preserve the actual failed summary rather than calling the
+whole run green. The repair dismisses real notes before subsequent tab interaction and replaces
+the wrapping disclosure with an independent 44-point native expansion button and sibling actions.
+Captured-ID confirmation, cancellation and scoped forgetting remain unchanged.
+
+The final **Upstream075-iPad-Repairs passed 281/281**, zero failures/skips, Xcode exit0: all
+278 units, exact three-band EQ/relaunch, nickname save/relaunch/cancel/confirmed-forget, and
+real memo finalization before local playback. The two affected companion journeys then passed
+**2/2 on iPhone** in `Upstream075-iPhone-OutputFinal`. All 12 iPad UI identifiers selected for
+this pass have passing latest results across the stated runs. Current manifests contain **278
+units + 39 app UI + 3 system UI on iPhone**, and **278 units + 24 representative app UI on iPad**.
+The iPad aggregate includes 12 earlier named UI results; it is not the complete iPhone UI suite
+or a single combined green run. Inspected unaltered tablet Field/AXXXL/EQ/preferences/memo PNGs
+and the final phone preference capture are retained. Recordings and raw bundles remain ignored.
+
+All 42 upstream commits now have native source/platform decisions and mapped runtime evidence
+in [the final audit](IOS_UPSTREAM_075_AUDIT.md). Original HellzYeahh/contributor credits, complete
+MIT/OFL notices, reference material and the historical Android0.4 tree remain intact. No further
+feasible source omission was identified in this pinned range. Actual headphone touch/buttons,
+ANC/EQ/slider effects, external mic/route delivery, BAS/Apple payloads and signed-device delivery
+still require hardware; inaccessible Classic RFCOMM, global EQ, call interception and Android
+assistant/codec/background privileges remain explicit platform boundaries.
+
+Advanced **only the reviewed boundary** to9e6c491/0.75.0, preserving imported d6ceffa/0.4.0.
+The actual GET-only local checker resolved the same upstream tip: **identical, zero ahead/behind**;
+[unaltered public report](UPSTREAM_075_CHECK.md). The checker never merges or advances metadata.
+Future manual checks therefore identify changes after the completed42-commit review. Hosted
+workflow verification of all38 Python cases and the reviewed comparison follows this fork push.
+No original-repository write, upstream push destination or upstream PR is created. Local signing
+settings remain preserved outside commits; inspect exact indexed paths and privacy before pushing.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

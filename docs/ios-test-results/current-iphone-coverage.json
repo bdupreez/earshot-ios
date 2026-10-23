@@ -1705,7 +1705,7 @@
       "identifier": "EarshotUITests/EarshotUITests/testAppOnlyOutputNicknamePersistsAndSavedPreferencesForgetIsConfirmed",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/Upstream075-iPhone-Repairs.xcresult"
+      "bundle": "ios/TestResults/Upstream075-iPhone-OutputFinal.xcresult"
     },
     {
       "identifier": "EarshotUITests/EarshotUITests/testAutomationRunsChosenMode",
@@ -1819,7 +1819,7 @@
       "identifier": "EarshotUITests/EarshotUITests/testVoiceMemoFinalizesBeforeLocalPlaybackAndSurvivesNavigation",
       "kind": "app UI",
       "result": "Passed",
-      "bundle": "ios/TestResults/Upstream075-iPhone-AppUI.xcresult"
+      "bundle": "ios/TestResults/Upstream075-iPhone-OutputFinal.xcresult"
     },
     {
       "identifier": "EarshotUITests/EarshotUITests/testWelcomeAndDemoModeSwitching",

@@ -100,7 +100,19 @@ private struct CompanionSavedOutputPreferences: View {
 
     var body: some View {
         Panel(title: "Saved output preferences") {
-            DisclosureGroup("Manage saved outputs (\(companion.preferences.savedOutputIDs.count))", isExpanded: $expanded) {
+            // Give the disclosure header its own hit/accessibility bounds. On
+            // iPad, a labelled DisclosureGroup can include its interactive rows
+            // in the header button, making their Forget actions unreachable.
+            Button { expanded.toggle() } label: {
+                HStack {
+                    Text("Manage saved outputs (\(companion.preferences.savedOutputIDs.count))")
+                    Spacer()
+                    Image(systemName: expanded ? "chevron.down" : "chevron.right").accessibilityHidden(true)
+                }.frame(maxWidth: .infinity, minHeight: 44, alignment: .leading).contentShape(Rectangle())
+            }.buttonStyle(.plain)
+                .accessibilityValue(expanded ? "Expanded" : "Collapsed")
+                .accessibilityIdentifier("companionManageSavedOutputs")
+            if expanded {
                 if companion.preferences.savedOutputIDs.isEmpty {
                     Text("No saved output preferences.").font(.footnote).foregroundStyle(.secondary)
                 }
@@ -112,12 +124,13 @@ private struct CompanionSavedOutputPreferences: View {
                                 .font(.caption).foregroundStyle(.secondary)
                             Text(categories(for: id)).font(.caption).foregroundStyle(.secondary)
                             Button("Forget local preferences", role: .destructive) { requestForget(id) }
+                                .frame(minHeight: 44, alignment: .leading)
                                 .accessibilityLabel("Forget local preferences for \(companion.savedOutputLabel(for: id))")
                         }
                         .padding(.top, 8)
                     }
                 }
-            }.accessibilityIdentifier("companionManageSavedOutputs")
+            }
             Text("Manage saved routes even when they are no longer selected. Only Earshot’s preferences are removed; this does not rename, disconnect or unpair an output.")
                 .font(.caption).foregroundStyle(.secondary)
         }

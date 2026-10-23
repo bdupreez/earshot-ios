@@ -53,6 +53,7 @@ final class EarshotUITests: XCTestCase {
         app.launchArguments = []
         app.launch()
         XCTAssertTrue(app.staticTexts["Demo device"].waitForExistence(timeout: 5))
+        dismissReleaseNotesIfPresented()
         reveal(app.sliders["noiseLevel"])
         XCTAssertTrue(app.staticTexts["7/10"].exists)
         XCTAssertFalse(app.alerts.firstMatch.exists)
@@ -97,6 +98,7 @@ final class EarshotUITests: XCTestCase {
         app.launchArguments = []
         app.launch()
         XCTAssertTrue(app.staticTexts["Demo device"].waitForExistence(timeout: 5))
+        dismissReleaseNotesIfPresented()
         selectTab("Sound")
         for (name, finalPosition) in bands {
             let slider = app.sliders[name]

@@ -1,5 +1,8 @@
 {
   "repository": "HellzYeahh/earshot",
   "imported_commit": "d6ceffa7a028f2809840160bf8323715d24384cb",
-  "imported_version": "0.4.0"
+  "imported_version": "0.4.0",
+  "reviewed_commit": "9e6c4912531ec6e159eded862d1b6ffa55094199",
+  "reviewed_version": "0.75.0",
+  "review_audit": "docs/IOS_UPSTREAM_075_AUDIT.md"
 }

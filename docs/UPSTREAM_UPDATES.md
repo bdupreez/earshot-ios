@@ -44,6 +44,14 @@ The same checker also passed locally. Its initial live comparison found 42 newer
 300 changed files returned and possible file-list truncation explicitly flagged. This is a dated
 observation; run the check again for current information.
 
+The complete 42-commit range was deliberately reconciled and simulator-tested in the
+[0.75 native audit](IOS_UPSTREAM_075_AUDIT.md). The reviewed boundary now records 0.75.0 at
+`9e6c4912531ec6e159eded862d1b6ffa55094199`, while the retained Android import remains 0.4.0.
+The actual [23 October local report](UPSTREAM_075_CHECK.md) resolved that same upstream tip:
+**identical, zero ahead/behind**. Future checks start after this reviewed range. The expanded
+workflow runs all checker and project/privacy regressions; its new hosted result is recorded
+when actually observed, independently of the historical 18-test run above.
+
 ## What the report means
 
 The imported baseline is pinned in [upstream-baseline.json](upstream-baseline.json), initially
