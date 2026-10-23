@@ -1,23 +1,25 @@
 import SwiftUI
 
 extension Color {
-    static let earshot = Color(red: 0.12, green: 0.61, blue: 0.52)
+    static let earshot = Color.accentColor
     static let ink = Color(red: 0.08, green: 0.15, blue: 0.17)
 }
 
 struct Panel<Content: View>: View {
+    @Environment(\.earshotPalette) private var palette
     var title: String?
     var subtitle: String?
     @ViewBuilder var content: Content
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            if let title { Text(title).font(.headline) }
+            if let title { Text(title).font(palette.heading) }
             if let subtitle { Text(subtitle).font(.subheadline).foregroundStyle(.secondary) }
             content
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
-        .background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 24))
+        .background(palette.card, in: RoundedRectangle(cornerRadius: 24))
+        .overlay(RoundedRectangle(cornerRadius: 24).stroke(palette.hairline.opacity(palette.isField ? 0.6 : 0), lineWidth: 0.5))
     }
 }
 
@@ -27,7 +29,7 @@ struct Page<Content: View>: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) { content }.padding(.horizontal, 20).padding(.vertical, 12).frame(maxWidth: 760)
                 .frame(maxWidth: .infinity)
-        }.background(Color(uiColor: .systemGroupedBackground))
+        }.background(EarshotFieldBackground())
     }
 }
 
@@ -42,6 +44,7 @@ struct InfoNote: View {
 }
 
 struct ToolLink<Destination: View>: View {
+    @Environment(\.earshotPalette) private var palette
     let title: String
     let detail: String
     let icon: String
@@ -50,10 +53,10 @@ struct ToolLink<Destination: View>: View {
         NavigationLink { destination } label: {
             HStack(spacing: 16) {
                 Image(systemName: icon).font(.title2).foregroundStyle(Color.earshot).frame(width: 42, height: 48)
-                VStack(alignment: .leading, spacing: 4) { Text(title).font(.headline).foregroundStyle(.primary); Text(detail).font(.subheadline).foregroundStyle(.secondary) }
+                VStack(alignment: .leading, spacing: 4) { Text(title).font(palette.heading).foregroundStyle(palette.text); Text(detail).font(.subheadline).foregroundStyle(.secondary) }
                 Spacer(minLength: 0)
                 Image(systemName: "chevron.right").font(.caption.weight(.bold)).foregroundStyle(.tertiary)
-            }.padding(18).background(Color(uiColor: .secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 22))
+            }.padding(18).background(palette.card, in: RoundedRectangle(cornerRadius: 22))
         }.buttonStyle(.plain)
     }
 }

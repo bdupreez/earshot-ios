@@ -42,7 +42,7 @@ struct WelcomeView: View {
                 Text("A native iOS companion for your headphones. Listening modes, thoughtful sound tuning, and useful little tools.").font(.title3).foregroundStyle(.secondary)
                 InfoNote(text: "An AI-assisted port attempt of the original Earshot by HellzYeahh and contributors. Independent, open source, and still experimental.")
                 VStack(spacing: 12) {
-                    Button { store.finishWelcome(demo: false) } label: { Label("Find my headphones", systemImage: "dot.radiowaves.left.and.right").frame(maxWidth: .infinity).padding(8) }.buttonStyle(.borderedProminent).accessibilityIdentifier("connectHeadphones")
+                    Button { store.finishWelcome(demo: false) } label: { Label("Find my headphones", systemImage: "dot.radiowaves.left.and.right").frame(maxWidth: .infinity).padding(8) }.earshotProminentButton().accessibilityIdentifier("connectHeadphones")
                     Button { store.finishWelcome(demo: true) } label: { Text("Try demo mode").frame(maxWidth: .infinity).padding(8) }.buttonStyle(.bordered).accessibilityIdentifier("tryDemo")
                 }
                 Text("No account. No analytics. Your settings stay on this device.").font(.caption).foregroundStyle(.secondary).frame(maxWidth: .infinity)

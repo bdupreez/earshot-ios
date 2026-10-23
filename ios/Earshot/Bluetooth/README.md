@@ -108,3 +108,23 @@ Protocol attribution: the original Earshot contributors' Kotlin protocol catalog
 `docs/reference/`.
 
 Sidetone writes preserve the device-reported remember-after-restart flag when changing level, and preserve level when changing that flag. Latency retains the first valid report for the current connection; resetting it uses the same separately confirmed experimental write and does not claim a measured acoustic effect. Both state paths clear on link changes.
+
+
+## Upstream0.75 native reconciliation
+
+Bose touch control `[1.34]` has positive low-bit ON semantics (upstream99270636),
+not the misleading historical DisableCaptouch interpretation. Shortcut `[1.9]` reports
+retain every device-reported button/event/action and its own capability mask; three-byte
+echoes preserve only that same button’s previous mask. Unknown current actions are displayed
+without granting them write permission. QCE(2024) and other brands are not guessed as BMAP.
+
+`BatteryCompanion` is a separate user-initiated read-only tool. It discovers standard BAS180F,
+lets the user choose the source, and reads only2A19 with deadlines and serialized cancellation.
+It never changes the verified control connection. Optional Apple manufacturer observations
+are labelled nearby/unverified and never inferred to belong to the current route.
+
+Soundcore’s35 models have bounded native framing, per-model state parsers/write guards and
+synthetic offline demonstrations. Sennheiser, Sony and Method have source-backed catalogue
+fixtures and documented read metadata. Their upstream live links all use Classic RFCOMM;
+no guessed GATT service or characteristic is substituted. Unresolved layouts stay read-only.
+See the42-commit [audit](../../../docs/IOS_UPSTREAM_075_AUDIT.md) and original MIT research credits.

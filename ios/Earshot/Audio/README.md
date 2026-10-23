@@ -32,3 +32,19 @@ and [mixing-option](https://developer.apple.com/documentation/avfaudio/avaudiose
 documentation. Bluetooth sliders commit at the end of a drag; local Pro EQ/preview sliders remain continuous.
 
 `DSPTests` verifies the original model, math, presets and interchange formats, including actual offline `AVAudioEngine` waveforms for boost, bypass, sustained audibility and peak limiting. `PresetLifecycleTests` covers preset identity, atomic imports, persistence/recovery, exact filter restoration, dirty drafts, shared gain calculations, real seek/progress, engine idling, session ownership and replay after natural completion. `AppStoreTests` covers isolated persistence, profile capabilities, mode validation and automation state. Simulator execution verifies the native software path; it does not measure headphones, Bluetooth latency, perceived loudness, or hardware fidelity.
+
+
+## Headset companion and voice memos
+
+The upstream0.75-inspired native companion remembers explicit local EQ preset/off choices
+by public output UID. Route restore runs before a foreground local-only connection rule;
+category/microphone transitions do not create reconnect loops or replace explicit memory.
+Global assistant remapping and other-app audio processing are not enabled by these features.
+
+Voice memos are protected AAC files in Documents, with playback, sharing, confirmed deletion,
+30-minute/100-clip/256MiB limits and no automatic saved-clip eviction. The short microphone
+check remains a separate cache tool. Recording requires permission and actual input-route
+reporting; backgrounding/interruption/input loss saves and stops the memo. Permission-alert
+inactivity alone is not treated as background execution. Starting local playback stops/finalizes
+capture first, and memo/mic playback also stops other owners of the shared audio session.
+Simulator recording is real app audio I/O but does not establish Bluetooth microphone fidelity.

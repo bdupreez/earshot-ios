@@ -158,8 +158,29 @@ struct RunListeningRuleIntent: AppIntent {
     func perform() async throws -> some IntentResult { try EarshotShared.request(.runRule(id: rule.id)); return .result() }
 }
 
+/// Native foreground equivalents of upstream headset actions. iOS owns global
+/// assistant-button dispatch; these actions can be placed in user-created Shortcuts.
+struct CycleLocalEQIntent: AppIntent {
+    static var title: LocalizedStringResource = "Cycle local EQ in Earshot"
+    static var description = IntentDescription("Open Earshot and cycle its local playback EQ. This does not affect other apps or overwrite remembered output choices.")
+    static var openAppWhenRun = true
+    @available(iOS 26.0, *) static var supportedModes: IntentModes { .foreground }
+    static var authenticationPolicy: IntentAuthenticationPolicy { .requiresAuthentication }
+    func perform() async throws -> some IntentResult { try EarshotShared.request(.cycleLocalEQ); return .result() }
+}
+struct VoiceMemoIntent: AppIntent {
+    static var title: LocalizedStringResource = "Record voice memo in Earshot"
+    static var description = IntentDescription("Open Earshot to start or stop a local voice memo. Microphone permission and an active foreground app are required; leaving Earshot saves and stops recording.")
+    static var openAppWhenRun = true
+    @available(iOS 26.0, *) static var supportedModes: IntentModes { .foreground }
+    static var authenticationPolicy: IntentAuthenticationPolicy { .requiresAuthentication }
+    func perform() async throws -> some IntentResult { try EarshotShared.request(.voiceMemo); return .result() }
+}
+
 struct EarshotShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
+        AppShortcut(intent: CycleLocalEQIntent(), phrases: ["Cycle local EQ in \(.applicationName)"], shortTitle: "Cycle local EQ", systemImageName: "slider.horizontal.3")
+        AppShortcut(intent: VoiceMemoIntent(), phrases: ["Record voice memo in \(.applicationName)"], shortTitle: "Voice memo", systemImageName: "mic")
         AppShortcut(intent: QuietModeIntent(), phrases: ["Use Quiet mode in \(.applicationName)"], shortTitle: "Quiet mode", systemImageName: "moon")
         AppShortcut(intent: AwareModeIntent(), phrases: ["Use Aware mode in \(.applicationName)"], shortTitle: "Aware mode", systemImageName: "sun.max")
         AppShortcut(intent: CycleListeningModeIntent(), phrases: ["Cycle listening modes in \(.applicationName)"], shortTitle: "Cycle modes", systemImageName: "arrow.triangle.2.circlepath")

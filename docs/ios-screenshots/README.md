@@ -38,3 +38,11 @@ Images are unaltered exports from actual installed-Xcode XCUITest runs. Demo bat
 All use installed Xcode 26.4.1 and runtime iOS 26.4.1. `FeatureGapAcceptance` finished 184/187, `FeatureGapFinalFollowups` 162/163 and `NativeUIRepairsFinal` 161/161. The final focused iPhone app/system run passed 6/6; its initial medium-widget capture exposed visual clipping despite passing delivery. The corrected extension passed 2/2 Control Center/medium-widget journeys with native viewport assertions, then 1/1 small-widget regression. Only the corrected medium capture is published here; the earlier clipped image remains in its local bundle.
 
 Earlier failures remain in raw summaries; the [iPhone manifest](../ios-test-results/current-iphone-coverage.json) records 189 unit, 31 app UI and three system UI latest results. The slider pass preserves its initial 7/8 result and three failed exact-target attempts; the final physical end-stop/relaunch case passed 1/1. The expanded iPad run finished 168/171, then its repair run passed 169/169. The [iPad manifest](../ios-test-results/current-ipad-coverage.json) records 189 unit and 15 representative app UI latest results, not a complete iPad UI-suite run or one combined 204-case result. The latest slider integration finished 191/192; its confirmation-wait repair passed 1/1. Historical baseline bundles passed 53/53 and 2/2. Raw full SpringBoard captures remain local; public widget images are native captures of Earshot’s own element.
+
+
+Upstream0.75 native0.2 checkpoint (23October2026), actual iPhone17Pro/iOS26.4.1 XCUITest
+attachments inspected after label/contrast repairs: [battery](upstream075-battery.png),
+[headset companion](upstream075-companion.png), [Sennheiser virtual controls](upstream075-sennheiser.png),
+[Soundcore synthetic readback/Lab](upstream075-soundcore.png), [saved voice memo](upstream075-memo.png).
+The263-test checkpoint passed in one run; these images do not show physical accessory acceptance.
+All original Earshot design/protocol/artwork credit remains HellzYeahh and contributors, MIT.

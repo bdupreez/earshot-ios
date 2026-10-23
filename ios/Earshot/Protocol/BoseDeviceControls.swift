@@ -22,17 +22,34 @@ struct BosePairedSource: Identifiable, Equatable {
     }
 }
 
-struct BoseButtonShortcut: Equatable {
+struct BoseButtonShortcut: Equatable, Identifiable {
     let button: UInt8
     let event: UInt8
     let action: UInt8
     let supported: Set<Int>
+    var id: UInt8 { button }
+    var title: String {
+        [0x80: "Shortcut button", 3: "Right earbud", 4: "Left earbud"][Int(button)] ?? "Button \(button)"
+    }
+    /// Firmware sends full capability records and three-byte SET_GET echoes.
+    /// Reject partial masks; a short echo cannot grant any new write capability.
     static func parse(_ data: Data) -> BoseButtonShortcut? {
         let bytes = Array(data)
-        guard bytes.count >= 7 else { return nil }
-        let supported = BoseParsers.bitset(Data(bytes[3..<7]))
-        guard supported.contains(Int(bytes[2])) else { return nil }
+        guard bytes.count == 3 || bytes.count >= 7 else { return nil }
+        let supported = bytes.count >= 7 ? BoseParsers.bitset(Data(bytes[3..<7])) : []
+        guard bytes.count == 3 || !supported.isEmpty else { return nil }
         return BoseButtonShortcut(button: bytes[0], event: bytes[1], action: bytes[2], supported: supported)
+    }
+    /// Upstream StateMapping keeps each reported button and retains its mask when
+    /// firmware echoes only button/event/action. Never borrow another bud's mask.
+    static func merging(_ incoming: Self, into records: [Self]) -> [Self] {
+        let previous = records.first { $0.button == incoming.button }
+        let merged = Self(button: incoming.button, event: incoming.event, action: incoming.action,
+                          supported: incoming.supported.isEmpty ? previous?.supported ?? [] : incoming.supported)
+        return (records.filter { $0.button != incoming.button } + [merged]).sorted {
+            func rank(_ value: UInt8) -> Int { value == 0x80 ? 0 : value == 3 ? 1 : value == 4 ? 2 : 10 + Int(value) }
+            return rank($0.button) < rank($1.button)
+        }
     }
     static func name(_ action: Int) -> String {
         [0: "Not configured", 1: "Voice assistant", 2: "Cycle noise cancelling", 3: "Battery level", 4: "Play / pause",

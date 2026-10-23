@@ -44,11 +44,12 @@ def comparison(status="ahead", total=1, *, files=None, commits=None, merge_base=
 
 
 class FakeGET:
-    def __init__(self, pages, *, branch="main", head=HEAD, full_name=checker.REPOSITORY):
+    def __init__(self, pages, *, branch="main", head=HEAD, full_name=checker.REPOSITORY, base=BASE):
         self.pages = pages
         self.branch = branch
         self.head = head
         self.full_name = full_name
+        self.base = base
         self.calls = []
 
     def __call__(self, path):
@@ -58,7 +59,7 @@ class FakeGET:
         if path.startswith(checker.API_PATH + "/commits?"):
             return [{"sha": self.head}]
         for page, response in enumerate(self.pages, start=1):
-            expected = checker.API_PATH + "/compare/" + BASE + "..." + self.head + "?per_page=100&page=" + str(page)
+            expected = checker.API_PATH + "/compare/" + self.base + "..." + self.head + "?per_page=100&page=" + str(page)
             if path == expected:
                 return response
         raise AssertionError("Unexpected checker GET endpoint")
@@ -185,6 +186,61 @@ class BaselineAndCLITests(unittest.TestCase):
                 path.write_text(json.dumps(value), encoding="utf-8")
                 with self.assertRaises(checker.CheckError):
                     checker.load_baseline(path)
+
+    def test_reviewed_boundary_keeps_android_import_provenance(self):
+        payload = {"repository": checker.REPOSITORY, "imported_commit": BASE, "imported_version": "0.4.0",
+                   "reviewed_commit": OTHER, "reviewed_version": "0.5.0", "review_audit": "docs/IOS_UPSTREAM_REVIEW.md"}
+        with tempfile.TemporaryDirectory() as directory:
+            loaded = checker.load_baseline(self.write_baseline(directory, payload))
+        self.assertEqual(loaded.imported_commit, BASE)
+        self.assertEqual(loaded.imported_version, "0.4.0")
+        self.assertEqual(loaded.comparison_commit, OTHER)
+        get = FakeGET([comparison(merge_base=OTHER)], base=OTHER)
+        self.assertEqual(checker.check_upstream(loaded, get).state, "ahead")
+        self.assertIn("/compare/" + OTHER + "..." + HEAD, get.calls[-1])
+
+    def test_incomplete_or_invalid_review_metadata_fails_closed_before_requests(self):
+        invalid = [{"reviewed_commit": "main", "reviewed_version": "0.5.0"},
+                   {"reviewed_commit": OTHER}, {"reviewed_commit": OTHER, "reviewed_version": ""},
+                   {"reviewed_version": "0.5.0"}, {"review_audit": "docs/review.md"},
+                   {"reviewed_commit": OTHER, "reviewed_version": "0.5.0", "review_audit": {}},
+                   {"reviewed_commit": "A" * 40, "reviewed_version": "0.5.0"}]
+        for extra in invalid:
+            with self.subTest(extra=extra), tempfile.TemporaryDirectory() as directory:
+                payload = {"repository": checker.REPOSITORY, "imported_commit": BASE, "imported_version": "0.4.0", **extra}
+                with self.assertRaises(checker.CheckError):
+                    checker.load_baseline(self.write_baseline(directory, payload))
+        get = mock.Mock()
+        with self.assertRaises(checker.CheckError):
+            checker.check_upstream(checker.Baseline(checker.REPOSITORY, BASE, "0.4.0", "../main", "0.5.0"), get)
+        get.assert_not_called()
+
+    def test_reviewed_identical_checks_reviewed_sha_instead_of_android_snapshot(self):
+        reviewed = checker.Baseline(checker.REPOSITORY, BASE, "0.4.0", OTHER, "0.5.0")
+        get = FakeGET([comparison("identical", 0, commits=[], merge_base=OTHER)], base=OTHER, head=OTHER)
+        self.assertEqual(checker.check_upstream(reviewed, get).state, "identical")
+
+    def test_review_report_preserves_provenance_and_escapes_audit_metadata(self):
+        reviewed = checker.Baseline(checker.REPOSITORY, BASE, "0.4.0", OTHER, "0.5.0", '</code><script>audit</script>')
+        report = checker.check_upstream(reviewed, FakeGET([comparison(merge_base=OTHER)], base=OTHER))
+        text = checker.render_report(report)
+        self.assertIn("Imported Android provenance: [" + BASE, text)
+        self.assertIn("Pinned baseline: [" + OTHER, text)
+        self.assertIn("0.4.0", text)
+        self.assertIn("0.5.0", text)
+        self.assertIn("&lt;script&gt;", text)
+        self.assertNotIn("<script>", text)
+
+    def test_reviewed_cli_check_never_advances_either_boundary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            payload = {"repository": checker.REPOSITORY, "imported_commit": BASE, "imported_version": "0.4.0",
+                       "reviewed_commit": OTHER, "reviewed_version": "0.5.0", "review_audit": "docs/review.md"}
+            path = self.write_baseline(directory, payload)
+            original = path.read_bytes()
+            get = FakeGET([comparison("identical", 0, commits=[], merge_base=OTHER)], base=OTHER, head=OTHER)
+            with contextlib.redirect_stdout(io.StringIO()):
+                self.assertEqual(checker.main(["--output", str(Path(directory) / "review.md")], get_json=get, baseline_path=path), 0)
+            self.assertEqual(path.read_bytes(), original)
 
     def test_success_writes_markdown_only_to_requested_path_and_fixed_stdout(self):
         with tempfile.TemporaryDirectory() as directory:

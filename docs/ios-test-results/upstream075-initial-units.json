@@ -1,0 +1,61 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "670AA0BD-A1DF-4768-835F-966A0D09E7B3",
+        "deviceName" : "iPhone 17 Pro",
+        "modelName" : "iPhone 17 Pro",
+        "osBuildNumber" : "23E254a",
+        "osVersion" : "26.4.1",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 235,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Earshot · Built with macOS 26.4.1",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1792717881.225,
+  "passedTests" : 235,
+  "result" : "Failed",
+  "skippedTests" : 0,
+  "startTime" : 1792717820.264,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "XCTAssertEqual failed: (\"file:///tmp/earshot-fixture/\") is not equal to (\"file:///tmp/earshot-fixture\")",
+      "targetName" : "EarshotTests",
+      "testIdentifier" : 54,
+      "testIdentifierString" : "CompanionTests/testMemoCapacityAndFileNamesCannotEscapeOwnedDirectory()",
+      "testIdentifierURL" : "test://com.apple.xcode/Earshot/EarshotTests/CompanionTests/testMemoCapacityAndFileNamesCannotEscapeOwnedDirectory",
+      "testName" : "testMemoCapacityAndFileNamesCannotEscapeOwnedDirectory()"
+    },
+    {
+      "failureText" : "failed: caught error: \"refused(\"A read does not change simulated state.\")\"",
+      "targetName" : "EarshotTests",
+      "testIdentifier" : 215,
+      "testIdentifierString" : "SoundcoreTests/testSleepAllElevenControlsRoundTripAndPostSleepKeepsTimerBytesSentinel()",
+      "testIdentifierURL" : "test://com.apple.xcode/Earshot/EarshotTests/SoundcoreTests/testSleepAllElevenControlsRoundTripAndPostSleepKeepsTimerBytesSentinel",
+      "testName" : "testSleepAllElevenControlsRoundTripAndPostSleepKeepsTimerBytesSentinel()"
+    }
+  ],
+  "title" : "Test - Earshot",
+  "topInsights" : [
+    {
+      "category" : "Longest Test Runs",
+      "impact" : "53% of duration",
+      "text" : "6 longest test runs with outlier durations exceeding 0.55s (three standard deviations)"
+    }
+  ],
+  "totalTestCount" : 237
+}

@@ -22,7 +22,9 @@ struct SoundView: View {
         Page {
             Text("Find your frequency.").font(.title2.weight(.bold))
             Picker("Equalizer", selection: $page) { Text("Headphone EQ").tag(0); Text("Pro EQ").tag(1) }.pickerStyle(.segmented)
-            if page == 0 {
+            if page == 0 && store.profile.isVendorCatalogue {
+                InfoNote(text: "Headphone EQ is not mapped to a live iOS transport for this profile. Vendor demo settings are on Home or in Tools → Vendor catalogue. Pro EQ processes audio played inside Earshot.")
+            } else if page == 0 {
                 Panel(title: "A little more you", subtitle: "Saved on your headphones. Applies to every audio source.") {
                     ForEach(0..<3) { index in
                         CommittedBluetoothSlider(title: ["Bass", "Mid", "Treble"][index], reportedValue: store.saved.eq[index], range: -10...10,
@@ -35,8 +37,8 @@ struct SoundView: View {
             } else {
                 InfoNote(text: "Pro EQ processes audio played inside Earshot. iOS does not let this app equalize Spotify, Apple Music, calls, or other apps.")
                 Panel {
-                    Toggle("Enable Pro EQ", isOn: $store.saved.proEnabled).font(.headline).onChange(of: store.saved.proEnabled) { _, enabled in if !enabled { store.audio.setBypassed(false) }; store.applyAudio() }
-                    Picker("Preset", selection: Binding(get: { store.saved.presetID }, set: { store.choosePreset($0) })) { ForEach(store.presets) { preset in Text(preset.name).tag(preset.id) } }.accessibilityIdentifier("presetPicker")
+                    Toggle("Enable Pro EQ", isOn: Binding(get: { store.saved.proEnabled }, set: { enabled in store.saved.proEnabled = enabled; store.companion.rememberExplicitPick(enabled ? store.saved.presetID : nil) })).font(.headline).onChange(of: store.saved.proEnabled) { _, enabled in if !enabled { store.audio.setBypassed(false) }; store.applyAudio() }
+                    Picker("Preset", selection: Binding(get: { store.saved.presetID }, set: { store.choosePreset($0, rememberForOutput: true) })) { ForEach(store.presets) { preset in Text(preset.name).tag(preset.id) } }.accessibilityIdentifier("presetPicker")
                     EQChart(preset: store.preset)
                     if let description = store.preset.description { Text(description).font(.caption).foregroundStyle(.secondary).lineLimit(4) }
                     HStack { Label(String(format: "Preamp %.1f dB", store.effectiveAudioPreamp), systemImage: "waveform"); Spacer(); Label(store.saved.audioOptions.limiterEnabled ? "Limiter on" : "Limiter off", systemImage: store.saved.audioOptions.limiterEnabled ? "checkmark.shield" : "shield.slash") }.font(.caption).foregroundStyle(.secondary)
@@ -160,7 +162,7 @@ struct LocalPlayerView: View {
             }
             HStack {
                 Button { engine.skip(seconds: -15) } label: { Image(systemName: "gobackward.15") }.disabled(!engine.hasFile).accessibilityLabel("Back 15 seconds")
-                Button { engine.playPause() } label: { Label(engine.isPlaying ? "Pause" : "Play", systemImage: engine.isPlaying ? "pause.fill" : "play.fill") }.buttonStyle(.borderedProminent).disabled(!engine.hasFile).accessibilityIdentifier("playAudio")
+                Button { engine.playPause() } label: { Label(engine.isPlaying ? "Pause" : "Play", systemImage: engine.isPlaying ? "pause.fill" : "play.fill") }.earshotProminentButton().disabled(!engine.hasFile).accessibilityIdentifier("playAudio")
                 Button { engine.skip(seconds: 15) } label: { Image(systemName: "goforward.15") }.disabled(!engine.hasFile).accessibilityLabel("Forward 15 seconds")
                 Button { engine.stop() } label: { Image(systemName: "stop.fill") }.disabled(!engine.hasFile).accessibilityLabel("Stop audio")
             }.buttonStyle(.bordered)

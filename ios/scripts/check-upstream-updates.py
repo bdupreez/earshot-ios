@@ -42,6 +42,13 @@ class Baseline:
     repository: str
     imported_commit: str
     imported_version: str
+    reviewed_commit: str | None = None
+    reviewed_version: str | None = None
+    review_audit: str | None = None
+
+    @property
+    def comparison_commit(self) -> str:
+        return self.reviewed_commit or self.imported_commit
 
 
 @dataclass
@@ -79,7 +86,27 @@ def load_baseline(path: Path = BASELINE_PATH) -> Baseline:
     version = payload.get("imported_version")
     if not isinstance(version, str) or not version.strip() or len(version) > 100:
         raise CheckError("The baseline must include its imported version.")
-    return Baseline(REPOSITORY, sha, version)
+    baseline = Baseline(REPOSITORY, sha, version, payload.get("reviewed_commit"),
+                        payload.get("reviewed_version"), payload.get("review_audit"))
+    validate_baseline(baseline)
+    return baseline
+
+
+def validate_baseline(baseline: Baseline) -> None:
+    if baseline.repository != REPOSITORY:
+        raise CheckError("The baseline must name the original Earshot repository.")
+    validated_sha(baseline.imported_commit)
+    if not isinstance(baseline.imported_version, str) or not baseline.imported_version.strip() or len(baseline.imported_version) > 100:
+        raise CheckError("The baseline must include its imported version.")
+    if baseline.reviewed_commit is None:
+        if baseline.reviewed_version is not None or baseline.review_audit is not None:
+            raise CheckError("Review metadata requires an explicit reviewed commit.")
+        return
+    validated_sha(baseline.reviewed_commit)
+    if not isinstance(baseline.reviewed_version, str) or not baseline.reviewed_version.strip() or len(baseline.reviewed_version) > 100:
+        raise CheckError("A reviewed baseline must include its reviewed version.")
+    if baseline.review_audit is not None and (not isinstance(baseline.review_audit, str) or not baseline.review_audit.strip() or len(baseline.review_audit) > 2048):
+        raise CheckError("The review audit reference must be bounded nonempty text.")
 
 
 class NoRedirects(urllib.request.HTTPRedirectHandler):
@@ -156,9 +183,8 @@ def _file_records(value) -> list[dict]:
 
 def check_upstream(baseline: Baseline, get_json) -> UpstreamReport:
     # Revalidate programmatic callers as strictly as the baseline file.
-    if baseline.repository != REPOSITORY:
-        raise CheckError("The baseline must name the original Earshot repository.")
-    validated_sha(baseline.imported_commit)
+    validate_baseline(baseline)
+    base = baseline.comparison_commit
     repository = get_json(API_PATH)
     if not isinstance(repository, dict) or repository.get("full_name") != REPOSITORY:
         raise CheckError("GitHub did not return the original Earshot repository.")
@@ -172,7 +198,7 @@ def check_upstream(baseline: Baseline, get_json) -> UpstreamReport:
     if not isinstance(head_records, list) or len(head_records) != 1 or not isinstance(head_records[0], dict):
         raise CheckError("GitHub did not resolve the upstream default branch.")
     head = validated_sha(head_records[0].get("sha"))
-    compare_path = API_PATH + "/compare/" + baseline.imported_commit + "..." + head
+    compare_path = API_PATH + "/compare/" + base + "..." + head
     first = get_json(compare_path + "?per_page=100&page=1")
     if not isinstance(first, dict):
         raise CheckError("GitHub returned an invalid comparison.")
@@ -183,10 +209,10 @@ def check_upstream(baseline: Baseline, get_json) -> UpstreamReport:
     merge_base = validated_sha(merge_record.get("sha")) if isinstance(merge_record, dict) else None
     state = first.get("status")
     if state == "identical":
-        if head != baseline.imported_commit or ahead or behind or total:
+        if head != base or ahead or behind or total:
             state = "manual-review"
     elif state == "ahead":
-        if merge_base != baseline.imported_commit or not ahead or behind or total != ahead:
+        if merge_base != base or not ahead or behind or total != ahead:
             state = "manual-review"
     elif state == "behind":
         if merge_base != head or not behind or ahead:
@@ -262,18 +288,24 @@ STATUS_MESSAGES = {
 
 
 def render_report(report: UpstreamReport) -> str:
-    baseline_sha = report.baseline.imported_commit
+    baseline_sha = report.baseline.comparison_commit
     lines = ["# Manual Earshot upstream check", "",
              "Original: [Earshot by HellzYeahh and contributors](" + REPOSITORY_URL + "), MIT. "
              "This fork is an experimental AI-assisted native iOS port attempt.", "",
              STATUS_MESSAGES[report.state], "",
              "This check imports, merges and publishes nothing, and never advances the pinned baseline.", "",
-             "Imported version:", "<pre><code>" + safe_text(report.baseline.imported_version, 100) + "</code></pre>", "",
+             "Retained Android snapshot version:", "<pre><code>" + safe_text(report.baseline.imported_version, 100) + "</code></pre>", "",
+             "- Imported Android provenance: [" + report.baseline.imported_commit + "](" + REPOSITORY_URL + "/commit/" + report.baseline.imported_commit + ")",
              "Upstream default branch (resolved once):", "<pre><code>" + safe_text(report.branch, 1024) + "</code></pre>", "",
              "- Pinned baseline: [" + baseline_sha + "](" + REPOSITORY_URL + "/commit/" + baseline_sha + ")",
              "- Resolved upstream head: [" + report.head + "](" + REPOSITORY_URL + "/commit/" + report.head + ")",
              "- Immutable comparison: [review commits and files](" + REPOSITORY_URL + "/compare/" + baseline_sha + "..." + report.head + ")",
              "- Ahead: %d; behind: %d." % (report.ahead_by, report.behind_by), ""]
+    if report.baseline.reviewed_commit is not None:
+        lines.extend(["The comparison starts at the separately reviewed native-port boundary. The retained Android snapshot and its original version are unchanged.", "",
+                      "Reviewed upstream version:", "<pre><code>" + safe_text(report.baseline.reviewed_version, 100) + "</code></pre>", ""])
+        if report.baseline.review_audit is not None:
+            lines.extend(["Review audit reference:", "<pre><code>" + safe_text(report.baseline.review_audit) + "</code></pre>", ""])
     if report.merge_base:
         lines.extend(["- Reported merge base: [" + report.merge_base + "](" + REPOSITORY_URL + "/commit/" + report.merge_base + ")", ""])
     if report.state == "ahead":

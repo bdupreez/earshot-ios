@@ -48,11 +48,12 @@ observation; run the check again for current information.
 
 The imported baseline is pinned in [upstream-baseline.json](upstream-baseline.json), initially
 upstream 0.4.0 at `d6ceffa7a028f2809840160bf8323715d24384cb`. The checker resolves upstream's
-default branch to one immutable commit, then compares that commit with this imported baseline.
+default branch to one immutable commit, then compares that commit with a separately reviewed
+boundary when one is present, falling back to the imported baseline for older files.
 Comparing upstream directly with the iOS branch would confuse intentional port changes with
 new upstream work.
 
-- Identical history means there are no newer changes relative to the imported snapshot.
+- Identical history means there are no newer changes relative to the selected comparison boundary.
 - Ahead history identifies newer upstream commits for review.
 - Behind, diverged or unexpected ancestry needs manual history review; it is not reported as current.
 - API failures fail the check and do not establish that upstream is unchanged.
@@ -64,7 +65,8 @@ an omitted subsystem is unchanged. The report labels limits and links to the fix
 Remote subjects, paths and branch text are treated as untrusted data and escaped before display.
 
 The check does not advance the baseline, import code, synchronize a branch, open an issue/PR,
-or execute on a schedule. Running it repeatedly reports changes since the last deliberate import.
+or execute on a schedule. Running it repeatedly reports changes since the last deliberate review
+boundary (or import when there is no separate review boundary).
 
 ## Porting an update deliberately
 
@@ -74,9 +76,19 @@ features do not automatically become possible on iOS. Keep original authorship a
 credits. Port selected work on a `codex/` branch, run appropriate native tests and preserve actual
 Xcode evidence. Physical headphone effects still need a device test.
 
-Advance the imported baseline only after its entire range has been deliberately incorporated or
-explicitly reconciled and documented. Selectively porting one fix is not enough to claim that all
-upstream commits have been imported. Update the provenance notes alongside any baseline change.
+Keep `imported_commit` and `imported_version` as provenance for the retained Android tree. A native
+port can finish reviewing a newer upstream range without replacing that historical snapshot.
+After the entire range has been deliberately ported or reconciled, validated and documented, add
+`reviewed_commit` (a complete lowercase 40-character SHA) and `reviewed_version` to
+`upstream-baseline.json`. An optional `review_audit` string records the audit document or review
+reference; it is bounded and escaped in the report, never executed or used as a remote link.
+The checker compares from `reviewed_commit` when present, while displaying both boundaries.
+Review metadata without a valid reviewed SHA and version is rejected. Existing three-field
+baseline files continue to compare from their imported snapshot.
+
+Do not set the reviewed boundary just because a check ran, or after porting only one selected fix.
+The checker never writes either boundary. The completed, validated review must explicitly advance
+it; preserve 0.4.0 and its imported SHA unless the retained Android snapshot itself changes.
 Publish progress only to this fork after the index privacy check; preserve local signing edits.
 
 Reference: [GitHub's comparison API and pagination limits](https://docs.github.com/en/rest/commits/commits#compare-two-commits).

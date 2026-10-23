@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HomeView: View {
     @EnvironmentObject var store: AppStore
+    @Environment(\.earshotPalette) private var palette
     @State private var switchingHeadphones = false
     var body: some View {
         Page {
@@ -27,8 +28,11 @@ struct HomeView: View {
                 Text(store.saved.demo ? "A virtual device. Changes stay in the demo." : store.bluetooth.status).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity)
                 if let time = store.remainingTimeDescription { Text("Reported listening time: \(time)\(store.saved.demo ? " · simulated" : "")").font(.caption).foregroundStyle(.secondary) }
                 if !store.batteries.isEmpty { HStack { ForEach(store.batteries.keys.sorted(), id: \.self) { key in VStack(spacing: 4) { Text("\(store.batteries[key]!)%").font(.headline); Text(key).font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity) } } }
-                if !store.connected { NavigationLink("Find headphones") { ConnectionView() }.buttonStyle(.borderedProminent).frame(maxWidth: .infinity) }
+                if !store.connected { NavigationLink("Find headphones") { ConnectionView() }.earshotProminentButton().frame(maxWidth: .infinity) }
             }
+            if store.saved.demo, let model = store.profile.soundcoreModel { SoundcoreDemoView(model: model).id(model.rawValue) }
+            if store.saved.demo, let model = store.profile.vendorDefinition { VendorDemoView(model: model).id(model.id) }
+            ToolLink(title: "Headset companion", detail: store.companion.output?.name ?? "Audio route, local EQ and voice memos", icon: "headphones") { CompanionControlsView() }
             if store.deviceStatus.operationMode == .firmwareUpdateOnly {
                 InfoNote(text: "The headphones report firmware-update-only mode. Normal controls may be unavailable. This port does not perform firmware updates.")
             }
@@ -41,7 +45,7 @@ struct HomeView: View {
                                     Button { store.selectMode(mode.id) } label: {
                                         VStack(spacing: 10) { Image(systemName: mode.id == 0 ? "moon" : mode.id == 1 ? "sun.max" : "waveform").font(.title3); Text(mode.name).font(.subheadline.weight(.medium)) }
                                             .frame(minWidth: 80).padding(.vertical, 18).padding(.horizontal, 12)
-                                            .foregroundStyle(store.saved.currentMode == mode.id ? .white : .primary)
+                                            .foregroundStyle(store.saved.currentMode == mode.id ? palette.filledText : .primary)
                                             .background(store.saved.currentMode == mode.id ? Color.earshot : Color(uiColor: .tertiarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 18))
                                     }.buttonStyle(.plain).accessibilityIdentifier("mode.\(mode.id)").accessibilityValue(store.saved.currentMode == mode.id ? "Selected" : "Not selected").accessibilityAddTraits(store.saved.currentMode == mode.id ? .isSelected : [])
                                 }

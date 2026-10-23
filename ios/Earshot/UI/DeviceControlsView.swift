@@ -188,12 +188,19 @@ struct DeviceControlsView: View {
     }
 
     @ViewBuilder private var shortcutSection: some View {
-        if let shortcut = store.buttonShortcut {
+        if !store.shortcutButtons.isEmpty {
             Section("Shortcut button") {
-                Picker("Button action", selection: Binding(get: { Int(shortcut.action) }, set: { store.setButtonShortcut($0) })) {
-                    ForEach(shortcut.supported.sorted(), id: \.self) { action in Text(BoseButtonShortcut.name(action)).tag(action) }
-                }.disabled(!store.connected || !store.supports(1, 9))
-                Text("Actions come from the device’s capability mask. A voice assistant or Spotify action can require setup in its own app.").font(.caption).foregroundStyle(.secondary)
+                ForEach(store.shortcutButtons) { shortcut in
+                    Picker(store.shortcutButtons.count == 1 ? "Button action" : shortcut.title,
+                           selection: Binding(get: { Int(shortcut.action) }, set: { store.setButtonShortcut(button: shortcut.button, action: $0) })) {
+                        ForEach(shortcut.supported.union([Int(shortcut.action)]).sorted(), id: \.self) { action in Text(BoseButtonShortcut.name(action)).tag(action) }
+                    }.disabled(!store.connected || !store.supports(1, 9) || shortcut.supported.isEmpty)
+                }
+                Text("Actions come from each button’s own capability mask. Press a button while this screen is open to inspect its last reported event below. iOS cannot intercept the global assistant button or Spotify Tap to launch arbitrary actions.").font(.caption).foregroundStyle(.secondary)
+                if let event = store.deviceStatus.lastButtonEvent {
+                    LabeledContent("Detected event", value: event.summary)
+                    Text(event.receivedAt.formatted(date: .omitted, time: .standard)).font(.caption)
+                }
             }
         }
     }

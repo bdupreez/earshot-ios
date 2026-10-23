@@ -382,11 +382,99 @@ final class EarshotUITests: XCTestCase {
         attachScreenshot("Home — dark appearance")
     }
 
+    func testHeadsetCompanionCyclesLocalEQAndShowsHonestRouteBoundary() throws {
+        launchDemo()
+        selectTab("Tools")
+        let link = button(startingWith: "Headset companion")
+        reveal(link); link.tap()
+        XCTAssertTrue(app.navigationBars["Headset companion"].waitForExistence(timeout: 5))
+        let cycle = app.buttons["companionCycleEQ"]
+        reveal(cycle); cycle.tap()
+        XCTAssertTrue(app.staticTexts["companionStatus"].exists)
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        attachScreenshot("Field headset companion — native route picker, output EQ memory and local actions")
+    }
+
+    func testSoundcoreSleepDemoUsesDocumentedControlsWithoutLiveConnection() throws {
+        app.launchArguments = ["--uitesting", "--demo-profile=soundcore.D1301"]
+        app.launch()
+        dismissReleaseNotesIfPresented()
+        XCTAssertTrue(tabButton("Home").waitForExistence(timeout: 10))
+        XCTAssertTrue(app.staticTexts["Demo device"].exists)
+        let listening = app.buttons["soundcoreControl.listening_mode"]
+        reveal(listening); listening.tap()
+        let sounds = app.buttons["Local sounds"]
+        XCTAssertTrue(sounds.waitForExistence(timeout: 3), app.debugDescription)
+        sounds.tap()
+        let result = app.staticTexts["soundcoreSimulationResult"]
+        reveal(result)
+        XCTAssertTrue(result.label.contains("No physical command was sent"), app.debugDescription)
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        attachScreenshot("Soundcore Sleep A30 local setting round-trip — no physical command")
+    }
+
+    func testSennheiserCatalogueDemoAndResearchAreSeparateFromPhysicalControl() throws {
+        app.launchArguments = ["--uitesting", "--demo-profile=sennheiser.momentum4"]
+        app.launch()
+        dismissReleaseNotesIfPresented()
+        XCTAssertTrue(tabButton("Home").waitForExistence(timeout: 10))
+        app.swipeUp()
+        let slider = app.sliders["vendorControl.noiseLevel"]
+        reveal(slider)
+        XCTAssertTrue(slider.exists, app.debugDescription)
+        slider.adjust(toNormalizedSliderPosition: 0.5)
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        attachScreenshot("Momentum 4 local fixture — native controls with original research attribution")
+    }
+
+    func testVoiceMemoFinalizesBeforeLocalPlaybackAndSurvivesNavigation() throws {
+        launchDemo(); selectTab("Tools")
+        let link = button(startingWith: "Headset companion")
+        reveal(link); link.tap()
+        let record = app.buttons["companionRecordMemo"]
+        reveal(record); record.tap()
+        XCTAssertTrue(app.buttons["Stop and save memo"].waitForExistence(timeout: 5), app.debugDescription)
+        let elapsed = app.descendants(matching: .any).matching(identifier: "companionMemoElapsed").firstMatch
+        let recorded = NSPredicate(format: "value MATCHES %@", "([2-9]|[1-9][0-9]+) seconds")
+        expectation(for: recorded, evaluatedWith: elapsed)
+        waitForExpectations(timeout: 8)
+        selectTab("Sound")
+        app.buttons["Pro EQ"].tap()
+        let load = app.buttons["loadSample"]
+        reveal(load); load.tap()
+        let play = app.buttons["playAudio"]
+        reveal(play); play.tap()
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 4))
+        selectTab("Tools")
+        XCTAssertTrue(record.waitForExistence(timeout: 4)); reveal(record)
+        XCTAssertEqual(record.label, "Record voice memo", "Starting local playback must finalize the live memo first.")
+        let memo = app.buttons.matching(NSPredicate(format: "identifier BEGINSWITH %@", "companionPlayMemo.")).firstMatch
+        reveal(memo); XCTAssertTrue(memo.exists)
+        attachScreenshot("Real Simulator voice memo finalized before local playback — physical headset input unverified")
+    }
+
+    func testBatteryCompanionExplainsSelectionAndDoesNotRequireDiscoveryToOpen() throws {
+        launchDemo(); selectTab("Tools")
+        let link = button(startingWith: "Battery companion")
+        reveal(link); link.tap()
+        XCTAssertTrue(app.navigationBars["Battery companion"].waitForExistence(timeout: 4))
+        XCTAssertTrue(app.buttons["discoverBatterySources"].exists)
+        XCTAssertTrue(app.staticTexts["batteryCompanionStatus"].label.contains("Choose Discover"))
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+        attachScreenshot("Read-only battery companion before user-initiated Bluetooth discovery")
+    }
+
+    private func dismissReleaseNotesIfPresented() {
+        let done = app.buttons["dismissReleaseNotes"]
+        if done.waitForExistence(timeout: 2) { done.tap() }
+    }
+
     private func launchDemo() {
         app.launch()
         XCTAssertTrue(app.buttons["tryDemo"].waitForExistence(timeout: 10))
         reveal(app.buttons["tryDemo"])
         app.buttons["tryDemo"].tap()
+        dismissReleaseNotesIfPresented()
         XCTAssertTrue(tabButton("Home").waitForExistence(timeout: 5))
     }
 

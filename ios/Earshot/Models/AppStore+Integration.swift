@@ -156,6 +156,10 @@ import WidgetKit
     func executeSharedPayload(_ payload: EarshotCommandPayload) async throws -> String {
         guard appIsActive else { throw RuleExecutionError.failed("Open Earshot to execute this request.") }
         switch payload {
+        case .cycleLocalEQ:
+            return await companion.perform(.cycleEQ)
+        case .voiceMemo:
+            return await companion.perform(.voiceMemo)
         case .localPreset(let id):
             guard presets.contains(where: { $0.id == id }) else { throw RuleExecutionError.failed("That local EQ preset was removed. Update the Shortcut.") }
             saved.proEnabled = true; choosePreset(id)

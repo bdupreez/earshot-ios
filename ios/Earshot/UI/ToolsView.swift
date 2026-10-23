@@ -5,8 +5,11 @@ struct ToolsView: View {
     var body: some View {
         Page {
             Text("The useful little things.").font(.title2.weight(.bold))
+            ToolLink(title: "Headset companion", detail: "Any audio output, EQ memory, actions and voice memos", icon: "headphones") { CompanionControlsView() }
             ToolLink(title: "Connection", detail: "Discover headphones and inspect your audio route", icon: "dot.radiowaves.left.and.right") { ConnectionView() }
             ToolLink(title: "Microphone check", detail: "Record, listen, and check the actual input", icon: "mic") { MicrophoneView() }
+            ToolLink(title: "Battery companion", detail: "Explicit read-only BLE battery discovery and nearby adverts", icon: "battery.75percent") { BatteryCompanionView() }
+            ToolLink(title: "Vendor catalogue", detail: "Soundcore, Sennheiser, Sony, Method, AirPods and generic demos", icon: "books.vertical") { VendorCatalogueView() }
             ToolLink(title: "Protocol lab", detail: "Capability reads, experimental Print console and reports", icon: "flask") { LabView() }
             ToolLink(title: "iOS compatibility", detail: "What works here, and what needs hardware", icon: "checkmark.shield") { CompatibilityView() }
             InfoNote(text: "Earshot for iOS is an experimental AI-assisted port. Simulator success validates the app and virtual controls; physical headphone compatibility remains unverified.")
@@ -21,7 +24,7 @@ struct ConnectionView: View {
             Panel(title: "Headphone control") {
                 Text(store.saved.demo ? "Demo mode is active" : store.bluetooth.status).font(.subheadline)
                 HStack {
-                    Button("Scan for headphones") { if store.saved.demo { store.setDemo(false) }; store.bluetooth.scan() }.buttonStyle(.borderedProminent).accessibilityIdentifier("scanHeadphones")
+                    Button("Scan for headphones") { if store.saved.demo { store.setDemo(false) }; store.bluetooth.scan() }.earshotProminentButton().accessibilityIdentifier("scanHeadphones")
                     if store.bluetooth.isConnected { Button("Disconnect") { store.bluetooth.disconnect() }.buttonStyle(.bordered) }
                 }
                 ForEach(store.bluetooth.devices) { device in
@@ -88,7 +91,7 @@ struct MicrophoneControls: View {
                         }.font(.caption.monospacedDigit()).foregroundStyle(.secondary).accessibilityHidden(true)
                     }
                 }
-                Button { if mic.isRecording { mic.stopRecording() } else { audio.stop(); Task { await mic.startRecording() } } } label: { Label(mic.isRecording ? "Stop recording" : "Record microphone", systemImage: mic.isRecording ? "stop.fill" : "record.circle").frame(maxWidth: .infinity).padding(6) }.buttonStyle(.borderedProminent).accessibilityIdentifier("recordMic")
+                Button { if mic.isRecording { mic.stopRecording() } else { audio.stop(); Task { await mic.startRecording() } } } label: { Label(mic.isRecording ? "Stop recording" : "Record microphone", systemImage: mic.isRecording ? "stop.fill" : "record.circle").frame(maxWidth: .infinity).padding(6) }.earshotProminentButton().accessibilityIdentifier("recordMic")
                 HStack { Button(mic.isPlaying ? "Stop playback" : "Play recording") { if mic.isPlaying { mic.stopPlayback() } else { audio.stop(); mic.play() } }.disabled(!mic.hasRecording || mic.isRecording); Spacer(); Button("Delete", role: .destructive) { mic.deleteRecording() }.disabled(!mic.hasRecording || mic.isRecording) }
             }
             InfoNote(text: mic.routeDescription, icon: "ear")
@@ -111,9 +114,10 @@ struct LabView: View {
             InfoNote(text: "The queries below are read-only. The separate Print console requires explicit experimental consent. Firmware update, authentication, reset, factory defaults and destructive commands are blocked in the transport.")
             Panel(title: "Query headphones") {
                 Picker("Function", selection: $query) { ForEach(queries.indices, id: \.self) { Text(queries[$0].0).tag($0) } }
-                Button("Send GET") { let q = queries[query]; store.send(BmapPacket(block: q.1, function: q.2, operation: .get)) }.buttonStyle(.borderedProminent).disabled(!store.bluetooth.isConnected || store.saved.demo)
+                Button("Send GET") { let q = queries[query]; store.send(BmapPacket(block: q.1, function: q.2, operation: .get)) }.earshotProminentButton().disabled(!store.bluetooth.isConnected || store.saved.demo)
                 if store.saved.demo { Text("Demo mode does not send Bluetooth packets.").font(.caption).foregroundStyle(.secondary) }
             }
+            NavigationLink("Vendor research catalogue") { VendorCatalogueView() }
             NavigationLink("Capability scan and console") { ProtocolLabView(bluetooth: store.bluetooth) }
             Panel(title: "Connection report") {
                 ShareLink(item: store.report) { Label("Share connection report", systemImage: "square.and.arrow.up") }

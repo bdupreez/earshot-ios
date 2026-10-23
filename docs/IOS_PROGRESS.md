@@ -212,6 +212,60 @@ project are untouched; prior Simulator results are not presented as a new native
 signing edits remain local and excluded. Index privacy checks and explicit fork-only destination
 verification are required before each push.
 
+## Checkpoint 16 — Upstream 0.75 native reconciliation (23 October 2026)
+
+Reviewed all 42 commits from 0.4.0 d6ceffa to 0.75.0 9e6c491 using the complete Git diff
+(311 files), including each merge and new reference notice. The [audit](IOS_UPSTREAM_075_AUDIT.md)
+links every commit and F01–F14 to its native implementation or public-platform limitation.
+Retained Android source/captures remain 0.4.0 provenance. Original Earshot, HellzYeahh and
+contributors remain prominent in README, About, source and release notes. New MIT research
+notices and complete OFL font notices are retained; GPL/AGPL/unlicensed code is not imported.
+
+Native 0.2 adds per-output explicit preset/off memory, public route/volume controls, foreground
+EQ-cycle/memo Intents, optional spoken feedback and protected persistent AAC voice memos.
+Recorder/mic/player ownership is exclusive; starting playback finalizes a memo first. Foreground
+local-only connection rules follow real external audio-route changes after remembered-EQ restore;
+category/microphone changes cannot create reconnect loops or overwrite explicit choices.
+
+Read-only BAS discovery uses explicit source selection, only 180F/2A19, bounded deadlines,
+serialized cancellation and stale-callback rejection. Optional delivered Apple adverts remain
+nearby/unverified and are never assigned to the active route. Neither feature marks vendor
+control connected. Added 35 Soundcore models with exact bounded frames, model-aware parsers,
+write guards and synthetic readback demos; 48 other catalogue entries cover Sennheiser, Sony,
+Method, Apple/Beats and generic exclusions. Unsupported live RFCOMM is never replaced with a
+guessed BLE writer. Unresolved layouts and undocumented operations stay read-only.
+
+Corrected Bose touch low-bit ON semantics, independent button/event/action records and retained
+same-button masks after short echoes. Unknown current actions grant no extra writes. QCE(2024)
+and other brands no longer get an assumed Bose profile. Field light/dark styling, registered OFL
+fonts and opaque light/dark/tinted Strike artwork retain original upstream design credit.
+Screenshot review caught hidden picker labels and low-contrast filled buttons; native controls
+now have explicit visible labels and readable text. The vendor container preserves child
+accessibility identifiers. Local signing settings are reconciled separately from a clean generated
+project; public marketing/build versions are 0.2.0/2. Personal developer data remains unstaged.
+
+Actual Xcode 26.4.1 / iPhone 17 Pro / iOS 26.4.1 validation history is preserved in
+[IOS_VALIDATION.md](IOS_VALIDATION.md): initial 237 units exposed two new defects, repaired before
+two subsequent 258-unit passing runs. The first new-UI attempt had three failed interactions,
+and the next had one vendor accessibility-identifier failure; all five new identifiers have
+passing latest results after repairs. Source review also caught both low-code Soundcore mutations
+(1075/1077), reverse audio-session ownership and the BAS disconnect/reread race.
+The final **Upstream075-iPhone-Checkpoint.xcresult passed 263/263**, zero failures/skips,
+Xcode exit 0: all 258 unit/integration tests plus five actual UI journeys in one run.
+[Actual summary](ios-test-results/upstream075-iphone-checkpoint.json). Exported screenshots
+were inspected after correcting visible setting labels, independent child identifiers and
+filled-button contrast. The memo screenshot shows a newly saved 15-second AAC clip after
+local playback started; no physical headset input is inferred.
+All 23 Python checker tests pass, including strict reviewed-baseline handling and escaping.
+The checker can compare a separately reviewed upstream commit while preserving the 0.4 Android
+import metadata; that reviewed marker is deliberately not advanced during this checkpoint.
+
+Broader existing iPhone UI/system surfaces and representative iPad/large-text layouts are the next
+verification checkpoint. Physical battery delivery, vendor transports, actual headset mic routing,
+Bose touch/button effects, and the owner’s slider retest remain device acceptance work. Simulator
+and synthetic-frame results do not establish those effects. Pushes target only the user’s fork,
+with exact staged-path inspection and the index privacy guard required before publishing.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

@@ -36,7 +36,7 @@
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>Earshot discovers compatible headphones and exchanges local control commands over Bluetooth.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Record a short local clip to check your microphone. No recording leaves this device.</string>
+	<string>Record local voice memos and microphone checks. Recordings stay on this device unless you choose to share them.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -57,5 +57,15 @@
 	</array>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Optional Wi-Fi rules need permission to read the current network name while Earshot is open. Earshot does not collect GPS updates or upload your network name.</string>
+	<key>UIAppFonts</key>
+	<array>
+		<string>Fonts/barlow_condensed_bold.ttf</string>
+		<string>Fonts/barlow_condensed_medium.ttf</string>
+		<string>Fonts/barlow_condensed_semibold.ttf</string>
+		<string>Fonts/barlow_medium.ttf</string>
+		<string>Fonts/barlow_regular.ttf</string>
+		<string>Fonts/barlow_semibold.ttf</string>
+		<string>Fonts/jetbrains_mono.ttf</string>
+	</array>
 </dict>
 </plist>

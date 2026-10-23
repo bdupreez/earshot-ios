@@ -2,6 +2,8 @@
 
 These are compact summaries exported with Apple's `xcresulttool get test-results summary` from actual simulator runs of this **AI-assisted iOS port attempt**. The original project is [Earshot by HellzYeahh and contributors](https://github.com/HellzYeahh/earshot); see [all credits](../../THIRD_PARTY_NOTICES.md).
 
+- [Upstream0.75 iPhone checkpoint](upstream075-iphone-checkpoint.json): **263/263 Passed** in one actual run (258 units/integration +5 new UI), after the documented source/UI repairs.
+- Earlier attempts are retained: [237-unit initial failure](upstream075-initial-units.json), [first263-test attempt](upstream075-first-feature-attempt.json), [second263-test attempt](upstream075-iphone-new-features.json), and [focused vendor repair1/1](upstream075-vendor-ui-final.json). These failed bundles remain Failed and are not relabelled.
 - [Current iPhone per-case coverage](current-iphone-coverage.json): derived latest results for 166 unit + 29 app UI identifiers and three separate small/medium-widget and Control Center journeys, all Passed across the explicitly listed bundles. This manifest is explicitly **not a single-run total**; it excludes temporary system probes.
 - [Current iPad per-case coverage](current-ipad-coverage.json): 166 unit + 12 representative app UI identifiers, all latest Passed across the stated iPad integration/repair runs; not a full iPad UI suite or a single combined total.
 - [Final iPad repairs](ipad-native-repairs-final.json): 169 passed, 0 failed, 0 skipped; all 166 units and the three previously failing UI cases.

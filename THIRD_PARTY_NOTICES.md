@@ -16,3 +16,27 @@ The preserved upstream snapshot is Earshot **0.4.0**, commit [`d6ceffa7a028f2809
 No claim is made to Bose, QuietComfort, Skullcandy, Apple, or other product trademarks. This fork is not affiliated with or endorsed by those companies. Vendor reference material is retained as reference, not represented as iOS port authorship. Bragi protobuf definitions have not been vendored.
 
 Contributors should preserve these credits and the MIT licence when redistributing this fork, and distinguish AI-generated or AI-assisted port work from upstream contributions.
+
+
+## Upstream0.5–0.75 reconciliation
+
+The AI-assisted iOS0.2 port pass reviews all42 commits through original Earshot0.75.0,
+[`9e6c4912531ec6e159eded862d1b6ffa55094199`](https://github.com/HellzYeahh/earshot/commit/9e6c4912531ec6e159eded862d1b6ffa55094199).
+The retained Android source remains the0.4.0 snapshot above. See
+[the per-commit audit](docs/IOS_UPSTREAM_075_AUDIT.md) for exact sources and platform decisions.
+Field colours, typography choices and Strike artwork are **original upstream Earshot work**;
+the native adaptation is not credited as original AI design. This includes clearly simulated
+Soundcore, Sennheiser, Sony and Method fixtures and read-only protocol research catalogues.
+
+| Reference | Credit | Licence and actual use |
+| --- | --- | --- |
+| soundcorebridge | [Mervin](https://github.com/mervin008/soundcorebridge) | MIT, copyright(c)2026 Mervin. Protocol facts and GATT reconnaissance cross-check; not a validated live iOS vendor channel. Full notice under docs/reference/soundcorebridge. |
+| momentum4-control | [Ariazonaa](https://github.com/Ariazonaa/momentum4-control) | MIT, copyright(c)2026 Ariazonaa. Upstream captures/behaviour and blocked-command research; full retained notice under docs/reference/momentum4-control. |
+| momentumctl | [Galen Abell](https://github.com/gjabell/momentumctl) | MIT, copyright(c)2026 Galen Abell. Command/UUID research through upstream Earshot; full retained notice under docs/reference/momentumctl. |
+| SonyHeadphonesClient | [mos9527, Amr Satrio and contributors](https://github.com/mos9527/SonyHeadphonesClient) | MIT, copyright(c)2026 named contributors. MDR/Tandem layouts and synthetic Sony fixture through upstream; full retained notice under docs/reference/sonyheadphonesclient. |
+| Barlow and Barlow Condensed | The Barlow Project Authors | SIL Open Font License1.1, copyright2017. Unmodified upstream font binaries; complete notices bundled in Resources/Fonts and docs/reference/fonts. |
+| JetBrains Mono | The JetBrains Mono Project Authors | SIL Open Font License1.1, copyright2020. Unmodified upstream font binary with its full bundled OFL notice. |
+
+OpenSCQ30, Gadgetbridge and other GPL/AGPL or unlicensed implementations are **protocol-fact
+references only**. Their implementation code is not newly copied into this MIT native port.
+No manufacturer authorizes or endorses the port merely because a protocol fact is documented.

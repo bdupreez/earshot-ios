@@ -21,6 +21,7 @@ import Combine
     var deviceOperationTask: Task<Void, Never>?
     var modelFacts: BoseModelFacts?
     var reportedModeIDs: Set<Int> = []
+    var audioRouteConnectionPolicy = AudioRouteConnectionPolicy()
     var appIsActive = false
     var lastSharedSnapshot: EarshotWidgetSnapshot?
     var lastIntentCatalog: EarshotIntentCatalog?
@@ -50,9 +51,11 @@ import Combine
     @Published var audioSource = "Not reported"
     @Published var pairedSources: [BosePairedSource] = []
     @Published private(set) var buttonShortcut: BoseButtonShortcut?
+    @Published private(set) var shortcutButtons: [BoseButtonShortcut] = []
     let bluetooth = HeadphoneBluetooth()
     let audio = LocalAudioEngine()
     let mic = MicRecorder()
+    let companion: HeadsetCompanion
     let routes = AudioRouteObserver()
     let notifications = NotificationManager()
     let wifi = WiFiObserver()
@@ -79,21 +82,26 @@ import Combine
     private var subscribed = false
     private var lePreferenceRequested = false
     private var batteryPollTask: Task<Void, Never>?
-    private var connectionRulesPending = false
+    var connectionRulesPending = false
     private var firedConnectionRuleIDs = Set<String>()
 
     init(defaults: UserDefaults = .standard, arguments: [String] = ProcessInfo.processInfo.arguments,
          packetSender: ((BmapPacket) throws -> Void)? = nil) {
         self.defaults = defaults
+        companion = HeadsetCompanion(defaults: defaults)
         self.packetSender = packetSender
         if arguments.contains("--uitesting") { defaults.removeObject(forKey: "earshot.ios.state") ; defaults.removeObject(forKey: "earshot.welcomed") }
         welcome = !defaults.bool(forKey: "earshot.welcomed")
         let originalData = defaults.data(forKey: "earshot.ios.state")
         let decoded = originalData.flatMap { try? JSONDecoder().decode(SavedAppState.self, from: $0) }
         saved = decoded ?? SavedAppState()
+        if arguments.contains("--uitesting"), let arg = arguments.first(where: { $0.hasPrefix("--demo-profile=") }) {
+            let id = String(arg.dropFirst("--demo-profile=".count))
+            if DeviceProfile.all.contains(where: { $0.id == id }) { saved.demo = true; saved.profileID = id; welcome = false }
+        }
         audio.mayReleaseAudioSession = { [weak self] in
             guard let self else { return true }
-            return !self.mic.isRecording && !self.mic.isPlaying
+            return !self.mic.isRecording && !self.mic.isPlaying && !self.companion.memos.isRecording && !self.companion.memos.isPlaying
         }
         if let originalData, decoded == nil || saved.recoveredItemCount > 0 {
             do {
@@ -145,6 +153,27 @@ import Combine
         if saved.demo { hydrateDemo() }
         else if !welcome { bluetooth.start() }
         if let warning = normalizePresetLibrary() { message = warning }
+        companion.availablePresets = { [weak self] in self?.presets ?? [] }
+        companion.currentEQ = { [weak self] in (self?.saved.proEnabled ?? false, self?.saved.presetID) }
+        companion.applyEQ = { [weak self] id in
+            guard let self else { return }
+            if let id, self.presets.contains(where: { $0.id == id }) { self.saved.presetID = id; self.saved.proEnabled = true }
+            else if id == nil { self.saved.proEnabled = false }
+            self.applyAudio()
+        }
+        companion.beforeRecording = { [weak self] in self?.audio.stop(); self?.mic.stopRecording(); self?.mic.stopPlayback() }
+        companion.canSpeakFeedback = { [weak self] in !(self?.mic.isRecording ?? false) && !(self?.mic.isPlaying ?? false) && !(self?.audio.isPlaying ?? false) }
+        companion.memos.mayReleaseAudioSession = { [weak self] in !(self?.mic.isRecording ?? false) && !(self?.mic.isPlaying ?? false) && !(self?.audio.isPlaying ?? false) }
+        mic.mayReleaseAudioSession = { [weak self] in !(self?.companion.memos.isRecording ?? false) && !(self?.companion.memos.isPlaying ?? false) && !(self?.audio.isPlaying ?? false) }
+        audio.beforeStartingPlayback = { [weak self] in
+            self?.companion.stopSpokenFeedback(); self?.companion.memos.stopRecording(); self?.companion.memos.stopPlayback()
+            self?.mic.stopRecording(); self?.mic.stopPlayback()
+        }
+        mic.beforeUsingAudioSession = { [weak self] in self?.companion.stopSpokenFeedback(); self?.companion.memos.stopRecording(); self?.companion.memos.stopPlayback() }
+        companion.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
+        companion.memos.objectWillChange.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
+        companion.onOutputChanged = { [weak self] output, reason in self?.onAudioOutputChanged(output, reason: reason) }
+        companion.refreshRoute()
         applyAudio()
     }
     var profile: DeviceProfile {
@@ -160,7 +189,7 @@ import Combine
     var modeName: String { if saved.currentMode == 255 { return "Unsaved listening settings" }; return saved.modes.first { $0.id == saved.currentMode }?.name ?? "No mode selected" }
     var presets: [EQPreset] { BuiltInPresets.all + saved.customPresets }
     var preset: EQPreset { presets.first { $0.id == saved.presetID } ?? BuiltInPresets.flat }
-    func supports(_ block: Int, _ function: Int) -> Bool { saved.demo || liveFunctions.contains("\(block).\(function)") }
+    func supports(_ block: Int, _ function: Int) -> Bool { saved.demo && !profile.isVendorCatalogue || liveFunctions.contains("\(block).\(function)") }
     var canEditFavorites: Bool { saved.demo || connected && supports(31, 8) && favoriteTotal > 0 && !profile.unsupported }
     var canControlNoise: Bool { saved.demo || connected && !profile.unsupported && (supports(31, 10) || usesDirectNoise() || canEditMode(saved.currentMode)) }
     func canEditMode(_ id: Int) -> Bool {
@@ -208,6 +237,13 @@ import Combine
         if saved.demo { hydrateDemo() }
     }
     private func hydrateDemo() {
+        if profile.isVendorCatalogue {
+            // Catalogue fixtures own their state. Never fill a non-Bose device with
+            // synthetic Bose capabilities, firmware, sources, or protocol reports.
+            clearLiveState(); saved.modes = []; battery = nil; batteries = [:]
+            firmware = "Vendor demo · no hardware telemetry"
+            return
+        }
         sidetonePersist = sidetonePersist ?? true
         if saved.modes.isEmpty {
             saved.modes = profile.presets.enumerated().map { ListeningMode(id: $0.offset, name: $0.element, builtIn: true, favorite: true, noise: .init(level: $0.offset == 1 ? 0 : 10, spatial: $0.offset >= 2 ? 1 : 0)) }
@@ -230,6 +266,7 @@ import Combine
         }
         pairedSources = [BosePairedSource(address: Data([0x10, 0, 0, 0, 0, 1]), name: "Demo iPhone", connected: true, isLocal: true), BosePairedSource(address: Data([0x10, 0, 0, 0, 0, 2]), name: "Demo laptop", connected: false)]
         buttonShortcut = BoseButtonShortcut(button: 0x80, event: 9, action: 19, supported: [1, 14, 16, 19])
+        shortcutButtons = buttonShortcut.map { [$0] } ?? []
     }
     func selectMode(_ index: Int) {
         guard connected, (0...254).contains(index), let mode = saved.modes.first(where: { $0.id == index && $0.configured }) else { return }
@@ -324,7 +361,10 @@ import Combine
             do { send(try BoseCommands.setFavorites(indices: next, totalModes: favoriteTotal)) } catch { message = error.localizedDescription }
         }
     }
-    func choosePreset(_ id: String) { saved.presetID = id; applyAudio() }
+    func choosePreset(_ id: String, rememberForOutput: Bool = false) {
+        saved.presetID = id; applyAudio()
+        if rememberForOutput { companion.rememberExplicitPick(saved.proEnabled ? id : nil) }
+    }
     func applyAudio() { audio.apply(preset: preset, preamp: effectiveAudioPreamp, enabled: saved.proEnabled, boost: saved.boost, limiterEnabled: saved.audioOptions.limiterEnabled) }
     func savePreset(_ newPreset: EQPreset) {
         do { _ = try createUserPreset(newPreset) } catch { message = error.localizedDescription }
@@ -545,7 +585,10 @@ import Combine
         case (4, 12):
             if BoseParsers.routedSource(p) != nil { valid = true }
         case (1, 9):
-            if let shortcut = BoseButtonShortcut.parse(p.payload) { buttonShortcut = shortcut; valid = true }
+            if let shortcut = BoseButtonShortcut.parse(p.payload) {
+                shortcutButtons = BoseButtonShortcut.merging(shortcut, into: shortcutButtons)
+                buttonShortcut = shortcutButtons.first; valid = true
+            }
         case (7, 4): valid = data.first.map { $0 <= 1 } ?? false
         case (9, 2):
             if !data.isEmpty { subscribed = BoseParsers.bitset(data.count == 5 ? Data(data.dropFirst()) : p.payload).contains(2); valid = true }
@@ -597,7 +640,7 @@ import Combine
         eqRanges = [:]; favorites = []; favoriteTotal = 0; subscribed = false; lePreferenceRequested = false; connectionRulesPending = false
         charging = false; firedConnectionRuleIDs = []
         deviceVolume = 0; deviceVolumeMaximum = 0; playbackStatus = "Not reported"; playbackActions = []
-        leAudio = nil; deviceLatency = "Not reported"; deviceLatencyValue = nil; deviceLatencyOriginal = nil; deviceLatencyRange = nil; audioSource = "Not reported"; pairedSources = []; buttonShortcut = nil
+        leAudio = nil; deviceLatency = "Not reported"; deviceLatencyValue = nil; deviceLatencyOriginal = nil; deviceLatencyRange = nil; audioSource = "Not reported"; pairedSources = []; buttonShortcut = nil; shortcutButtons = []
         if !saved.demo { battery = nil; batteries = [:]; saved.modes = []; firmware = "Not read" }
     }
     private func notifyBattery() {
@@ -642,8 +685,16 @@ import Combine
         else if supports(1, 37), !profile.unsupported { send(BoseCommands.setToggle(function: 37, enabled: enabled)) }
     }
     func setButtonShortcut(_ action: Int) {
-        guard connected, let shortcut = buttonShortcut, shortcut.supported.contains(action), (0...255).contains(action) else { return }
-        if saved.demo { buttonShortcut = BoseButtonShortcut(button: shortcut.button, event: shortcut.event, action: UInt8(action), supported: shortcut.supported) }
+        guard let button = buttonShortcut?.button else { return }
+        setButtonShortcut(button: button, action: action)
+    }
+    func setButtonShortcut(button: UInt8, action: Int) {
+        guard connected, let shortcut = shortcutButtons.first(where: { $0.button == button }),
+              shortcut.supported.contains(action), (0...255).contains(action) else { return }
+        if saved.demo {
+            shortcutButtons = BoseButtonShortcut.merging(.init(button: shortcut.button, event: shortcut.event, action: UInt8(action), supported: shortcut.supported), into: shortcutButtons)
+            buttonShortcut = shortcutButtons.first
+        }
         else if supports(1, 9), !profile.unsupported {
             send(BmapPacket(block: 1, function: 9, operation: .setGet, payload: Data([shortcut.button, shortcut.event, UInt8(action)])))
         }
@@ -666,7 +717,7 @@ import Combine
     }
     func processConnectionRules() {
         guard connectionRulesPending else { return }
-        let rules = saved.rules.filter { $0.enabled && $0.trigger == "On connection" }
+        let rules = saved.rules.filter { $0.enabled && $0.trigger == "On connection" && $0.effectiveActions.contains(where: \.needsHeadphones) }
         for rule in rules where !firedConnectionRuleIDs.contains(rule.id) && ruleAvailabilityError(rule) == nil {
             if runRule(rule, source: .connection) { firedConnectionRuleIDs.insert(rule.id) }
         }

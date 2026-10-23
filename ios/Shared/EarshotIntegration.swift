@@ -9,6 +9,8 @@ enum EarshotCommandPayload: Codable, Equatable, Sendable {
     case listeningMode(index: Int)
     case listeningRole(EarshotListeningRole)
     case cycleModes
+    case cycleLocalEQ
+    case voiceMemo
     case noiseLevel(Double)
     case hardwareEQ(bass: Double, mid: Double, treble: Double)
     case localPreset(id: String)
@@ -18,7 +20,7 @@ enum EarshotCommandPayload: Codable, Equatable, Sendable {
         switch self {
         case .listeningMode(let index):
             guard (0...254).contains(index) else { throw EarshotIntegrationError.invalidCommand }
-        case .listeningRole, .cycleModes: break
+        case .listeningRole, .cycleModes, .cycleLocalEQ, .voiceMemo: break
         case .noiseLevel(let level):
             guard level.isFinite, (0...10).contains(level) else { throw EarshotIntegrationError.invalidCommand }
         case .hardwareEQ(let bass, let mid, let treble):
@@ -35,11 +37,13 @@ enum EarshotCommandPayload: Codable, Equatable, Sendable {
         case .hardwareEQ: return "hardwareEQ"
         case .localPreset: return "localPreset"
         case .runRule: return nil // Separate rule invocations retain their order.
-        case .cycleModes: return nil // Each tap advances once after the previous live report.
+        case .cycleModes, .cycleLocalEQ, .voiceMemo: return nil // Preserve every user action.
         }
     }
 
-    fileprivate var coalescesRepeatedValues: Bool { if case .cycleModes = self { return false }; return true }
+    fileprivate var coalescesRepeatedValues: Bool {
+        switch self { case .cycleModes, .cycleLocalEQ, .voiceMemo: return false; default: return true }
+    }
 }
 
 struct EarshotCommandEnvelope: Codable, Equatable, Sendable, Identifiable {

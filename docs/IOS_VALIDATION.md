@@ -2,6 +2,43 @@
 
 The original application is [Earshot by HellzYeahh and contributors](https://github.com/HellzYeahh/earshot), MIT. This report describes only the **AI-assisted native iOS port attempt** in this fork. Upstream Android test results and captures are preserved separately and do not establish iOS compatibility.
 
+## Upstream 0.75 native 0.2 pass — 23 October 2026
+
+Full source review covers 42 commits and 311 changed files through 9e6c491, with per-commit
+[implementation/platform decisions](IOS_UPSTREAM_075_AUDIT.md). Installed Xcode remains 26.4.1
+(17E202), iPhone 17 Pro Simulator 670AA0BD…E7B3, actual runtime 26.4.1 (23E254a). Native 0.2/build 2
+uses ad hoc signing (`CODE_SIGN_IDENTITY=-`, empty DEVELOPMENT_TEAM) for actual App Group tests.
+Local personal signing settings are retained separately and excluded from the generated commit.
+
+| Actual local result bundle | Observed outcome |
+| --- | --- |
+| Upstream075-iPhone-Unit | 237 total, 235 passed, 2 failed: directory-URL comparison in a new test, and Sleep ANC-prompt mutation classification. [Preserved summary](ios-test-results/upstream075-initial-units.json). |
+| Upstream075-iPhone-NewFeatures | 263 total, 260 passed, 3 failed. All 258 units passed; release notes obscured vendor UI and the memo test waited for an exact elapsed tick. [Preserved summary](ios-test-results/upstream075-first-feature-attempt.json). |
+| Upstream075-iPhone-NewFeatures2 | 263 total, 262 passed, 1 failed. All 258 units and four new UI journeys passed; the Sennheiser container overrode child identifiers. [Preserved summary](ios-test-results/upstream075-iphone-new-features.json). |
+| Upstream075-iPhone-VendorFinal | 1/1 passed, zero failures/skips; real native slider interaction after containing the vendor accessibility group. [Summary](ios-test-results/upstream075-vendor-ui-final.json). |
+
+An intermediate test build failed on a private test-fixture flag and was repaired. Installed-Xcode
+builds then passed. Independent source reviews found and corrected both low-code Soundcore setting
+commands 1075/1077, missing reverse memo→player ownership and late BAS disconnect callbacks before
+recording acceptance. Tests exercise the production frame guards, parsers, route policy and battery
+read lifecycle; synthetic captures are explicitly simulated and never sent as live commands.
+The actual recording UI captures foreground audio and verifies that starting local playback saves
+and stops the memo. Microphone permission is pre-granted in Simulator; first-install device consent
+and actual headset-input quality are separate acceptance work.
+
+The final **Upstream075-iPhone-Checkpoint.xcresult passed 263/263**, zero failures/skips,
+Xcode exit 0: all 258 unit/integration tests plus five actual UI journeys in one run.
+[Actual summary](ios-test-results/upstream075-iphone-checkpoint.json). Exported screenshots
+were inspected after correcting visible setting labels, independent child identifiers and
+filled-button contrast. The memo screenshot shows a newly saved 15-second AAC clip after
+local playback started; no physical headset input is inferred.
+
+All 23 offline Python tests pass for GET-only upstream checks and reviewed/imported baseline
+separation. Personal signing/account keys are not test fixtures or committed configuration.
+Broader existing UI, system-surface regression, iPad and large-text results will be recorded in the
+next checkpoint; older evidence below remains historical rather than a claim of a new combined run.
+No physical headphone acceptance is inferred from this work.
+
 ## Environment
 
 Repository maintenance on **23 October 2026** made the iOS branch the fork default and added a

@@ -39,6 +39,21 @@ Implemented areas include:
 - Home device-name quick switching, once-per-release notes, and original-project attribution in onboarding, About, diagnostics, and documentation.
 - Read-only documented/selected/deep protocol discovery, a separately consented experimental Print console, reported latency with session-original reset, and device-reported sidetone persistence. All physical effects remain unverified.
 
+**Upstream 0.75 review (23 October 2026):** All 42 commits through
+[`9e6c491`](https://github.com/HellzYeahh/earshot/commit/9e6c4912531ec6e159eded862d1b6ffa55094199)
+are mapped in the [per-commit native audit](docs/IOS_UPSTREAM_075_AUDIT.md).
+The native 0.2 work adds a headset companion for any system audio output, explicit per-output
+local EQ memory, foreground Shortcuts actions, persistent local voice memos, and optional
+read-only standard BLE battery discovery. Delivered Apple manufacturer adverts stay clearly
+labelled as nearby and unverified. Field styling, OFL fonts and Strike artwork retain upstream credit.
+The catalogue includes 35 Soundcore models plus 48 Sennheiser/Sony/Method/Apple/generic entries;
+only documented virtual settings are exposed. Soundcore simulations additionally validate
+allowlisted frames and reparse synthetic state. These are **local demos**, not live vendor drivers.
+All new upstream vendor transports use Classic RFCOMM, which public iOS does not expose.
+Bose touch ON semantics and independent reported-button capability masks are corrected.
+Actual native test outcomes and remaining hardware checks are recorded in
+[validation](docs/IOS_VALIDATION.md), separately from source/protocol inference.
+
 This is **not complete Android feature parity**. [The migration matrix](docs/IOS_MIGRATION.md) records implemented, conditional, missing, and platform-restricted features. In particular, iOS does not offer a direct public replacement for Android's arbitrary RFCOMM sockets, Shizuku codec controls, global other-app EQ, call-volume boosting, or unrestricted app/background automation. Compatible BLE control services must be tested on physical headphones. Crusher's documented Bragi link uses Classic RFCOMM; this fork has no supported iOS control transport for it.
 
 **Apple Music and EQ:** Pro EQ's parametric filters, preamp and limiter process only Earshot's
@@ -76,6 +91,14 @@ xcodebuild -project ios/Earshot.xcodeproj -scheme Earshot \
   -destination 'platform=iOS Simulator,name=iPhone 17 Pro,OS=latest' \
   -derivedDataPath ios/build CODE_SIGNING_ALLOWED=NO build
 ```
+
+If the local Xcode project contains signing edits, use
+`python3 ios/scripts/update-project-membership.py --apply` when adding Swift files.
+It generates a clean project under ignored `ios/build/GeneratedProject/` and reconciles source
+membership while retaining local target/build settings. `--sync-public-versions` deliberately
+updates only marketing/build versions. The generator itself refuses to overwrite a project
+containing signing settings; never stage the local signed project. Commit only the reviewed
+clean generated project and run the index privacy guard before every fork-only push.
 
 For a physical iPhone, select your development team for both the app and Widget extension, use unique bundle identifiers if necessary, and provision the shared App Group `group.dev.earshot.ios` consistently with `EarshotShared` and the widget provider. Bluetooth/microphone and optional Wi-Fi location-permission descriptions are included. Enable Access Wi-Fi Information on the app to validate foreground SSID rules. Headphone BLE transport, App Group provisioning, background behaviour, and real Bluetooth mic routing require hardware acceptance testing.
 

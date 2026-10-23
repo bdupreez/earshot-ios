@@ -8,7 +8,7 @@ mkdir -p TestResults
 # account. An unsigned build can compile but cannot test shared-container access.
 build_arguments=(-project Earshot.xcodeproj -scheme Earshot -configuration Debug
   -destination "platform=iOS Simulator,id=$device_id" -derivedDataPath build
-  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-)
+  -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM=)
 xcodebuild "${build_arguments[@]}" build-for-testing
 xcrun simctl bootstatus "$device_id" -b
 xcrun simctl install "$device_id" build/Build/Products/Debug-iphonesimulator/Earshot.app

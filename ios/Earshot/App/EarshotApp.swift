@@ -5,12 +5,13 @@ import SwiftUI
     @Environment(\.scenePhase) private var phase
     var body: some Scene {
         WindowGroup {
-            RootView().environmentObject(store)
+            RootView().environmentObject(store).environmentObject(store.companion)
                 .preferredColorScheme(store.saved.theme == "Dark" ? .dark : store.saved.theme == "Light" ? .light : nil)
-                .tint(.earshot)
+                .earshotVisualStyle(store.saved.visualStyle)
                 .onOpenURL { url in store.requestFromURL(url) }
                 .onChange(of: phase, initial: true) { _, phase in
                     store.appIsActive = phase == .active
+                    store.companion.isAppActive = phase != .background
                     if phase == .active {
                         // Permission may have changed in Settings. Reconcile the
                         // real notification plan even when saved rules are equal.

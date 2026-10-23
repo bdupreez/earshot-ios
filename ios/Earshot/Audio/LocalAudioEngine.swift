@@ -18,6 +18,7 @@ final class LocalAudioEngine: ObservableObject {
     var isEngineRunning: Bool { engine.isRunning }
     var processingSampleRate: Double { audioFile?.processingFormat.sampleRate ?? Biquad.defaultSampleRate }
     /// The app's microphone tools share this process-wide audio session.
+    var beforeStartingPlayback: () -> Void = {}
     var mayReleaseAudioSession: @MainActor () -> Bool = { true }
 
     private let engine = AVAudioEngine()
@@ -120,6 +121,7 @@ final class LocalAudioEngine: ObservableObject {
     func playPause() {
         guard let file = audioFile else { status = "Import an audio file first."; return }
         if isPlaying { pause(status: "Paused · \(fileName)"); return }
+        beforeStartingPlayback()
         do {
             let session = AVAudioSession.sharedInstance()
             try session.setCategory(.playback, mode: .default)

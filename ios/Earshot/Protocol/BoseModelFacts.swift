@@ -48,6 +48,10 @@ struct BoseModelFacts: Equatable {
         if n.hasPrefix("le-") { n.removeFirst(3) }
         n = n.replacingOccurrences(of: "quietcomfort", with: "qc").replacingOccurrences(of: "\\s+", with: " ", options: .regularExpression)
         func matches(_ pattern: String) -> Bool { n.range(of: pattern, options: .regularExpression) != nil }
+        // Upstream5d933ff: QCE2024 uses a different protocol, and generic names
+        // must not promote other brands to a Bose profile. Product reports win.
+        guard !matches("\\b(qcy|soundcore|sony|sennheiser)\\b"),
+              !(n.contains("earbud") && n.contains("2024")) else { return nil }
         let gen2 = matches("\\b(2nd|gen ?2)\\b")
         let id: UInt16
         if (n.contains("ultra open") || n.contains("open earbuds")) && !n.contains("sport") {

@@ -17,6 +17,41 @@ common-mode stream pacing, bounded unsent ANC replacement and compact-mode detai
 This user report is narrower than controlled physical acceptance; the repaired build still requires
 device retesting. Original Earshot's local-draft/end-of-drag noise behavior is explicitly credited.
 
+## Upstream 0.5–0.75 reconciliation (23 October 2026)
+
+Reviewed the full 42-commit Git range d6ceffa…9e6c491, not just the API’s capped 300-file
+comparison. The full diff changes 311 files (31,053 insertions/1,289 deletions). The retained
+Android implementation stays at 0.4.0 as historical provenance. Native 0.2 adopts/reconciles
+new behaviour under the original MIT credits; [the individual commit audit](IOS_UPSTREAM_075_AUDIT.md)
+records each source and platform decision. Upstream Android test evidence does not transfer.
+
+| Upstream feature | Native adaptation / evidence boundary |
+| --- | --- |
+| Per-headset EQ memory | Per public audio-output UID, including explicit Off. Only user choices replace memory; route restore/rules/cycle are temporary. No claim that a UID equals a globally paired device identity. |
+| Any-headset companion | Public system route picker/output volume, local EQ, foreground actions and microphone recordings. A route never marks vendor control connected. No paired-device enumeration, alias/forget/disconnect API is invented. |
+| Voice memo action | Persistent protected AAC files, actual selected input route, playback/share/confirmed deletion, capacity and interruption handling. Recorder/player session ownership is exclusive. Background recording is stopped and saved. |
+| Shortcut remapper | Native foreground App Intents for EQ cycle/memo and existing modes/presets/rules. User-created Shortcuts may chain Open App. Global assistant/press-hold interception and arbitrary app-use observation remain unavailable. |
+| Standard BLE battery | User-initiated 180F discovery and explicit source selection; only 2A19 reads, bounded timeout/teardown, no vendor writes. Public iOS/hardware must actually expose the service. |
+| Apple/Beats adverts | Conditional public manufacturer-data parser; nearby observations are unverified, never automatically assigned to the audio route. Delivery/ownership cannot be promised. |
+| Soundcore | 35-model catalogue, exact bounded framing/guards, state parsers, Sleep A30/known-family settings and offline read/synthetic-write confirmations. Unresolved layouts remain read-only. No speculative vendor GATT UUID mapping. |
+| Sennheiser / Sony / Method | Source-backed model-specific local fixtures and documented read metadata, without invented live control. All upstream drivers require inaccessible Classic RFCOMM. Method does not borrow Crusher features; Sony support remains reply-driven. |
+| Bose fixes | Positive touch-control bit, multiple button/event/action records and retained per-button masks after short echoes, generic QCE(2024) routing, existing verified-L2CAP/timeouts/write guards retained. |
+| Field / Strike / typography | Native light/dark palette with System colours option, Dynamic Type-relative headings, unmodified OFL fonts, opaque light/dark/tinted icons. Original upstream design/artwork credited prominently. |
+| Cross-brand Lab | Offline documented model query catalogues; exact allowlists where native encoding exists. No numeric vendor sweeps, firmware/auth/reset writes or simulated device acceptance. |
+| Connection automations | Local-only rules follow genuine foreground external audio-route transitions; microphone/category transitions do not impersonate a headset connection. Hardware-containing rules still require the separate verified BMAP link and device reports. |
+
+Apple’s public [currentRoute](https://developer.apple.com/documentation/avfaudio/avaudiosession/currentroute),
+[AVAudioRecorder](https://developer.apple.com/documentation/avfaudio/avaudiorecorder),
+[CoreBluetooth service discovery](https://developer.apple.com/documentation/corebluetooth/cbperipheral/discoverservices(_:))
+and [advertisement keys](https://developer.apple.com/documentation/corebluetooth/advertisement-data-retrieval-keys)
+support these scoped native paths. An RFCOMM service UUID does not establish a BLE channel;
+[External Accessory](https://developer.apple.com/documentation/externalaccessory) requires an actual
+manufacturer-authorized supported accessory protocol. These are platform decisions and source
+inferences, not physical compatibility findings. No generic EQ for Apple Music/Spotify/calls is added.
+
+Actual Xcode results, failed attempts, UI screenshots and outstanding physical acceptance are in
+[IOS_VALIDATION.md](IOS_VALIDATION.md). Test evidence is updated after runs, never inferred from compilation.
+
 ## Platform challenges
 
 ### MIT distribution and the App Store

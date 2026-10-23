@@ -54,8 +54,9 @@ enum BoseCommands {
     }
 
     static func setTouchControls(enabled: Bool) -> BmapPacket {
-        // The register is named DisableCaptouch, so its meaning is inverted in the UI.
-        setToggle(function: 34, enabled: !enabled)
+        // Upstream 99270636 verified bit 0 as touch ON (QC Ultra 2 fw 10.12).
+        // The historical DisableCaptouch name is misleading. Preserve other bits on reads.
+        setToggle(function: 34, enabled: enabled)
     }
 
     static func setVoicePrompts(enabled: Bool, language: UInt8) throws -> BmapPacket {

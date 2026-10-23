@@ -17,6 +17,8 @@ final class MicRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AV
     @Published private(set) var routeDescription = "Microphone route appears when recording starts."
     @Published private(set) var usedHeadsetMic = false
 
+    var mayReleaseAudioSession: () -> Bool = { true }
+    var beforeUsingAudioSession: () -> Void = {}
     private var recorder: AVAudioRecorder?
     private var player: AVAudioPlayer?
     private var timer: Timer?
@@ -65,6 +67,7 @@ final class MicRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AV
             return
         }
         stopPlayback()
+        beforeUsingAudioSession()
         let session = AVAudioSession.sharedInstance()
         do {
             // HFP allows a Bluetooth headset microphone. A2DP alone is output-only.
@@ -120,6 +123,7 @@ final class MicRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AV
     }
 
     func play() {
+        beforeUsingAudioSession()
         guard hasRecording else { return }
         stopRecording()
         stopPlayback()
@@ -208,6 +212,7 @@ final class MicRecorder: NSObject, ObservableObject, AVAudioRecorderDelegate, AV
     }
 
     private func releaseSession() {
+        guard mayReleaseAudioSession() else { return }
         try? AVAudioSession.sharedInstance().setActive(false, options: .notifyOthersOnDeactivation)
     }
 

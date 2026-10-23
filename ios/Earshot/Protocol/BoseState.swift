@@ -135,7 +135,7 @@ struct BoseMode: Identifiable, Sendable {
 
 enum BoseParsers {
     static func multipoint(_ data: Data) -> Bool? { data.first.map { $0 & 0x02 != 0 } }
-    static func touchControls(_ data: Data) -> Bool? { data.first.map { $0 & 1 == 0 } }
+    static func touchControls(_ data: Data) -> Bool? { data.first.map { $0 & 1 != 0 } }
     static func voicePrompts(_ data: Data) -> (enabled: Bool, language: UInt8)? {
         data.first.map { ($0 & 0x20 != 0, $0 & 0x1f) }
     }

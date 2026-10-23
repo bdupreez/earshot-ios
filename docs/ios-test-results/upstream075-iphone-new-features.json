@@ -1,0 +1,53 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "670AA0BD-A1DF-4768-835F-966A0D09E7B3",
+        "deviceName" : "iPhone 17 Pro",
+        "modelName" : "iPhone 17 Pro",
+        "osBuildNumber" : "23E254a",
+        "osVersion" : "26.4.1",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 1,
+      "passedTests" : 262,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Earshot · Built with macOS 26.4.1",
+  "expectedFailures" : 0,
+  "failedTests" : 1,
+  "finishTime" : 1792719114.685,
+  "passedTests" : 262,
+  "result" : "Failed",
+  "skippedTests" : 0,
+  "startTime" : 1792718947.526,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "failed - Expected a fully visible control: \"vendorControl.noiseLevel\" Slider",
+      "targetName" : "EarshotUITests",
+      "testIdentifier" : 261,
+      "testIdentifierString" : "EarshotUITests/testSennheiserCatalogueDemoAndResearchAreSeparateFromPhysicalControl()",
+      "testIdentifierURL" : "test://com.apple.xcode/Earshot/EarshotUITests/EarshotUITests/testSennheiserCatalogueDemoAndResearchAreSeparateFromPhysicalControl",
+      "testName" : "testSennheiserCatalogueDemoAndResearchAreSeparateFromPhysicalControl()"
+    }
+  ],
+  "title" : "Test - Earshot",
+  "topInsights" : [
+    {
+      "category" : "Longest Test Runs",
+      "impact" : "49% of duration",
+      "text" : "5 longest test runs with outlier durations exceeding 0.52s (three standard deviations)"
+    }
+  ],
+  "totalTestCount" : 263
+}

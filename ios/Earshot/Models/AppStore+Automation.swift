@@ -3,6 +3,20 @@
 import Foundation
 
 @MainActor extension AppStore {
+    /// Local-only connection rules follow a foreground audio-route transition.
+    /// Hardware-containing rules remain on the separate verified BMAP path.
+    func onAudioOutputChanged(_ output: CompanionAudioOutput?, reason: AudioRouteObservationReason = .refresh) {
+        let ownedMicrophone = mic.isRecording || companion.memos.isRecording
+        let effectiveReason: AudioRouteObservationReason = ownedMicrophone ? .microphoneTransition : reason
+        let shouldRun = audioRouteConnectionPolicy.observe(output, reason: effectiveReason,
+                                                         isAppActive: appIsActive && !saved.demo)
+        guard shouldRun, appIsActive, !saved.demo else { return }
+        for rule in saved.rules where rule.enabled && rule.trigger == "On connection" &&
+            !rule.effectiveActions.contains(where: \.needsHeadphones) {
+            _ = runRule(rule, source: .connection)
+        }
+    }
+
     @discardableResult
     func upsertRule(_ rule: AutomationRule) -> Bool {
         if let error = rule.configurationError { message = error; return false }

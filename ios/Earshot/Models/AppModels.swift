@@ -13,7 +13,7 @@ struct DeviceProfile: Identifiable, Codable, Equatable {
     var presets = ["Quiet", "Aware", "Immersion", "Cinema"]
     var customCount = 7
 
-    static let all: [DeviceProfile] = [
+    static let boseProfiles: [DeviceProfile] = [
         .init(id: "ultra2", name: "QC Ultra Headphones · 2nd Gen"),
         .init(id: "ultra1", name: "QC Ultra Headphones · 1st Gen", presets: ["Quiet", "Aware", "Immersion"]),
         .init(id: "qc2", name: "QC Headphones · 2nd Gen"),
@@ -62,6 +62,11 @@ struct AutomationRule: Identifiable, Codable, Equatable {
     var wifiSSID: String?
 }
 
+enum EarshotVisualStyle: String, Codable, CaseIterable, Identifiable {
+    case field = "Field", system = "System colours"
+    var id: String { rawValue }
+}
+
 struct SavedAppState: Codable {
     var demo = false
     var profileID = "ultra2"
@@ -77,6 +82,7 @@ struct SavedAppState: Codable {
     var touchControls = true
     var autoOff = 20
     var theme = "System"
+    var visualStyle = EarshotVisualStyle.field
     var proEnabled = false
     var presetID = "flat"
     var customPresets: [EQPreset] = []
@@ -93,7 +99,7 @@ struct SavedAppState: Codable {
     // Synthesized Codable ignores property defaults when keys are absent. Decode
     // each key with its default so upgrades preserve presets, settings and rules.
     private enum CodingKeys: String, CodingKey {
-        case demo, profileID, modes, currentMode, noise, eq, sidetone, autoPause, autoAnswer, multipoint, voicePrompts, touchControls, autoOff, theme, proEnabled, presetID, customPresets, boost, batteryAlert, rules, audioOptions, demoDeviceNames, demoVoiceLanguage, modeCycleModes
+        case demo, profileID, modes, currentMode, noise, eq, sidetone, autoPause, autoAnswer, multipoint, voicePrompts, touchControls, autoOff, theme, visualStyle, proEnabled, presetID, customPresets, boost, batteryAlert, rules, audioOptions, demoDeviceNames, demoVoiceLanguage, modeCycleModes
     }
     init(from decoder: Decoder) throws {
         self.init()
@@ -112,6 +118,7 @@ struct SavedAppState: Codable {
         touchControls = try values.decodeIfPresent(Bool.self, forKey: .touchControls) ?? touchControls
         autoOff = try values.decodeIfPresent(Int.self, forKey: .autoOff) ?? autoOff
         theme = try values.decodeIfPresent(String.self, forKey: .theme) ?? theme
+        visualStyle = (try? values.decode(EarshotVisualStyle.self, forKey: .visualStyle)) ?? .field
         proEnabled = try values.decodeIfPresent(Bool.self, forKey: .proEnabled) ?? proEnabled
         presetID = try values.decodeIfPresent(String.self, forKey: .presetID) ?? presetID
         if let decoded = try values.decodeIfPresent([RecoverableRecord<EQPreset>].self, forKey: .customPresets) {

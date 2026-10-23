@@ -12,6 +12,11 @@ struct WhatsNewView: View {
                     .accessibilityIdentifier("releaseNotesCredits")
                 Link("Original Earshot — HellzYeahh & contributors", destination: URL(string: "https://github.com/HellzYeahh/earshot")!)
             }
+            Panel(title: "Upstream0.75 · native0.2") {
+                Text("Reviewed42 original upstream commits. The headset companion adds per-output local EQ memory, foreground actions and persistent voice memos. Standard BLE battery reads are explicitly selected; any nearby Apple advert remains unverified.")
+                Text("Explore35 Soundcore models and Sennheiser, Sony, Method, AirPods and generic catalogues. These virtual controls and offline protocol plans do not enable unsupported RFCOMM on iOS.")
+                Text("Field colours, bundled OFL typography and Strike artwork preserve the original project’s design credit. Bose touch-control polarity and per-button capability records are corrected.")
+            }
             Panel(title: "Listen with local EQ") {
                 Text("Play your own audio files with native EQ, automatic or manual preamp, loudness protection, progress and seeking. Compare the original sound with A/B bypass.")
                 Text("Create, edit, copy and share presets; import Android JSON and AutoEq text. Graphic conversion keeps the original filters available to restore while editing.")
