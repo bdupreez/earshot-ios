@@ -15,8 +15,50 @@ enum PendingDeviceOperation: Equatable {
     }
 }
 
+/// Native counterpart of upstream's generic active-headset Home identity (MIT).
+/// An AVAudioSession route is an audio fact, never proof of BMAP control or battery ownership.
+struct HomeDevicePresentation: Equatable {
+    enum Source: String, Equatable { case demo, verifiedControl, audioRouteOnly, disconnected }
+    let source: Source
+    let primaryName: String
+    let audioOutput: CompanionAudioOutput?
+    let audioOutputDisplayName: String?
+
+    var status: String {
+        switch source {
+        case .demo: return "Demo device"
+        case .verifiedControl: return "Control connected"
+        case .audioRouteOnly: return "Audio output selected"
+        case .disconnected: return "Not connected"
+        }
+    }
+    var showsControlTelemetry: Bool { source == .demo || source == .verifiedControl }
+
+    static func resolve(demo: Bool, controlConnected: Bool, controlName: String,
+                        output: CompanionAudioOutput?, outputNickname: String?) -> Self {
+        if demo {
+            return .init(source: .demo, primaryName: controlName, audioOutput: nil, audioOutputDisplayName: nil)
+        }
+        let external = output.flatMap { $0.isHeadphones ? $0 : nil }
+        let routeName = external.map { outputNickname ?? $0.name }
+        if controlConnected {
+            return .init(source: .verifiedControl, primaryName: controlName,
+                         audioOutput: external, audioOutputDisplayName: routeName)
+        }
+        if let external, let routeName {
+            return .init(source: .audioRouteOnly, primaryName: routeName,
+                         audioOutput: external, audioOutputDisplayName: routeName)
+        }
+        return .init(source: .disconnected, primaryName: "Headphones", audioOutput: nil, audioOutputDisplayName: nil)
+    }
+}
+
 @MainActor extension AppStore {
     var displayDeviceName: String { saved.demo ? saved.demoDeviceNames[saved.profileID] ?? profile.name : liveDeviceName }
+    var homeDevicePresentation: HomeDevicePresentation {
+        .resolve(demo: saved.demo, controlConnected: bluetooth.isConnected, controlName: displayDeviceName,
+                 output: companion.output, outputNickname: companion.outputNickname)
+    }
     var remainingTimeDescription: String? { EarshotWidgetBattery(id: "main", name: "Headphones", percent: battery, remainingMinutes: batteryMinutes).remainingDescription }
 
     func queryLEAudioPreference() {

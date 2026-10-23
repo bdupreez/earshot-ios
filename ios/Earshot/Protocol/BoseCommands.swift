@@ -55,7 +55,7 @@ enum BoseCommands {
 
     static func setTouchControls(enabled: Bool) -> BmapPacket {
         // Upstream 99270636 verified bit 0 as touch ON (QC Ultra 2 fw 10.12).
-        // The historical DisableCaptouch name is misleading. Preserve other bits on reads.
+        // The historical DisableCaptouch name is misleading. Ignore unrelated higher bits when reading.
         setToggle(function: 34, enabled: enabled)
     }
 

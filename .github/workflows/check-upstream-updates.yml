@@ -16,11 +16,11 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Verify the update checker
+      - name: Verify updater and project/privacy guards
         env:
           PYTHONDONTWRITEBYTECODE: '1'
-        run: python3 -m unittest discover -s ios/scripts/tests -p 'test_check_upstream_updates.py' -v
-      - name: Read upstream metadata and compare the imported snapshot
+        run: python3 -m unittest discover -s ios/scripts/tests -p 'test_*.py' -v
+      - name: Read upstream metadata and compare the reviewed baseline
         env:
           GH_TOKEN: ${{ github.token }}
         run: python3 ios/scripts/check-upstream-updates.py --output "$RUNNER_TEMP/earshot-upstream-update.md"

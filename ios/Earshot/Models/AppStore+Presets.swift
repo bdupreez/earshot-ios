@@ -51,7 +51,10 @@ extension AppStore {
         value.isBuiltIn = false
         value.name = PresetValidation.uniqueName(value.name, existing: presets)
         saved.customPresets.append(value)
-        choosePreset(value.id)
+        // Saving a new/copy preset is an explicit Sound-screen choice, like
+        // upstream SoundViewModel.savePreset. Temporary rules use choosePreset
+        // directly and must not replace this output's remembered selection.
+        choosePreset(value.id, rememberForOutput: true)
         return value
     }
 
@@ -62,7 +65,10 @@ extension AppStore {
         value.isBuiltIn = false
         value.name = PresetValidation.uniqueName(value.name, existing: presets, excludingID: value.id)
         saved.customPresets[index] = value
-        if saved.presetID == value.id { applyAudio() }
+        if saved.presetID == value.id {
+            applyAudio()
+            companion.rememberExplicitPick(saved.proEnabled ? value.id : nil)
+        }
     }
 
     func renameUserPreset(id: String, name: String) throws {
@@ -107,7 +113,9 @@ extension AppStore {
         }
         // Commit only after every imported record validates and capacity checks pass.
         saved.customPresets = working
-        if let selected { choosePreset(selected) }
+        // File and pasted imports share this user-initiated commit. Even an
+        // existing duplicate is explicitly selected by a successful import.
+        if let selected { choosePreset(selected, rememberForOutput: true) }
         return PresetImportSummary(imported: imported, skippedDuplicates: skipped)
     }
 }

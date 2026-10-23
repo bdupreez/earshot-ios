@@ -6,12 +6,16 @@ import SwiftUI
 struct CompanionControlsView: View {
     @EnvironmentObject private var companion: HeadsetCompanion
     @Environment(\.scenePhase) private var phase
+    @State private var forgetting: CompanionOutputForgetTarget?
     var body: some View {
         Page {
             InfoNote(text: "Headset companion features adapted from the original Earshot by HellzYeahh and contributors. This experimental AI-assisted iOS port uses public iOS audio APIs.")
             Panel(title: "Audio output") {
                 LabeledContent("Selected output", value: companion.output?.name ?? "No active output")
-                if let output = companion.output { Text(output.isHeadphones ? "External audio route selected" : "Built-in or system audio output").font(.caption).foregroundStyle(.secondary) }
+                if let output = companion.output {
+                    Text(output.isHeadphones ? "External audio route selected" : "Built-in or system audio output").font(.caption).foregroundStyle(.secondary)
+                    CompanionNicknameControls(companion: companion, output: output).id(output.id)
+                }
                 Text("An audio route is separate from a verified headphone control connection. It does not prove battery, ANC, hardware EQ or button support.").font(.footnote).foregroundStyle(.secondary)
                 HStack { Text("Choose audio output"); Spacer(); CompanionRoutePicker().frame(width: 48, height: 44) }
                 CompanionSystemVolume().frame(height: 44).accessibilityLabel("System output volume")
@@ -36,13 +40,15 @@ struct CompanionControlsView: View {
                         Text("Local EQ off").tag("__off")
                         ForEach(companion.availablePresets()) { preset in Text(preset.name).tag(preset.id) }
                     }.disabled(!companion.preferences.rememberEQ).accessibilityIdentifier("companionRememberedEQ")
-                    Button("Forget this output’s preferences", role: .destructive) { companion.forgetCurrentOutput() }
+                    Button("Forget this output’s preferences", role: .destructive) { requestForget(output.id) }
+                        .disabled(!companion.preferences.savedOutputIDs.contains(output.id))
                 } else { Text("Select an external audio output to remember its preset or local EQ off.").font(.footnote).foregroundStyle(.secondary) }
                 Text("Only explicit preset or off choices are remembered. Rules and temporary EQ changes do not replace them. EQ affects audio played inside Earshot.").font(.footnote).foregroundStyle(.secondary)
                 Button("Cycle local EQ") { _ = companion.cycleEQ() }.accessibilityIdentifier("companionCycleEQ")
                 Toggle("Spoken confirmation", isOn: $companion.preferences.spokenFeedback)
                 Text(companion.status).font(.caption).accessibilityIdentifier("companionStatus")
             }
+            CompanionSavedOutputPreferences(companion: companion, requestForget: requestForget)
             Panel(title: "Foreground actions") {
                 Text("Default Earshot action").font(.subheadline)
                 Picker("Default Earshot action", selection: $companion.preferences.defaultAction) {
@@ -67,6 +73,104 @@ struct CompanionControlsView: View {
         // backgrounding ends the explicit recording request; audio interruptions
         // are handled independently by AVAudioSession notifications.
         .onChange(of: phase, initial: true) { _, phase in companion.isAppActive = phase != .background }
+        .alert("Forget local output preferences?", isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } }), presenting: forgetting) { target in
+            Button("Forget local preferences", role: .destructive) {
+                _ = companion.forgetOutputPreferences(for: target.id)
+                forgetting = nil
+            }
+            Button("Cancel", role: .cancel) { forgetting = nil }
+        } message: { target in
+            Text("Remove Earshot’s saved local EQ choice, action override and nickname for \(target.label)? Current playback, system names and Bluetooth pairing stay as they are.")
+        }
+    }
+    private func requestForget(_ outputID: String) {
+        forgetting = .init(id: outputID, label: companion.savedOutputLabel(for: outputID))
+    }
+}
+
+private struct CompanionOutputForgetTarget {
+    let id: String
+    let label: String
+}
+
+private struct CompanionSavedOutputPreferences: View {
+    @ObservedObject var companion: HeadsetCompanion
+    let requestForget: (String) -> Void
+    @State private var expanded = false
+
+    var body: some View {
+        Panel(title: "Saved output preferences") {
+            DisclosureGroup("Manage saved outputs (\(companion.preferences.savedOutputIDs.count))", isExpanded: $expanded) {
+                if companion.preferences.savedOutputIDs.isEmpty {
+                    Text("No saved output preferences.").font(.footnote).foregroundStyle(.secondary)
+                }
+                LazyVStack(alignment: .leading, spacing: 16) {
+                    ForEach(companion.preferences.savedOutputIDs, id: \.self) { id in
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(companion.savedOutputLabel(for: id)).font(.headline)
+                            Text(companion.output?.id == id ? "Current system route: \(companion.output?.name ?? "")" : "Saved iOS route \(HeadsetPreferences.abbreviatedOutputID(id))")
+                                .font(.caption).foregroundStyle(.secondary)
+                            Text(categories(for: id)).font(.caption).foregroundStyle(.secondary)
+                            Button("Forget local preferences", role: .destructive) { requestForget(id) }
+                                .accessibilityLabel("Forget local preferences for \(companion.savedOutputLabel(for: id))")
+                        }
+                        .padding(.top, 8)
+                    }
+                }
+            }.accessibilityIdentifier("companionManageSavedOutputs")
+            Text("Manage saved routes even when they are no longer selected. Only Earshot’s preferences are removed; this does not rename, disconnect or unpair an output.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+    }
+    private func categories(for id: String) -> String {
+        var labels = [String]()
+        if let eq = companion.preferences.outputEQ[id] { labels.append(eq.enabled ? "Local EQ preset" : "Local EQ off") }
+        if companion.preferences.outputActions[id] != nil { labels.append("Action override") }
+        if companion.preferences.nickname(for: id) != nil { labels.append("Earshot nickname") }
+        return labels.joined(separator: " · ")
+    }
+}
+
+private struct CompanionNicknameControls: View {
+    @ObservedObject var companion: HeadsetCompanion
+    let output: CompanionAudioOutput
+    @State private var draft: String
+    @FocusState private var editingNickname: Bool
+
+    init(companion: HeadsetCompanion, output: CompanionAudioOutput) {
+        self.companion = companion; self.output = output
+        _draft = State(initialValue: companion.preferences.nickname(for: output.id) ?? "")
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let nickname = companion.preferences.nickname(for: output.id) {
+                LabeledContent("Earshot-only nickname", value: nickname)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityIdentifier("companionOutputNickname")
+            }
+            TextField("App-only nickname", text: $draft)
+                .textFieldStyle(.roundedBorder).textInputAutocapitalization(.words).autocorrectionDisabled()
+                .accessibilityIdentifier("companionNicknameDraft")
+                .focused($editingNickname).submitLabel(.done)
+                .onSubmit { if companion.saveNickname(draft, for: output.id) { editingNickname = false } }
+            HStack {
+                Button("Save nickname") { if companion.saveNickname(draft, for: output.id) { editingNickname = false } }
+                    .disabled(HeadsetPreferences.validatedNickname(draft) == nil ||
+                              HeadsetPreferences.validatedNickname(draft) == companion.preferences.nickname(for: output.id))
+                    .accessibilityIdentifier("companionSaveNickname")
+                if companion.preferences.nickname(for: output.id) != nil {
+                    Button("Remove nickname", role: .destructive) { _ = companion.removeNickname(for: output.id) }
+                        .accessibilityIdentifier("companionRemoveNickname")
+                }
+            }.buttonStyle(.bordered)
+            if !draft.isEmpty, HeadsetPreferences.validatedNickname(draft) == nil {
+                Text("Use a single-line nickname of up to 80 UTF-8 bytes, without control characters.").font(.caption).foregroundStyle(.secondary)
+            }
+            Text("Nicknames are saved only in Earshot. The system route above keeps its real name. This choice follows iOS’s route identifier, which may change after pairing or route changes; it does not verify a physical headset.")
+                .font(.caption).foregroundStyle(.secondary)
+        }
+        .onChange(of: companion.preferences.nickname(for: output.id)) { _, nickname in draft = nickname ?? "" }
     }
 }
 

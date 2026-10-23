@@ -44,6 +44,184 @@ final class CompanionTests: XCTestCase {
         XCTAssertEqual(settings.outputEQ.count, 100)
     }
 
+    func testNicknameValidationTrimsAndMeasuresUTF8WithoutSilentlyTruncating() {
+        var settings = HeadsetPreferences()
+        XCTAssertTrue(settings.setNickname("  My headphones  ", outputID: "route"))
+        XCTAssertEqual(settings.nickname(for: "route"), "My headphones")
+        let eightyBytes = String(repeating: "é", count: 40)
+        XCTAssertEqual(eightyBytes.utf8.count, HeadsetPreferences.maximumNicknameBytes)
+        XCTAssertTrue(settings.setNickname(eightyBytes, outputID: "route"))
+        for invalid in ["", "   ", String(repeating: "é", count: 41), "Two\nlines", "\nName", "Name\t", "Null\u{0000}byte", "Line\u{2028}separator"] {
+            XCTAssertFalse(settings.setNickname(invalid, outputID: "route"), invalid.debugDescription)
+            XCTAssertEqual(settings.nickname(for: "route"), eightyBytes, "Invalid edits must preserve the saved nickname")
+        }
+        XCTAssertFalse(settings.setNickname("Name", outputID: ""))
+        XCTAssertFalse(settings.setNickname("Name", outputID: String(repeating: "a", count: 513)))
+        XCTAssertNil(settings.nickname(for: nil))
+    }
+
+    func testNicknameCapacityAllowsExistingEditsAndExplicitRemoval() {
+        var settings = HeadsetPreferences()
+        for index in 0..<HeadsetPreferences.maximumOutputs {
+            XCTAssertTrue(settings.setNickname("Output \(index)", outputID: "route-\(index)"))
+        }
+        XCTAssertFalse(settings.setNickname("Overflow", outputID: "overflow"))
+        XCTAssertTrue(settings.setNickname("Updated", outputID: "route-0"))
+        XCTAssertEqual(settings.nickname(for: "route-0"), "Updated")
+        XCTAssertEqual(settings.outputNicknames.count, 100)
+        XCTAssertTrue(settings.setNickname(nil, outputID: "route-0"))
+        XCTAssertNil(settings.nickname(for: "route-0"))
+        XCTAssertTrue(settings.setNickname("New output", outputID: "overflow"))
+        XCTAssertEqual(settings.outputNicknames.count, 100)
+    }
+
+    func testNicknameMigrationIsLossyPerRecordAndRetainsOtherCompanionPreferences() throws {
+        let old = try JSONDecoder().decode(HeadsetPreferences.self, from: Data(#"{"spokenFeedback":false,"outputEQ":{"route":{"enabled":false}}}"#.utf8))
+        XCTAssertTrue(old.outputNicknames.isEmpty)
+        XCTAssertFalse(old.spokenFeedback)
+        XCTAssertEqual(old.outputEQ["route"], .off)
+        let data = Data(#"{"spokenFeedback":false,"outputEQ":{"route":{"enabled":true,"presetID":"bass"}},"outputActions":{"route":"voiceMemo"},"outputNicknames":{"route":"  Commuting  ","badType":15,"blank":" ","control":"Name\n","":"No route","tooLong":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"}}"#.utf8)
+        let decoded = try JSONDecoder().decode(HeadsetPreferences.self, from: data)
+        XCTAssertEqual(decoded.outputNicknames, ["route": "Commuting"])
+        XCTAssertFalse(decoded.spokenFeedback)
+        XCTAssertEqual(decoded.outputEQ["route"], .preset("bass"))
+        XCTAssertEqual(decoded.action(for: "route"), .voiceMemo)
+        XCTAssertEqual(try JSONDecoder().decode(HeadsetPreferences.self, from: JSONEncoder().encode(decoded)), decoded)
+    }
+
+    func testRestoredNicknameLibraryRemainsBounded() throws {
+        var nicknames = [String: Any]()
+        for index in 0..<150 { nicknames[String(format: "route-%03d", index)] = "Nickname \(index)" }
+        nicknames["000-invalid"] = ["unexpected": true]
+        let data = try JSONSerialization.data(withJSONObject: ["outputNicknames": nicknames])
+        let decoded = try JSONDecoder().decode(HeadsetPreferences.self, from: data)
+        XCTAssertEqual(decoded.outputNicknames.count, HeadsetPreferences.maximumOutputs)
+        XCTAssertEqual(decoded.nickname(for: "route-000"), "Nickname 0")
+        XCTAssertNil(decoded.nickname(for: "route-149"))
+        XCTAssertNil(decoded.nickname(for: "000-invalid"))
+    }
+
+    @MainActor func testAppOnlyNicknamePersistsWithoutRenamingRouteOrTriggeringEQOrRouteCallbacks() throws {
+        let fixture = try Fixture(); defer { fixture.clean() }
+        let companion = HeadsetCompanion(defaults: fixture.defaults, observeAudioRoute: false, memoDirectory: fixture.directory)
+        let first = CompanionAudioOutput(id: "route-A", name: "System headphones", kind: "BluetoothA2DPOutput", isHeadphones: true)
+        companion.acceptOutput(first)
+        var eqCalls = 0, routeCalls = 0
+        companion.applyEQ = { _ in eqCalls += 1 }
+        companion.onOutputChanged = { _, _ in routeCalls += 1 }
+        XCTAssertTrue(companion.saveNickname("  Commuting  ", for: first.id))
+        XCTAssertEqual(companion.outputDisplayName, "Commuting")
+        XCTAssertEqual(companion.outputNickname, "Commuting")
+        XCTAssertEqual(companion.output, first, "The public system route facts must remain unchanged")
+        XCTAssertEqual(eqCalls, 0)
+        XCTAssertEqual(routeCalls, 0)
+        let relaunched = HeadsetCompanion(defaults: fixture.defaults, observeAudioRoute: false, memoDirectory: fixture.directory)
+        relaunched.acceptOutput(first)
+        XCTAssertEqual(relaunched.outputDisplayName, "Commuting")
+        relaunched.acceptOutput(.init(id: "route-B", name: first.name, kind: first.kind, isHeadphones: true))
+        XCTAssertNil(relaunched.outputNickname, "Matching system names cannot establish physical device identity")
+        XCTAssertEqual(relaunched.outputDisplayName, first.name)
+        relaunched.acceptOutput(first)
+        XCTAssertTrue(relaunched.removeNickname(for: first.id))
+        XCTAssertEqual(relaunched.outputDisplayName, first.name)
+        let afterRemoval = HeadsetCompanion(defaults: fixture.defaults, observeAudioRoute: false, memoDirectory: fixture.directory)
+        XCTAssertNil(afterRemoval.preferences.nickname(for: first.id))
+    }
+
+    @MainActor func testStaleNicknameDraftCannotFollowRouteChangeAndForgetClearsOnlyCurrentOutputsPreferences() throws {
+        let fixture = try Fixture(); defer { fixture.clean() }
+        fixture.defaults.set("retained", forKey: "earshot.unrelated.preference")
+        let companion = HeadsetCompanion(defaults: fixture.defaults, observeAudioRoute: false, memoDirectory: fixture.directory)
+        let first = CompanionAudioOutput(id: "route-A", name: "System A", kind: "Bluetooth", isHeadphones: true)
+        let second = CompanionAudioOutput(id: "route-B", name: "System B", kind: "Bluetooth", isHeadphones: true)
+        companion.acceptOutput(first)
+        XCTAssertTrue(companion.saveNickname("First", for: first.id))
+        companion.preferences.remember(.off, outputID: first.id)
+        companion.preferences.setAction(.cycleEQ, outputID: first.id)
+        companion.acceptOutput(second)
+        XCTAssertFalse(companion.saveNickname("Stale draft", for: first.id))
+        XCTAssertFalse(companion.removeNickname(for: first.id))
+        XCTAssertNil(companion.outputNickname)
+        XCTAssertEqual(companion.preferences.nickname(for: first.id), "First")
+        XCTAssertTrue(companion.saveNickname("Second", for: second.id))
+        companion.preferences.remember(.preset("bass"), outputID: second.id)
+        companion.preferences.setAction(.voiceMemo, outputID: second.id)
+        companion.forgetCurrentOutput()
+        XCTAssertNil(companion.outputNickname)
+        XCTAssertNil(companion.preferences.outputEQ[second.id])
+        XCTAssertNil(companion.preferences.outputActions[second.id])
+        XCTAssertEqual(companion.preferences.nickname(for: first.id), "First")
+        XCTAssertEqual(companion.preferences.outputEQ[first.id], .off)
+        XCTAssertEqual(companion.preferences.outputActions[first.id], .cycleEQ)
+        let relaunched = HeadsetCompanion(defaults: fixture.defaults, observeAudioRoute: false, memoDirectory: fixture.directory)
+        XCTAssertNil(relaunched.preferences.nickname(for: second.id))
+        XCTAssertEqual(relaunched.preferences.nickname(for: first.id), "First")
+        XCTAssertEqual(fixture.defaults.string(forKey: "earshot.unrelated.preference"), "retained")
+    }
+
+    func testSavedOutputManagementListsAllCategoriesAndForgettingFreesTheirCapacity() {
+        var settings = HeadsetPreferences()
+        for index in 0..<HeadsetPreferences.maximumOutputs {
+            XCTAssertTrue(settings.remember(.off, outputID: "eq-\(index)"))
+            XCTAssertTrue(settings.setAction(.cycleEQ, outputID: "action-\(index)"))
+            XCTAssertTrue(settings.setNickname("Name \(index)", outputID: "nickname-\(index)"))
+        }
+        let saved = settings.savedOutputIDs
+        XCTAssertEqual(saved.count, 300, "The management list must include offline routes from every independently bounded category")
+        XCTAssertEqual(saved, saved.sorted())
+        XCTAssertEqual(Set(saved), Set(settings.outputEQ.keys).union(settings.outputActions.keys).union(settings.outputNicknames.keys))
+        settings.forget(outputID: "eq-17")
+        XCTAssertFalse(settings.savedOutputIDs.contains("eq-17"))
+        XCTAssertTrue(settings.remember(.preset("bass"), outputID: "replacement"))
+        XCTAssertFalse(settings.setAction(.voiceMemo, outputID: "replacement"), "Forgetting an EQ-only route must preserve action entries")
+        settings.forget(outputID: "action-17")
+        XCTAssertTrue(settings.setAction(.voiceMemo, outputID: "replacement"))
+        XCTAssertFalse(settings.setNickname("Replacement", outputID: "replacement"))
+        settings.forget(outputID: "nickname-17")
+        XCTAssertTrue(settings.setNickname("Replacement", outputID: "replacement"))
+        XCTAssertEqual(settings.savedOutputIDs.filter { $0 == "replacement" }.count, 1)
+        XCTAssertEqual(settings.outputEQ["eq-18"], .off)
+        XCTAssertEqual(settings.outputActions["action-18"], .cycleEQ)
+        XCTAssertEqual(settings.nickname(for: "nickname-18"), "Name 18")
+    }
+
+    @MainActor func testConfirmedOfflineOutputForgetUsesCapturedIDWithoutChangingCurrentRouteOrPlaybackPolicy() throws {
+        let fixture = try Fixture(); defer { fixture.clean() }
+        let companion = HeadsetCompanion(defaults: fixture.defaults, observeAudioRoute: false, memoDirectory: fixture.directory)
+        let old = CompanionAudioOutput(id: "old-route-12345678", name: "Old system name", kind: "Bluetooth", isHeadphones: true)
+        let current = CompanionAudioOutput(id: "current-route", name: "Current system name", kind: "Bluetooth", isHeadphones: true)
+        companion.acceptOutput(old)
+        XCTAssertTrue(companion.saveNickname("Old nickname", for: old.id))
+        companion.preferences.remember(.off, outputID: old.id)
+        companion.preferences.setAction(.voiceMemo, outputID: old.id)
+        let capturedID = old.id
+        companion.acceptOutput(current)
+        XCTAssertTrue(companion.saveNickname("Current nickname", for: current.id))
+        companion.preferences.remember(.preset("bass"), outputID: current.id)
+        companion.preferences.setAction(.cycleEQ, outputID: current.id)
+        var eqCalls = 0, routeCalls = 0
+        companion.applyEQ = { _ in eqCalls += 1 }
+        companion.onOutputChanged = { _, _ in routeCalls += 1 }
+        XCTAssertEqual(companion.savedOutputLabel(for: old.id), "Old nickname")
+        XCTAssertTrue(companion.forgetOutputPreferences(for: capturedID))
+        XCTAssertFalse(companion.preferences.savedOutputIDs.contains(old.id))
+        XCTAssertNil(companion.preferences.outputEQ[old.id])
+        XCTAssertNil(companion.preferences.outputActions[old.id])
+        XCTAssertNil(companion.preferences.nickname(for: old.id))
+        XCTAssertEqual(companion.output, current)
+        XCTAssertEqual(companion.preferences.outputEQ[current.id], .preset("bass"))
+        XCTAssertEqual(companion.preferences.outputActions[current.id], .cycleEQ)
+        XCTAssertEqual(companion.outputNickname, "Current nickname")
+        XCTAssertEqual(eqCalls, 0)
+        XCTAssertEqual(routeCalls, 0)
+        XCTAssertFalse(companion.forgetOutputPreferences(for: capturedID), "A second confirmation cannot delete another route")
+        XCTAssertEqual(companion.savedOutputLabel(for: old.id), "Output …12345678", "Offline system names must not be invented or retained implicitly")
+        let relaunched = HeadsetCompanion(defaults: fixture.defaults, observeAudioRoute: false, memoDirectory: fixture.directory)
+        XCTAssertFalse(relaunched.preferences.savedOutputIDs.contains(old.id))
+        XCTAssertEqual(relaunched.preferences.nickname(for: current.id), "Current nickname")
+        XCTAssertEqual(relaunched.preferences.outputEQ[current.id], .preset("bass"))
+    }
+
     func testMemoryRestoreDistinguishesMissingChoiceOffDeletedPresetAndDisabledPolicy() {
         XCTAssertEqual(HeadsetEQRestoreDecision.decide(selection: nil, enabled: true, availableIDs: ["bass"]), .unchanged)
         XCTAssertEqual(HeadsetEQRestoreDecision.decide(selection: .off, enabled: true, availableIDs: []), .apply(nil))

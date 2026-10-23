@@ -4,6 +4,11 @@ struct SettingsView: View {
     @EnvironmentObject var store: AppStore
     var body: some View {
         List {
+            if store.profile.isVendorCatalogue {
+                Section("Vendor settings") {
+                    Text("Explore this model’s documented virtual controls on Home or in Tools → Vendor catalogue. These profiles have no verified live iOS control transport.").font(.footnote).foregroundStyle(.secondary)
+                }
+            } else {
             Section("On your headphones") {
                 Picker("Self Voice", selection: Binding(get: { store.saved.sidetone }, set: { store.updateSidetone($0) })) { Text("Off").tag(0); Text("Low").tag(3); Text("Medium").tag(2); Text("High").tag(1) }.disabled(!store.connected || !store.supports(1, 11) || store.sidetonePersist == nil)
                 if let persist = store.sidetonePersist {
@@ -17,6 +22,7 @@ struct SettingsView: View {
                 settingToggle("Touch controls", key: "touchControls", value: store.saved.touchControls, function: 34)
                 Picker("Auto-off", selection: Binding(get: { store.saved.autoOff }, set: { store.updateAutoOff($0) })) { ForEach([5,20,40,60,180,1440,0], id: \.self) { Text($0 == 0 ? "Never" : $0 == 1440 ? "24 hours" : "\($0) minutes").tag($0) } }.disabled(!store.connected || !store.supports(1, 4))
             }.disabled(store.profile.unsupported)
+            }
             Section("Make it yours") {
                 NavigationLink { AutomationsView() } label: { Label("Automations", systemImage: "bolt") }
                 NavigationLink { PreferencesView() } label: { Label("App preferences", systemImage: "slider.horizontal.3") }

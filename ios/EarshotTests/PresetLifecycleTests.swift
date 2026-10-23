@@ -210,6 +210,169 @@ final class PresetLifecycleTests: XCTestCase {
     }
 
     @MainActor
+    func testExplicitNewPresetAndDuplicateRememberTheSelectedOutputAcrossRelaunch() throws {
+        let fixture = makeStore(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let output = memoryOutput("created")
+        store.companion.preferences.spokenFeedback = false
+        store.companion.acceptOutput(output)
+        store.saved.proEnabled = true
+        store.choosePreset(BuiltInPresets.bassBoost.id, rememberForOutput: true)
+
+        let created = try store.createUserPreset(userPreset(name: "Saved explicitly", gain: 3))
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(created.id))
+        let copy = try store.createUserPreset(created)
+        XCTAssertNotEqual(copy.id, created.id)
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(copy.id))
+
+        let restored = AppStore(defaults: fixture.defaults, arguments: [])
+        restored.saved.presetID = BuiltInPresets.flat.id
+        restored.saved.proEnabled = false
+        restored.companion.acceptOutput(output)
+        XCTAssertEqual(restored.saved.presetID, copy.id)
+        XCTAssertTrue(restored.saved.proEnabled)
+        XCTAssertEqual(restored.companion.preferences.outputEQ[output.id], .preset(copy.id))
+    }
+
+    @MainActor
+    func testExplicitEditorSaveRemembersSelectedPresetButEditingAnotherDoesNotStealMemory() throws {
+        let fixture = makeStore(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let output = memoryOutput("editing")
+        store.companion.acceptOutput(output)
+        store.saved.proEnabled = true
+        var edited = try store.createUserPreset(userPreset(name: "Editor target", gain: 2))
+        let other = try store.createUserPreset(userPreset(name: "Other", gain: 4))
+        store.choosePreset(edited.id) // A temporary selection does not remember itself.
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(other.id))
+        edited.bands[0].gainDb = 3
+        try store.updateUserPreset(edited)
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(edited.id))
+        try store.renameUserPreset(id: edited.id, name: "Saved editor name")
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(edited.id))
+
+        store.choosePreset(BuiltInPresets.vocalClarity.id, rememberForOutput: true)
+        store.choosePreset(other.id)
+        edited.bands[0].gainDb = 5
+        try store.updateUserPreset(edited)
+        XCTAssertEqual(store.saved.presetID, other.id)
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(BuiltInPresets.vocalClarity.id))
+    }
+
+    @MainActor
+    func testSuccessfulJSONAndAutoEQImportsRememberTheirActualSelectionIncludingDuplicates() throws {
+        let fixture = makeStore(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let output = memoryOutput("imports")
+        store.companion.acceptOutput(output)
+        store.saved.proEnabled = true
+        let json = try PresetCodec.encodePresets([userPreset(name: "JSON import", gain: 2)])
+        XCTAssertEqual(try store.importUserPresets(text: json), PresetImportSummary(imported: 1, skippedDuplicates: 0))
+        let importedID = store.saved.presetID
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(importedID))
+        store.choosePreset(BuiltInPresets.flat.id, rememberForOutput: true)
+        XCTAssertEqual(try store.importUserPresets(text: json), PresetImportSummary(imported: 0, skippedDuplicates: 1))
+        XCTAssertEqual(store.saved.presetID, importedID)
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(importedID))
+
+        let autoEQ = "Preamp: -5 dB\nFilter 1: ON PK Fc 2600 Hz Gain 4.5 dB Q 1.0"
+        XCTAssertEqual(try store.importUserPresets(text: autoEQ, name: "Pasted AutoEQ"), PresetImportSummary(imported: 1, skippedDuplicates: 0))
+        XCTAssertNotEqual(store.saved.presetID, importedID)
+        XCTAssertEqual(store.preset.name, "Pasted AutoEQ")
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(store.saved.presetID))
+    }
+
+    @MainActor
+    func testFailedExplicitSaveOrImportLeavesOutputMemoryAndSelectionUnchanged() throws {
+        let fixture = makeStore(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let output = memoryOutput("failed")
+        store.companion.acceptOutput(output)
+        store.saved.proEnabled = true
+        let selected = try store.createUserPreset(userPreset())
+        let library = store.saved.customPresets
+        var invalid = userPreset(name: "Invalid"); invalid.bands = []
+        XCTAssertThrowsError(try store.createUserPreset(invalid))
+        XCTAssertThrowsError(try store.importUserPresets(text: PresetCodec.encodePresets([userPreset(gain: 4), invalid])))
+        XCTAssertEqual(store.saved.customPresets, library)
+        XCTAssertEqual(store.saved.presetID, selected.id)
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(selected.id))
+    }
+
+    @MainActor
+    func testAutomationCycleAndRouteRestorationDoNotReplaceExplicitPresetMemory() throws {
+        let fixture = makeStore(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let output = memoryOutput("temporary")
+        let other = memoryOutput("other")
+        store.companion.preferences.spokenFeedback = false
+        store.companion.acceptOutput(output)
+        store.saved.proEnabled = true
+        let selected = try store.createUserPreset(userPreset(name: "Remember me", gain: 3))
+        let rule = AutomationRule(name: "Temporary preset", trigger: "Manual", actions: [.preset(BuiltInPresets.bassBoost.id)])
+        XCTAssertTrue(store.runRule(rule))
+        XCTAssertEqual(store.saved.presetID, BuiltInPresets.bassBoost.id)
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(selected.id))
+        _ = store.companion.cycleEQ()
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(selected.id))
+
+        store.companion.preferences.outputEQ[other.id] = .preset(BuiltInPresets.vocalClarity.id)
+        store.companion.acceptOutput(other)
+        XCTAssertEqual(store.saved.presetID, BuiltInPresets.vocalClarity.id)
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .preset(selected.id))
+        store.companion.acceptOutput(output)
+        XCTAssertEqual(store.saved.presetID, selected.id)
+        XCTAssertEqual(store.companion.preferences.outputEQ[other.id], .preset(BuiltInPresets.vocalClarity.id))
+    }
+
+    @MainActor
+    func testExplicitPresetCommitsRespectLocalEQOffDisabledMemoryAndBuiltInOutput() throws {
+        let fixture = makeStore(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let output = memoryOutput("off")
+        store.companion.acceptOutput(output)
+        store.saved.proEnabled = false
+        _ = try store.createUserPreset(userPreset(name: "Saved while off"))
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .off)
+        store.saved.proEnabled = true
+        store.companion.preferences.rememberEQ = false
+        _ = try store.createUserPreset(userPreset(name: "Do not remember", gain: 4))
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .off)
+
+        let speaker = CompanionAudioOutput(id: "built-in", name: "iPhone speaker", kind: "Speaker", isHeadphones: false)
+        store.companion.preferences.rememberEQ = true
+        store.companion.acceptOutput(speaker)
+        _ = try store.createUserPreset(userPreset(name: "Speaker choice", gain: 6))
+        XCTAssertNil(store.companion.preferences.outputEQ[speaker.id])
+        XCTAssertEqual(store.companion.preferences.outputEQ[output.id], .off)
+    }
+
+    @MainActor
+    func testDeletingPresetsKeepsOtherOutputMemoryAndForgetsMissingChoiceOnlyOnRestore() throws {
+        let fixture = makeStore(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let output = memoryOutput("deleted")
+        let other = memoryOutput("retained")
+        store.companion.acceptOutput(output)
+        store.saved.proEnabled = true
+        let first = try store.createUserPreset(userPreset(name: "Delete me", gain: 2))
+        store.companion.acceptOutput(other)
+        let retained = try store.createUserPreset(userPreset(name: "Keep me", gain: 4))
+        store.deleteUserPreset(id: first.id)
+        XCTAssertEqual(store.saved.presetID, retained.id)
+        XCTAssertEqual(store.companion.preferences.outputEQ[other.id], .preset(retained.id))
+        store.companion.acceptOutput(output)
+        XCTAssertNil(store.companion.preferences.outputEQ[output.id])
+        XCTAssertEqual(store.saved.presetID, retained.id, "A removed remembered preset must not choose a different preset on the user's behalf")
+        store.deleteUserPreset(id: retained.id)
+        XCTAssertEqual(store.saved.presetID, BuiltInPresets.flat.id)
+        XCTAssertEqual(store.companion.preferences.outputEQ[other.id], .preset(retained.id), "Deletion is not an explicit new Flat choice for another output")
+        store.companion.acceptOutput(other)
+        XCTAssertNil(store.companion.preferences.outputEQ[other.id])
+        XCTAssertEqual(store.saved.presetID, BuiltInPresets.flat.id)
+    }
+
+    @MainActor
     func testPresetEditsAndAudioOptionsPersistAndLegacyStateGetsDefaults() throws {
         let fixture = makeStore(); defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
         let store = fixture.store
@@ -385,6 +548,10 @@ final class PresetLifecycleTests: XCTestCase {
 
     private func userPreset(name: String = "User", gain: Double = 2) -> EQPreset {
         EQPreset(id: "source", name: name, bands: [EQBand(frequencyHz: 1000, gainDb: gain, q: 1)], preampDb: -3)
+    }
+
+    private func memoryOutput(_ suffix: String) -> CompanionAudioOutput {
+        CompanionAudioOutput(id: "preset-memory-\(suffix)", name: "Test headphones \(suffix)", kind: "Headphones", isHeadphones: true)
     }
 
     @MainActor

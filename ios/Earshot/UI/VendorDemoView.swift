@@ -61,7 +61,9 @@ struct VendorDemoView: View {
                 Text(control.title).font(.subheadline.weight(.medium))
                 Picker(control.title, selection: Binding(get: { state[control.id]?.optionValue ?? "" }, set: { _ = state.set(.option($0), for: control.id) })) {
                     ForEach(choices) { Text($0.title).tag($0.id) }
-                }.labelsHidden().accessibilityLabel(control.title).accessibilityIdentifier("vendorControl.\(control.id)")
+                }.labelsHidden().accessibilityLabel(control.title)
+                    .accessibilityValue(choices.first { $0.id == state[control.id]?.optionValue }?.title ?? "Not reported")
+                    .accessibilityIdentifier("vendorControl.\(control.id)")
             }
         case .integerRange(let range):
             VStack(alignment: .leading) {

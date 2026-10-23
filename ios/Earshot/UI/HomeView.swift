@@ -4,6 +4,7 @@ struct HomeView: View {
     @EnvironmentObject var store: AppStore
     @Environment(\.earshotPalette) private var palette
     @State private var switchingHeadphones = false
+    private var devicePresentation: HomeDevicePresentation { store.homeDevicePresentation }
     var body: some View {
         Page {
             HStack {
@@ -13,27 +14,46 @@ struct HomeView: View {
             }
             Panel {
                 HStack {
-                    Label(store.saved.demo ? "Demo device" : store.bluetooth.isConnected ? "Connected" : "Not connected", systemImage: store.saved.demo ? "sparkles" : "circle.fill").font(.caption.weight(.semibold)).foregroundStyle(Color.earshot)
+                    HStack(spacing: 5) {
+                        Image(systemName: store.saved.demo ? "sparkles" : "circle.fill").accessibilityHidden(true)
+                        Text(devicePresentation.status).accessibilityIdentifier("homeConnectionStatus")
+                    }.font(.caption.weight(.semibold)).foregroundStyle(Color.earshot)
                     Spacer()
-                    if let battery = store.battery { Label("\(battery)%", systemImage: "battery.75percent").font(.subheadline.weight(.medium)).monospacedDigit() }
+                    if devicePresentation.showsControlTelemetry, let battery = store.battery { Label("\(battery)%", systemImage: "battery.75percent").font(.subheadline.weight(.medium)).monospacedDigit() }
                 }
                 HeadphoneArtwork(earbuds: store.profile.earbuds)
                 Button { switchingHeadphones = true } label: {
                     HStack(spacing: 8) {
-                        Text(store.displayDeviceName).font(.title2.weight(.bold))
+                        Text(devicePresentation.primaryName).font(.title2.weight(.bold)).accessibilityIdentifier("homePrimaryDeviceName")
                         Image(systemName: "chevron.up.chevron.down").font(.caption.weight(.semibold)).accessibilityHidden(true)
                     }.frame(maxWidth: .infinity, minHeight: 44)
                 }.buttonStyle(.plain).accessibilityIdentifier("headphoneSwitcher")
-                    .accessibilityHint("Choose another headphone or demo profile.")
-                Text(store.saved.demo ? "A virtual device. Changes stay in the demo." : store.bluetooth.status).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity)
-                if let time = store.remainingTimeDescription { Text("Reported listening time: \(time)\(store.saved.demo ? " · simulated" : "")").font(.caption).foregroundStyle(.secondary) }
-                if !store.batteries.isEmpty { HStack { ForEach(store.batteries.keys.sorted(), id: \.self) { key in VStack(spacing: 4) { Text("\(store.batteries[key]!)%").font(.headline); Text(key).font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity) } } }
-                if !store.connected { NavigationLink("Find headphones") { ConnectionView() }.earshotProminentButton().frame(maxWidth: .infinity) }
+                    .accessibilityHint(store.saved.demo ? "Choose another demo profile." : "Find compatible headphone controls. Choose audio output in Headset companion.")
+                if devicePresentation.source == .audioRouteOnly {
+                    Text("Headphone control not connected. This is the audio output selected by iOS; vendor controls and telemetry are unavailable.")
+                        .font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                        .accessibilityIdentifier("homeAudioRouteOnly")
+                } else {
+                    Text(store.saved.demo ? "A virtual device. Changes stay in the demo." : store.bluetooth.status).font(.footnote).foregroundStyle(.secondary).multilineTextAlignment(.center).frame(maxWidth: .infinity)
+                }
+                if let output = devicePresentation.audioOutput {
+                    if devicePresentation.source == .verifiedControl {
+                        LabeledContent("Selected audio output", value: devicePresentation.audioOutputDisplayName ?? output.name)
+                            .font(.caption).accessibilityIdentifier("homeAudioOutput")
+                        Text("The audio route and verified headphone control link are separate; their identities are not automatically matched.")
+                            .font(.caption).foregroundStyle(.secondary)
+                    }
+                    LabeledContent("System route name", value: output.name).font(.caption)
+                        .accessibilityIdentifier("homeSystemAudioRoute")
+                }
+                if devicePresentation.showsControlTelemetry, let time = store.remainingTimeDescription { Text("Reported listening time: \(time)\(store.saved.demo ? " · simulated" : "")").font(.caption).foregroundStyle(.secondary) }
+                if devicePresentation.showsControlTelemetry, !store.batteries.isEmpty { HStack { ForEach(store.batteries.keys.sorted(), id: \.self) { key in VStack(spacing: 4) { Text("\(store.batteries[key]!)%").font(.headline); Text(key).font(.caption).foregroundStyle(.secondary) }.frame(maxWidth: .infinity) } } }
+                if !store.connected { NavigationLink(devicePresentation.source == .audioRouteOnly ? "Find headphone controls" : "Find headphones") { ConnectionView() }.earshotProminentButton().frame(maxWidth: .infinity) }
             }
             if store.saved.demo, let model = store.profile.soundcoreModel { SoundcoreDemoView(model: model).id(model.rawValue) }
             if store.saved.demo, let model = store.profile.vendorDefinition { VendorDemoView(model: model).id(model.id) }
-            ToolLink(title: "Headset companion", detail: store.companion.output?.name ?? "Audio route, local EQ and voice memos", icon: "headphones") { CompanionControlsView() }
-            if store.deviceStatus.operationMode == .firmwareUpdateOnly {
+            ToolLink(title: "Headset companion", detail: store.companion.outputDisplayName ?? "Audio route, local EQ and voice memos", icon: "headphones") { CompanionControlsView() }
+            if devicePresentation.showsControlTelemetry && store.deviceStatus.operationMode == .firmwareUpdateOnly {
                 InfoNote(text: "The headphones report firmware-update-only mode. Normal controls may be unavailable. This port does not perform firmware updates.")
             }
             if store.connected && !store.profile.unsupported {

@@ -1,3 +1,28 @@
+# AI-assisted iOS port attempt — 0.2.0 (2026-10-23)
+
+Reviewed and reconciled all 42 original Earshot 0.4–0.75 commits through 9e6c491. Original app,
+protocol research, Field design, Strike artwork and credits remain HellzYeahh and contributors;
+new MIT research and bundled OFL font notices are preserved. The retained Android tree stays 0.4.
+See [the per-commit audit](docs/IOS_UPSTREAM_075_AUDIT.md), [progress](docs/IOS_PROGRESS.md) and
+[actual native validation](docs/IOS_VALIDATION.md).
+
+Added any-output companion controls, explicit local-EQ/off memory, foreground connection rules,
+EQ-cycle/memo App Intents, persistent protected voice memos and public system route/volume UI.
+Read-only standard BLE battery discovery requires explicit source selection; nearby Apple adverts
+remain unverified. Added 35 Soundcore model parsers, guards and offline synthetic-control demos,
+plus 48 Sennheiser/Sony/Method/Apple/generic catalogue entries. Classic RFCOMM vendor links remain
+unavailable through public iOS; unknown layouts stay read-only. Corrected Bose touch polarity,
+independent per-button masks/echoes and generic QCE(2024) routing. Added native Field/System styling,
+Dynamic Type-relative OFL typography and opaque light/dark/tinted Strike icon adaptations.
+
+The first checkpoint passed 263/263 actual iPhone Simulator tests (258 unit/integration + 5 new UI)
+and 23 offline Python regressions, preserving initial failures and inspected screenshots. Further
+source review adds explicit save/import preset memory, app-only output nicknames and saved-output
+preference management. Broader existing UI/system/iPad/large-text verification and privacy-tool
+hardening are recorded as they complete; no physical vendor/headset acceptance is inferred.
+
+---
+
 # AI-assisted iOS port attempt — 0.1.0 (2026-10-19)
 
 This fork explores a native Swift/SwiftUI port of [Earshot by HellzYeahh and contributors](https://github.com/HellzYeahh/earshot). Original app, protocol/DSP work, documentation and licences are credited and preserved. Added native iOS app, WidgetKit extension, App Intents, BLE L2CAP transport, local audio EQ/player, microphone tools, persistent demo profiles, and simulator XCTest/XCUITest targets. Full hardware parity is not established; see [migration](docs/IOS_MIGRATION.md) and [validation](docs/IOS_VALIDATION.md).

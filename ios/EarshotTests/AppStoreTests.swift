@@ -137,6 +137,87 @@ final class AppStoreTests: XCTestCase {
         XCTAssertTrue(DeviceProfile.all.first { $0.id == "crusher" }!.crusher)
     }
 
+    func testHomeRouteOnlyPresentationUsesNicknameAndKeepsActualSystemIdentity() {
+        let output = CompanionAudioOutput(id: "airpods-route", name: "AirPods Pro", kind: "BluetoothA2DPOutput", isHeadphones: true)
+        let shown = HomeDevicePresentation.resolve(demo: false, controlConnected: false,
+                                                   controlName: "Bose headphones · identifying", output: output, outputNickname: "Travel buds")
+        XCTAssertEqual(shown.source, .audioRouteOnly)
+        XCTAssertEqual(shown.status, "Audio output selected")
+        XCTAssertEqual(shown.primaryName, "Travel buds")
+        XCTAssertEqual(shown.audioOutput?.name, "AirPods Pro")
+        XCTAssertEqual(shown.audioOutput?.id, output.id)
+        XCTAssertFalse(shown.showsControlTelemetry, "An audio route must not inherit a previous Bose battery or control capability")
+        let withoutNickname = HomeDevicePresentation.resolve(demo: false, controlConnected: false,
+                                                             controlName: "Previous Bose", output: output, outputNickname: nil)
+        XCTAssertEqual(withoutNickname.primaryName, output.name)
+    }
+
+    func testHomeVerifiedControlAndDifferentAudioOutputKeepSeparateIdentities() {
+        let output = CompanionAudioOutput(id: "sony-route", name: "Sony headphones", kind: "BluetoothA2DPOutput", isHeadphones: true)
+        let shown = HomeDevicePresentation.resolve(demo: false, controlConnected: true,
+                                                   controlName: "Verified Bose QC Ultra", output: output, outputNickname: "Office audio")
+        XCTAssertEqual(shown.source, .verifiedControl)
+        XCTAssertEqual(shown.status, "Control connected")
+        XCTAssertEqual(shown.primaryName, "Verified Bose QC Ultra")
+        XCTAssertEqual(shown.audioOutputDisplayName, "Office audio")
+        XCTAssertEqual(shown.audioOutput?.name, "Sony headphones")
+        XCTAssertTrue(shown.showsControlTelemetry, "Telemetry remains owned by the verified control device, not the audio route")
+    }
+
+    func testHomeDemoIdentityNeverChangesToARealAudioRoute() {
+        let output = CompanionAudioOutput(id: "real-output", name: "Real headset", kind: "Headphones", isHeadphones: true)
+        for connected in [false, true] {
+            let shown = HomeDevicePresentation.resolve(demo: true, controlConnected: connected,
+                                                       controlName: "Virtual Method 540", output: output, outputNickname: "Real nickname")
+            XCTAssertEqual(shown.source, .demo)
+            XCTAssertEqual(shown.status, "Demo device")
+            XCTAssertEqual(shown.primaryName, "Virtual Method 540")
+            XCTAssertNil(shown.audioOutput)
+            XCTAssertNil(shown.audioOutputDisplayName)
+            XCTAssertTrue(shown.showsControlTelemetry)
+        }
+    }
+
+    func testHomeBuiltInOrMissingRouteDoesNotPresentAHeadsetOrStaleBoseName() {
+        let speaker = CompanionAudioOutput(id: "speaker", name: "iPhone speaker", kind: "Speaker", isHeadphones: false)
+        for output in [speaker, nil] {
+            let shown = HomeDevicePresentation.resolve(demo: false, controlConnected: false,
+                                                       controlName: "Old Bose device", output: output, outputNickname: "Speaker nickname")
+            XCTAssertEqual(shown.source, .disconnected)
+            XCTAssertEqual(shown.status, "Not connected")
+            XCTAssertEqual(shown.primaryName, "Headphones")
+            XCTAssertNil(shown.audioOutput)
+            XCTAssertNil(shown.audioOutputDisplayName)
+            XCTAssertFalse(shown.showsControlTelemetry)
+        }
+    }
+
+    @MainActor
+    func testAppStoreHomeRoutePresentationCannotGrantBluetoothControlsOrMixDemoIdentity() {
+        let fixture = makeStore()
+        defer { fixture.defaults.removePersistentDomain(forName: fixture.suite) }
+        let store = fixture.store
+        let output = CompanionAudioOutput(id: "generic-route", name: "Generic wired headphones", kind: "Headphones", isHeadphones: true)
+        store.companion.acceptOutput(output)
+        store.battery = 70 // A stale control reading must never be attached to this output.
+        XCTAssertEqual(store.homeDevicePresentation.primaryName, output.name)
+        XCTAssertEqual(store.homeDevicePresentation.source, .audioRouteOnly)
+        XCTAssertFalse(store.homeDevicePresentation.showsControlTelemetry)
+        XCTAssertFalse(store.connected)
+        XCTAssertFalse(store.bluetooth.isConnected)
+        XCTAssertFalse(store.supports(1, 7))
+        XCTAssertFalse(store.canControlNoise)
+        XCTAssertTrue(store.companion.saveNickname("Wired desk", for: output.id))
+        XCTAssertEqual(store.homeDevicePresentation.primaryName, "Wired desk")
+        XCTAssertEqual(store.homeDevicePresentation.audioOutput?.name, output.name)
+
+        store.setDemo(true)
+        XCTAssertEqual(store.homeDevicePresentation.source, .demo)
+        XCTAssertEqual(store.homeDevicePresentation.primaryName, store.profile.name)
+        XCTAssertNil(store.homeDevicePresentation.audioOutput)
+        XCTAssertFalse(store.bluetooth.isConnected)
+    }
+
     @MainActor
     private func makeStore() -> (store: AppStore, defaults: UserDefaults, suite: String) {
         let suite = "EarshotTests.\(UUID().uuidString)"

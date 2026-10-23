@@ -266,6 +266,46 @@ Bose touch/button effects, and the owner’s slider retest remain device accepta
 and synthetic-frame results do not establish those effects. Pushes target only the user’s fork,
 with exact staged-path inspection and the index privacy guard required before publishing.
 
+## Checkpoint 17 — Complete app UI and output-preference follow-up (23 October 2026)
+
+Closed the final source-audit omissions: explicit preset creation/copy/editor save and successful
+JSON/AutoEQ imports now remember the selected output's actual enabled/off choice; edits to a
+different preset cannot steal it. Added bounded app-only output nicknames and confirmed selective
+removal of saved EQ/action/nickname preferences, including offline outputs. System names and
+Bluetooth pairing remain separate. Home now presents a real generic external audio output
+prominently with an explicit no-control status, keeps its system name visible, and never adopts
+stale Bose telemetry or grants capabilities. Verified BMAP identity remains separate from a
+different audio output; demos remain virtual. Vendor Settings no longer shows old Bose controls.
+
+Added 20 regressions (7 preset memory, 8 nickname/management, 5 Home identity) for **278 total
+units**. The broad app UI run finished **36/38**, retaining the two scrolling/alert failures.
+The follow-up finished **282/284**: all 278 units, the exact complete preset lifecycle and three
+other UI cases passed; nickname row lookup and AX XXXL inertial scrolling still needed repair.
+The corrected **Upstream075-iPhone-Repairs passed 281/281**, zero failures/skips, Xcode exit 0:
+all 278 units plus nickname save/relaunch/cancel/confirmed-forget, neutral Home, and a real
+Soundcore menu interaction at Accessibility XXXL. No assertions or expected failures were relaxed.
+Failed summaries remain alongside the passing evidence in [IOS_VALIDATION.md](IOS_VALIDATION.md).
+Inspected unaltered Field/System, Home, saved-output and large-text PNGs are retained with provenance.
+
+Hardened project/privacy tooling: explicit and symlink generator destinations protect signing
+settings; deterministic removed/renamed sources reconcile correctly; relative resource IDs avoid
+duplicate build membership; unknown custom objects and protected settings survive. The index guard
+also detects binary keystores, alternate team/profile keys and quoted JSON settings without
+printing their values. All 38 local Python regressions pass on synthetic projects/repos. The
+actual owner's protected project/target/configuration dictionaries were independently compared
+before/after reconciliation and are unchanged; the clean generated project alone may be staged.
+
+Original HellzYeahh/Earshot contributors, MIT/OFL/reference notices and Android 0.4 provenance
+remain intact. The separate reviewed baseline is not yet advanced. Actual system-widget/Control
+Center and explicit picker accessibility-value follow-up then passed **6/6**, zero failures/skips,
+Xcode exit 0 (`Upstream075-iPhone-SystemAndValues`): all three actual system surfaces and three
+vendor/large-text UI journeys. Selected values are now exposed separately from their setting names.
+Inspected native system-element captures exclude unrelated apps. Current iPhone coverage is
+**278 units + 39 app UI + 3 system UI**, all latest Passed across named runs, not one combined run.
+iPad and hosted-workflow results will follow.
+Physical Bose touch/buttons/slider effects, BAS/Apple delivery and vendor transports remain
+hardware/platform boundaries. Check privacy and the exact fork push URL before publishing.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

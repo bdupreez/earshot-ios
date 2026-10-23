@@ -114,8 +114,12 @@ final class EarshotUITests: XCTestCase {
         XCTAssertTrue(connect.waitForExistence(timeout: 10))
         reveal(connect)
         connect.tap()
+        dismissReleaseNotesIfPresented()
         XCTAssertTrue(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Bluetooth hardware needs a physical iPhone")).firstMatch.waitForExistence(timeout: 5))
         XCTAssertFalse(app.staticTexts["Demo device"].exists)
+        XCTAssertEqual(app.staticTexts["homeConnectionStatus"].label, "Not connected")
+        XCTAssertEqual(app.buttons["headphoneSwitcher"].label, "Headphones")
+        attachScreenshot("Unverified control identity stays neutral on actual Simulator Home")
         selectTab("Tools")
         button(startingWith: "Connection").tap()
         XCTAssertTrue(app.buttons["scanHeadphones"].exists)
@@ -402,10 +406,13 @@ final class EarshotUITests: XCTestCase {
         XCTAssertTrue(tabButton("Home").waitForExistence(timeout: 10))
         XCTAssertTrue(app.staticTexts["Demo device"].exists)
         let listening = app.buttons["soundcoreControl.listening_mode"]
-        reveal(listening); listening.tap()
+        reveal(listening)
+        XCTAssertEqual(listening.value as? String, "Bluetooth")
+        listening.tap()
         let sounds = app.buttons["Local sounds"]
         XCTAssertTrue(sounds.waitForExistence(timeout: 3), app.debugDescription)
         sounds.tap()
+        XCTAssertEqual(listening.value as? String, "Local sounds")
         let result = app.staticTexts["soundcoreSimulationResult"]
         reveal(result)
         XCTAssertTrue(result.label.contains("No physical command was sent"), app.debugDescription)
@@ -422,9 +429,13 @@ final class EarshotUITests: XCTestCase {
         let slider = app.sliders["vendorControl.noiseLevel"]
         reveal(slider)
         XCTAssertTrue(slider.exists, app.debugDescription)
+        XCTAssertEqual(app.buttons["vendorControl.mode"].value as? String, "Noise cancelling")
         slider.adjust(toNormalizedSliderPosition: 0.5)
         XCTAssertFalse(app.alerts.firstMatch.exists)
         attachScreenshot("Momentum 4 local fixture — native controls with original research attribution")
+        selectTab("Settings")
+        XCTAssertTrue(app.staticTexts["Vendor settings"].exists)
+        XCTAssertFalse(app.switches["Touch controls"].exists, "A vendor catalogue must not display old Bose settings as device state.")
     }
 
     func testVoiceMemoFinalizesBeforeLocalPlaybackAndSurvivesNavigation() throws {
@@ -464,6 +475,84 @@ final class EarshotUITests: XCTestCase {
         attachScreenshot("Read-only battery companion before user-initiated Bluetooth discovery")
     }
 
+    func testFieldAndSystemColoursPersistWithoutChangingLightAppearance() throws {
+        launchDemo(); selectTab("Settings")
+        let preferences = button(startingWith: "App preferences")
+        reveal(preferences); preferences.tap()
+        let style = app.buttons["visualStylePicker"]
+        XCTAssertTrue(style.waitForExistence(timeout: 4)); style.tap()
+        app.buttons["System colours"].tap()
+        let appearance = app.buttons["appearancePicker"]
+        appearance.tap(); app.buttons["Light"].tap()
+        selectTab("Home")
+        attachScreenshot("System colours and Light remain independent preferences")
+        app.terminate(); app.launchArguments = []; app.launch()
+        dismissReleaseNotesIfPresented(); selectTab("Settings")
+        let reopened = button(startingWith: "App preferences")
+        reveal(reopened); reopened.tap()
+        XCTAssertTrue((style.label + String(describing: style.value)).contains("System colours"))
+        XCTAssertTrue((appearance.label + String(describing: appearance.value)).contains("Light"))
+        style.tap(); app.buttons["Field"].tap()
+        selectTab("Home")
+        attachScreenshot("Field light palette after persisted System colours and appearance selections")
+    }
+
+    func testSoundcoreControlsRemainLabelledAndUsableAtAccessibilityTextSize() throws {
+        app.launchArguments = ["--uitesting", "--demo-profile=soundcore.D1301", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"]
+        app.launch(); dismissReleaseNotesIfPresented()
+        XCTAssertTrue(tabButton("Home").waitForExistence(timeout: 10))
+        let source = app.buttons["soundcoreControl.listening_mode"]
+        reveal(source)
+        XCTAssertTrue(source.isHittable)
+        XCTAssertTrue(source.label.contains("Listening"), app.debugDescription)
+        XCTAssertEqual(source.value as? String, "Bluetooth")
+        attachScreenshot("Soundcore native controls at Accessibility XXXL — setting names remain visible")
+        source.tap()
+        let local = app.buttons["Local sounds"]
+        XCTAssertTrue(local.waitForExistence(timeout: 4)); local.tap()
+        XCTAssertEqual(source.value as? String, "Local sounds")
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+    }
+
+    func testAppOnlyOutputNicknamePersistsAndSavedPreferencesForgetIsConfirmed() throws {
+        // Companion preferences intentionally outlive --uitesting app-state resets.
+        // A fresh value also permits retries after a failed persistence assertion.
+        let nickname = "Simulator output \(UUID().uuidString.prefix(6))"
+        launchDemo(); selectTab("Tools")
+        let companion = button(startingWith: "Headset companion")
+        reveal(companion); companion.tap()
+        let draft = app.textFields["companionNicknameDraft"]
+        reveal(draft); replaceText(in: draft, with: nickname)
+        let save = app.buttons["companionSaveNickname"]
+        reveal(save); save.tap()
+        let savedNickname = app.descendants(matching: .any).matching(identifier: "companionOutputNickname").firstMatch
+        let nicknameSaved = NSPredicate(format: "label CONTAINS %@ OR value CONTAINS %@", nickname, nickname)
+        XCTAssertTrue(savedNickname.waitForExistence(timeout: 4))
+        expectation(for: nicknameSaved, evaluatedWith: savedNickname)
+        waitForExpectations(timeout: 4)
+        app.terminate(); app.launchArguments = []; app.launch()
+        dismissReleaseNotesIfPresented(); selectTab("Tools")
+        let reopened = button(startingWith: "Headset companion")
+        reveal(reopened); reopened.tap()
+        XCTAssertTrue(savedNickname.waitForExistence(timeout: 4))
+        XCTAssertTrue(nicknameSaved.evaluate(with: savedNickname))
+        let management = button(startingWith: "Manage saved outputs")
+        reveal(management); management.tap()
+        let forget = app.buttons["Forget local preferences for \(nickname)"]
+        reveal(forget); forget.tap()
+        let confirmation = app.alerts["Forget local output preferences?"]
+        XCTAssertTrue(confirmation.waitForExistence(timeout: 3))
+        confirmation.buttons["Cancel"].tap()
+        XCTAssertTrue(savedNickname.exists)
+        XCTAssertTrue(nicknameSaved.evaluate(with: savedNickname))
+        attachScreenshot("Saved output nickname with selective local preference management — system route remains separate")
+        forget.tap()
+        confirmation.buttons["Forget local preferences"].tap()
+        XCTAssertTrue(forget.waitForNonExistence(timeout: 4))
+        XCTAssertTrue(savedNickname.waitForNonExistence(timeout: 4))
+        XCTAssertFalse(app.alerts.firstMatch.exists)
+    }
+
     private func dismissReleaseNotesIfPresented() {
         let done = app.buttons["dismissReleaseNotes"]
         if done.waitForExistence(timeout: 2) { done.tap() }
@@ -487,7 +576,7 @@ final class EarshotUITests: XCTestCase {
     }
 
     private func reveal(_ element: XCUIElement) {
-        for _ in 0..<8 {
+        for _ in 0..<24 {
             let screen = app.frame
             var top = screen.minY + 20
             var bottom = screen.maxY - 20
@@ -501,13 +590,33 @@ final class EarshotUITests: XCTestCase {
             if element.exists {
                 let frame = element.frame
                 if element.isHittable, frame.minY >= top, frame.maxY <= bottom { return }
-                if !frame.isEmpty, frame.minY < top { app.swipeDown(); continue }
+                if !frame.isEmpty, frame.minY < top {
+                    scrollForReveal(towardTop: true, distance: top - frame.minY + 16, top: top, bottom: bottom)
+                    continue
+                }
+                if !frame.isEmpty, frame.maxY > bottom, frame.minY < bottom + 300 {
+                    scrollForReveal(towardTop: false, distance: frame.maxY - bottom + 16, top: top, bottom: bottom)
+                    continue
+                }
             }
             // A translucent floating tab bar can leave an obscured row "hittable" in AX.
             // Ensure the entire control is clear of that overlay before interacting.
             app.swipeUp()
         }
-        XCTFail("Expected a fully visible control: \(element)")
+        XCTFail("Expected a fully visible control: \(element)\n\(app.debugDescription)")
+    }
+
+    private func scrollForReveal(towardTop: Bool, distance: CGFloat, top: CGFloat, bottom: CGFloat) {
+        // Full inertial flicks can alternate an AX XXXL row between the title and
+        // floating tab bar. Use a short native gutter drag once near the target.
+        let travel = min(max(48, distance), 180, max(48, (bottom - top) * 0.45))
+        let middle = (top + bottom) / 2
+        let start = towardTop ? middle - travel / 2 : middle + travel / 2
+        let end = towardTop ? middle + travel / 2 : middle - travel / 2
+        let origin = app.coordinate(withNormalizedOffset: .zero)
+        origin.withOffset(CGVector(dx: 8, dy: start - app.frame.minY))
+            .press(forDuration: 0.05, thenDragTo: origin.withOffset(CGVector(dx: 8, dy: end - app.frame.minY)),
+                   withVelocity: .slow, thenHoldForDuration: 0.15)
     }
 
     private func button(startingWith title: String) -> XCUIElement {

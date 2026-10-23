@@ -5,15 +5,20 @@ import hashlib
 import json
 import plistlib
 import argparse
+import re
 
 ROOT = Path(__file__).resolve().parents[1]
 parser = argparse.ArgumentParser(description=__doc__)
 parser.add_argument("--output-project", type=Path, help="Generate a clean project elsewhere without touching local signing edits")
 args = parser.parse_args()
-PROJECT = args.output_project or ROOT / "Earshot.xcodeproj"
-if args.output_project is None and PROJECT.joinpath("project.pbxproj").exists():
+PROJECT = (args.output_project or ROOT / "Earshot.xcodeproj").resolve()
+if PROJECT.joinpath("project.pbxproj").exists():
+    # Check the resolved destination even when explicitly supplied or symlinked.
+    # Alternate output is not permission to destroy another signed project.
     existing = PROJECT.joinpath("project.pbxproj").read_text()
-    if "DEVELOPMENT_TEAM" in existing or "PROVISIONING_PROFILE" in existing:
+    signing = re.compile(r'''["']?(?:DEVELOPMENT_TEAM(?:_ID)?|DevelopmentTeam|PROVISIONING_PROFILE(?:_SPECIFIER)?)(?:\[[^\]\r\n]*\])?["']?\s*[=:]\s*(?:"([^"]*)"|'([^']*)'|([^\s;,}\)]+))''', re.IGNORECASE)
+    has_signing = any(any(part and part.strip() for part in match.groups()) for match in signing.finditer(existing))
+    if has_signing or re.search(r'Apple (?:Development|Distribution):|iPhone (?:Developer|Distribution):', existing):
         parser.error("Local signing settings detected. Use --output-project and reconcile file membership without replacing local build settings.")
 PROJECT.mkdir(parents=True, exist_ok=True)
 objects = {}
@@ -50,7 +55,7 @@ for name,paths,product,kind in [("Earshot",app_files,"Earshot.app","application"
     prod=obj("product:"+name,"PBXFileReference",explicitFileType="wrapper.application" if kind=="application" else "wrapper.app-extension" if kind=="app-extension" else "wrapper.cfbundle",includeInIndex="0",path=product,sourceTree="BUILT_PRODUCTS_DIR"); products.append(prod)
     builds=[obj("build:"+name+":"+str(p.relative_to(ROOT)),"PBXBuildFile",fileRef=ref("file:"+str(p.relative_to(ROOT)))) for p in paths]
     phases=[obj("sources:"+name,"PBXSourcesBuildPhase",buildActionMask="2147483647",files=builds,runOnlyForDeploymentPostprocessing="0"),obj("frameworks:"+name,"PBXFrameworksBuildPhase",buildActionMask="2147483647",files=[],runOnlyForDeploymentPostprocessing="0")]
-    resource_builds=[obj("resource:"+str(p),"PBXBuildFile",fileRef=r) for p,r in zip(resource_paths,resources)] if name=="Earshot" else []
+    resource_builds=[obj("resource:"+str(p.relative_to(ROOT)),"PBXBuildFile",fileRef=r) for p,r in zip(resource_paths,resources)] if name=="Earshot" else []
     phases.append(obj("resources:"+name,"PBXResourcesBuildPhase",buildActionMask="2147483647",files=resource_builds,runOnlyForDeploymentPostprocessing="0"))
     if name=="Earshot":
         embed=obj("embed:widget","PBXBuildFile",fileRef=ref("product:EarshotWidget"),settings={"ATTRIBUTES":["RemoveHeadersOnCopy"]})

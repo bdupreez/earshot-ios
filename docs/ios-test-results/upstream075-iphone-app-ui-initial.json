@@ -1,0 +1,57 @@
+{
+  "devicesAndConfigurations" : [
+    {
+      "device" : {
+        "architecture" : "arm64",
+        "deviceId" : "670AA0BD-A1DF-4768-835F-966A0D09E7B3",
+        "deviceName" : "iPhone 17 Pro",
+        "modelName" : "iPhone 17 Pro",
+        "osBuildNumber" : "23E254a",
+        "osVersion" : "26.4.1",
+        "platform" : "iOS Simulator"
+      },
+      "expectedFailures" : 0,
+      "failedTests" : 2,
+      "passedTests" : 36,
+      "skippedTests" : 0,
+      "testPlanConfiguration" : {
+        "configurationId" : "1",
+        "configurationName" : "Test Scheme Action"
+      }
+    }
+  ],
+  "environmentDescription" : "Earshot · Built with macOS 26.4.1",
+  "expectedFailures" : 0,
+  "failedTests" : 2,
+  "finishTime" : 1792721797.838,
+  "passedTests" : 36,
+  "result" : "Failed",
+  "skippedTests" : 0,
+  "startTime" : 1792719797.719,
+  "statistics" : [
+
+  ],
+  "testFailures" : [
+    {
+      "failureText" : "failed - Expected a fully visible control: \"soundcoreControl.listening_mode\" Button",
+      "targetName" : "EarshotUITests",
+      "testIdentifier" : 19,
+      "testIdentifierString" : "EarshotUITests/testSoundcoreControlsRemainLabelledAndUsableAtAccessibilityTextSize()",
+      "testIdentifierURL" : "test://com.apple.xcode/Earshot/EarshotUITests/EarshotUITests/testSoundcoreControlsRemainLabelledAndUsableAtAccessibilityTextSize",
+      "testName" : "testSoundcoreControlsRemainLabelledAndUsableAtAccessibilityTextSize()"
+    },
+    {
+      "failureText" : "XCTAssertGreaterThan failed: (\"36.0\") is not greater than (\"60.0\") - A modal or keyboard leaves no usable scroll area.",
+      "targetName" : "EarshotUITests",
+      "testIdentifier" : 33,
+      "testIdentifierString" : "FeatureGapUITests/testUserPresetLifecyclePersistsAndDeletingActiveReturnsFlat()",
+      "testIdentifierURL" : "test://com.apple.xcode/Earshot/EarshotUITests/FeatureGapUITests/testUserPresetLifecyclePersistsAndDeletingActiveReturnsFlat",
+      "testName" : "testUserPresetLifecyclePersistsAndDeletingActiveReturnsFlat()"
+    }
+  ],
+  "title" : "Test - Earshot",
+  "topInsights" : [
+
+  ],
+  "totalTestCount" : 38
+}

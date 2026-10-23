@@ -35,6 +35,7 @@ final class FeatureGapUITests: XCTestCase {
         XCTAssertTrue(rename.waitForExistence(timeout: 5))
         replaceText(rename.textFields["Preset name"], with: "Morning library", dismissKeyboard: false)
         rename.buttons["Rename"].tap()
+        XCTAssertTrue(rename.waitForNonExistence(timeout: 5))
         assertValue(app.buttons["presetPicker"], contains: "Morning library")
         relaunchPreservingState()
         openProEQ()
@@ -625,7 +626,15 @@ final class FeatureGapUITests: XCTestCase {
     }
 
     private func replaceText(_ field: XCUIElement, with value: String, dismissKeyboard: Bool = true) {
-        tap(field, direction: .towardTop)
+        if app.alerts.firstMatch.exists {
+            // A native alert's text field can be taller than its internal scroll
+            // viewport. It is directly tappable; never scroll the dimmed page.
+            XCTAssertTrue(field.waitForExistence(timeout: 5))
+            XCTAssertTrue(field.isHittable)
+            field.tap()
+        } else {
+            tap(field, direction: .towardTop)
+        }
         if let text = field.value as? String, !text.isEmpty, text != field.placeholderValue {
             if app.alerts.firstMatch.exists {
                 // Wait for keyboard focus before sending public Select All keys.

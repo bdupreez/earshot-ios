@@ -96,6 +96,7 @@ struct SoundcoreDemoView: View {
                 ForEach(control.options.indices, id: \.self) { index in Text(control.options[index]).tag(index) }
             }
             .labelsHidden().accessibilityLabel(control.title)
+            .accessibilityValue(control.value.flatMap { control.options.indices.contains($0) ? control.options[$0] : nil } ?? "Not reported")
             .disabled(!control.enabled)
             .accessibilityIdentifier("soundcoreControl.\(control.id)")
             if let note = control.note { Text(note).font(.caption).foregroundStyle(.secondary) }

@@ -19,7 +19,8 @@ choose **Run workflow**, and read the run's Summary. Or run locally:
 python3 ios/scripts/check-upstream-updates.py --output ios/TestResults/upstream-update-check.md
 ```
 
-The check compares the credited imported snapshot with upstream's current default-branch tip.
+The check compares the last deliberately reviewed upstream boundary with upstream's current
+default-branch tip, falling back to the credited imported snapshot when no review boundary exists.
 It reads public metadata and writes a report; it does not merge code, advance the imported baseline,
 change remotes, or push upstream. There is no automatic schedule. See [the update workflow](docs/UPSTREAM_UPDATES.md)
 for report limits and the deliberate porting process.
@@ -35,7 +36,7 @@ Implemented areas include:
 - Real Bluetooth GATT discovery and Bose BLE L2CAP control transport, with a verified BMAP reply required before reporting connected. Battery, per-part earbud battery, noise control, modes, favourites, custom-mode layouts, device settings, and diagnostics use upstream BMAP knowledge. The fork owner reports a QC Ultra 2 connection; controlled hardware acceptance and the slider-fix retest remain pending.
 - Native 3-band headphone EQ controls and a local-player Pro EQ: graphic/parametric filters, seven upstream presets including the AutoEq QC Ultra correction, response graph, headroom, preamp, limiter, and capped boost. JSON and AutoEq import/export, safe custom-preset editing/rename/delete, bounded deduplicated imports, recovery exports, seek/progress, and A/B bypass are supported.
 - Actual local audio playback through AVAudioEngine and a real microphone record/play/delete check using AVAudioRecorder. The microphone route is shown rather than assumed.
-- Persistent multi-action mode/noise/local-EQ rules, optional foreground Wi-Fi join triggers with explicit permission, weekday schedules while the app is open, optional tap-to-run notification reminders, low-battery notifications, eight Shortcuts actions, configurable mode cycling, rich battery/staleness widgets and iOS 18+ Quiet/Aware/Cycle Control Center buttons. Signed-device delivery remains unverified.
+- Persistent multi-action mode/noise/local-EQ rules, optional foreground Wi-Fi join triggers with explicit permission, weekday schedules while the app is open, optional tap-to-run notification reminders, low-battery notifications, ten Shortcuts actions, configurable mode cycling, rich battery/staleness widgets and iOS 18+ Quiet/Aware/Cycle Control Center buttons. Signed-device delivery remains unverified.
 - Home device-name quick switching, once-per-release notes, and original-project attribution in onboarding, About, diagnostics, and documentation.
 - Read-only documented/selected/deep protocol discovery, a separately consented experimental Print console, reported latency with session-original reset, and device-reported sidetone persistence. All physical effects remain unverified.
 
@@ -43,7 +44,8 @@ Implemented areas include:
 [`9e6c491`](https://github.com/HellzYeahh/earshot/commit/9e6c4912531ec6e159eded862d1b6ffa55094199)
 are mapped in the [per-commit native audit](docs/IOS_UPSTREAM_075_AUDIT.md).
 The native 0.2 work adds a headset companion for any system audio output, explicit per-output
-local EQ memory, foreground Shortcuts actions, persistent local voice memos, and optional
+local EQ memory, app-only output nicknames and saved-preference management, foreground Shortcuts
+actions, persistent local voice memos, and optional
 read-only standard BLE battery discovery. Delivered Apple manufacturer adverts stay clearly
 labelled as nearby and unverified. Field styling, OFL fonts and Strike artwork retain upstream credit.
 The catalogue includes 35 Soundcore models plus 48 Sennheiser/Sony/Method/Apple/generic entries;
@@ -124,9 +126,19 @@ EARSHOT_SIMULATOR_ID=YOUR_SIMULATOR_UDID ios/scripts/test-simulator.sh
 
 **Baseline acceptance (before the feature-gap pass):** 53 tests passed (41 unit + 12 UI), with zero failures or skips on the installed iPhone 17 Pro simulator. See the validation report below for secondary-device checks and remaining limits.
 
-**Current feature-pass verification:** all **189 native unit tests passed together**. Across the explicitly documented runs, **31 app UI journeys and three actual system journeys** have passing latest results. The focused slider/rule/player/credits checks cover eight UI identifiers across the initial run and final EQ repair. Small-widget Cycle, medium-widget Aware and Control Center Cycle retain their prior passing results. [Exact outcomes and per-case coverage](docs/IOS_VALIDATION.md) preserve earlier failures and make clear this is not one combined green run.
+**23 October upstream 0.75 verification:** the source review covers all **42 commits**;
+the final focused iPhone run passed **281/281** (all **278 unit/integration tests** plus three
+UI journeys), zero failures/skips. All **39 app UI identifiers** have passing latest results
+across the documented broad and repair runs, including Accessibility XXXL, exact preset
+lifecycle and output-nickname persistence/removal. This is an aggregate, not one combined
+UI run. See [the audit](docs/IOS_UPSTREAM_075_AUDIT.md),
+[actual run outcomes](docs/IOS_VALIDATION.md) and [per-case evidence](docs/ios-test-results/current-iphone-coverage.json).
+The actual Control Center and small/medium-widget follow-up also passed, alongside three
+vendor/large-text checks (**6/6**). iPad follow-up is being recorded separately; the earlier figures below are historical.
 
-On iPad, all **189 units** passed and all three focused slider journeys have passing latest results after the documented confirmation-wait repair. The aggregate covers **15 representative iPad app UI journeys** across named runs; the complete iPhone UI suite was not run on iPad.
+**Historical 19 October feature-pass verification:** all **189 native unit tests passed together**. Across the explicitly documented runs, **31 app UI journeys and three actual system journeys** have passing latest results. The focused slider/rule/player/credits checks cover eight UI identifiers across the initial run and final EQ repair. Small-widget Cycle, medium-widget Aware and Control Center Cycle retain their prior passing results. [Exact outcomes and per-case coverage](docs/IOS_VALIDATION.md) preserve earlier failures and make clear this is not one combined green run.
+
+Historical iPad verification passed **189 units** and all three focused slider journeys after the documented confirmation-wait repair. That aggregate covered **15 representative app UI journeys** across named runs; the complete iPhone UI suite was not run on iPad.
 
 Results and screenshot attachments are stored in ignored `ios/TestResults/*.xcresult` bundles. Open a result bundle in Xcode to inspect individual assertions, logs, and screenshots. See [the validation report](docs/IOS_VALIDATION.md) for actual outcomes, environment, and limitations. Simulator tests cannot validate a physical Bose Bluetooth connection, sound through headphones, hearing safety, or vendor firmware behaviour.
 

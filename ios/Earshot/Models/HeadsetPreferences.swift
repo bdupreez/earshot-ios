@@ -1,4 +1,5 @@
-// AI-assisted adaptation of HellzYeahh/earshot HeadsetEqMemory and ShortcutAction (MIT).
+// AI-assisted adaptation of HellzYeahh/earshot HeadsetEqMemory, ShortcutAction and
+// CompanionRemote aliases (MIT). iOS nicknames are app-local, never system Bluetooth aliases.
 import Foundation
 
 enum CompanionAction: String, Codable, CaseIterable, Identifiable {
@@ -22,9 +23,11 @@ struct HeadsetPreferences: Codable, Equatable {
     var defaultAction = CompanionAction.none
     var outputEQ: [String: HeadsetEQSelection] = [:]
     var outputActions: [String: CompanionAction] = [:]
+    private(set) var outputNicknames: [String: String] = [:]
     static let maximumOutputs = 100
+    static let maximumNicknameBytes = 80
     init() {}
-    private enum CodingKeys: String, CodingKey { case rememberEQ, spokenFeedback, defaultAction, outputEQ, outputActions }
+    private enum CodingKeys: String, CodingKey { case rememberEQ, spokenFeedback, defaultAction, outputEQ, outputActions, outputNicknames }
     init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: CodingKeys.self)
         rememberEQ = try values.decodeIfPresent(Bool.self, forKey: .rememberEQ) ?? true
@@ -43,6 +46,13 @@ struct HeadsetPreferences: Codable, Equatable {
             guard !key.isEmpty, key.utf8.count <= 512, let action = CompanionAction(rawValue: value) else { return nil }
             return (key, action)
         }.prefix(Self.maximumOutputs))
+        if let nicknames = try? values.nestedContainer(keyedBy: OutputKey.self, forKey: .outputNicknames) {
+            for key in nicknames.allKeys.sorted(by: { $0.stringValue < $1.stringValue }) {
+                guard let raw = try? nicknames.decode(String.self, forKey: key) else { continue }
+                _ = setNickname(raw, outputID: key.stringValue)
+                if outputNicknames.count == Self.maximumOutputs { break }
+            }
+        }
     }
     private struct OutputKey: CodingKey {
         let stringValue: String
@@ -62,6 +72,36 @@ struct HeadsetPreferences: Codable, Equatable {
               action == nil || outputActions[outputID] != nil || outputActions.count < Self.maximumOutputs else { return false }
         outputActions[outputID] = action
         return true
+    }
+    static func validatedNickname(_ raw: String) -> String? {
+        let forbidden = CharacterSet.controlCharacters.union(.newlines)
+        guard !raw.unicodeScalars.contains(where: { forbidden.contains($0) }) else { return nil }
+        let nickname = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !nickname.isEmpty, nickname.utf8.count <= maximumNicknameBytes else { return nil }
+        return nickname
+    }
+    func nickname(for outputID: String?) -> String? { outputID.flatMap { outputNicknames[$0] } }
+    /// Each category admits 100 routes independently; the management list covers their full union.
+    var savedOutputIDs: [String] {
+        Array(Set(outputEQ.keys).union(outputActions.keys).union(outputNicknames.keys)).sorted()
+            .prefix(Self.maximumOutputs * 3).map { $0 }
+    }
+    static func abbreviatedOutputID(_ outputID: String) -> String {
+        let safe = outputID.components(separatedBy: CharacterSet.controlCharacters.union(.newlines)).joined()
+        return safe.isEmpty ? "Unavailable route identifier" : "…\(safe.suffix(8))"
+    }
+    @discardableResult mutating func setNickname(_ nickname: String?, outputID: String) -> Bool {
+        guard !outputID.isEmpty, outputID.utf8.count <= 512 else { return false }
+        guard let nickname else { outputNicknames.removeValue(forKey: outputID); return true }
+        guard let validated = Self.validatedNickname(nickname),
+              outputNicknames[outputID] != nil || outputNicknames.count < Self.maximumOutputs else { return false }
+        outputNicknames[outputID] = validated
+        return true
+    }
+    mutating func forget(outputID: String) {
+        outputEQ.removeValue(forKey: outputID)
+        outputActions.removeValue(forKey: outputID)
+        outputNicknames.removeValue(forKey: outputID)
     }
 }
 

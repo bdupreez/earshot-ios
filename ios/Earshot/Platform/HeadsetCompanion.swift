@@ -43,6 +43,9 @@ final class HeadsetCompanion: NSObject, ObservableObject {
     private var volumeObserver: NSKeyValueObservation?
     private var lastOutputID: String?
     static let preferencesKey = "earshot.ios.headsetCompanion"
+    /// A convenience label only. The observed system route remains unchanged and visible.
+    var outputNickname: String? { preferences.nickname(for: output?.id) }
+    var outputDisplayName: String? { outputNickname ?? output?.name }
 
     init(defaults: UserDefaults = .standard, observeAudioRoute: Bool = true, memoDirectory: URL? = nil) {
         self.defaults = defaults
@@ -105,7 +108,39 @@ final class HeadsetCompanion: NSObject, ObservableObject {
         }
         status = "Remembered \(presetID == nil ? "local EQ off" : "local EQ preset") for \(output.name)."
     }
-    func forgetCurrentOutput() { if let id = output?.id { preferences.outputEQ.removeValue(forKey: id); preferences.outputActions.removeValue(forKey: id) } }
+    @discardableResult func saveNickname(_ nickname: String, for outputID: String) -> Bool {
+        guard output?.id == outputID else { status = "Audio output changed. Edit the nickname for the currently selected route."; return false }
+        guard HeadsetPreferences.validatedNickname(nickname) != nil else {
+            status = "Use a nonempty, single-line nickname of up to 80 UTF-8 bytes without control characters."; return false
+        }
+        guard preferences.setNickname(nickname, outputID: outputID) else {
+            status = "Nickname memory is full (100 outputs). Remove an old nickname before adding another."; return false
+        }
+        status = "Saved an Earshot-only nickname. The system Bluetooth and audio-route names are unchanged."
+        return true
+    }
+    @discardableResult func removeNickname(for outputID: String) -> Bool {
+        guard output?.id == outputID else { status = "Audio output changed. Select that route before removing its nickname."; return false }
+        let removed = preferences.setNickname(nil, outputID: outputID)
+        if removed { status = "Removed the Earshot-only nickname. The system route name is unchanged." }
+        return removed
+    }
+    func forgetCurrentOutput() {
+        if let id = output?.id { _ = forgetOutputPreferences(for: id) }
+    }
+    func savedOutputLabel(for outputID: String) -> String {
+        preferences.nickname(for: outputID) ?? (output?.id == outputID ? output?.name : nil) ?? "Output \(HeadsetPreferences.abbreviatedOutputID(outputID))"
+    }
+    /// The UI must confirm the captured row ID. This can forget an offline route and
+    /// only changes app preferences; it never changes current audio or system pairing.
+    @discardableResult func forgetOutputPreferences(for outputID: String) -> Bool {
+        guard preferences.savedOutputIDs.contains(outputID) else {
+            status = "Those saved output preferences have already been removed."; return false
+        }
+        preferences.forget(outputID: outputID)
+        status = "Forgot the selected output’s saved local EQ, action and Earshot-only nickname."
+        return true
+    }
     @discardableResult func cycleEQ() -> String? {
         let presets = availablePresets()
         guard let next = CompanionEQCycle.next(presetIDs: presets.map(\.id), currentID: currentEQ().presetID) else { status = "No local EQ presets are available."; return nil }
