@@ -360,6 +360,28 @@ scope. Physical acceptance and unavailable capabilities remain in the migration 
 credits/notices and local signing edits are preserved. This final evidence-only push must again
 pass exact staged-path/privacy inspection and target only the user's named fork branch.
 
+## Checkpoint 20 — Upstream freshness recheck (26 October 2026)
+
+Rechecked the original credited Earshot at the user's request using the GET-only updater and
+an independent live Git/tag/release-API review. Upstream default `main` and annotated tag
+`v0.75.0` resolve to `9e6c4912531ec6e159eded862d1b6ffa55094199`; the newest published release
+is still v0.75.0. The actual comparison is **identical, zero ahead and zero behind**.
+Preserved the [unaltered public report](UPSTREAM_2026_10_26_CHECK.md). No additional upstream
+commits, newer tags or newer published releases were found, so no native adaptation is needed.
+
+Fetched only the owner's fork, without tags: its iOS branch and local HEAD both matched
+`1246ce8f28db27d18c18e746a3cf934c2a35d391`, with no ahead/behind commits. Keep the imported
+Android 0.4.0 snapshot and separate reviewed 0.75.0 boundary unchanged. Original HellzYeahh /
+Earshot contributor credits, MIT/OFL/reference notices and retained Android sources are intact.
+
+This checkpoint changes documentation/evidence only. Native code, app version, tests and project
+membership are unchanged, so no new Simulator pass is inferred or claimed; the actual 23 October
+Xcode results remain the native evidence. Xcode 26.4.1 and the recorded simulator destinations
+are still installed. Hardware acceptance and public-iOS limitations remain in the migration plan.
+Preserve the private working project, inspect only the explicit staged documentation paths, run
+the full index privacy guard and verify the fork push URL before publishing this dated checkpoint.
+Never push to or change settings in HellzYeahh/earshot.
+
 ## Push policy
 
 The user requested regular progress pushes with detailed commit messages. Pushes are restricted to **[bdupreez/earshot-ios](https://github.com/bdupreez/earshot-ios)**. The original `HellzYeahh/earshot` repository must never receive a push or upstream pull request from this work. Each checkpoint should state what changed, what actually passed, what failed or remains unverified, and what happens next.

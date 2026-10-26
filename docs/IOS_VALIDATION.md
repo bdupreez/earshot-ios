@@ -2,6 +2,20 @@
 
 The original application is [Earshot by HellzYeahh and contributors](https://github.com/HellzYeahh/earshot), MIT. This report describes only the **AI-assisted native iOS port attempt** in this fork. Upstream Android test results and captures are preserved separately and do not establish iOS compatibility.
 
+## Upstream freshness check — 26 October 2026
+
+A fresh [GET-only comparison](UPSTREAM_2026_10_26_CHECK.md) reports upstream `main` identical
+to reviewed 0.75.0 commit `9e6c491`: zero ahead/behind. Independent live Git/tag and release-API
+checks found no newer tag or published release. Fetching the owner's fork confirmed its iOS
+branch matched local HEAD `1246ce8` before this documentation checkpoint.
+
+No native source, project membership, app version, test logic or review boundary changed.
+No new Xcode/Simulator run is claimed: the actual 23 October native evidence below still applies
+to this unchanged app. The installed toolchain remains Xcode 26.4.1 (17E202), and both previously
+used simulator destinations are still installed. Physical headphone acceptance remains separate.
+Personal signing settings remain local; the dated public report and progress documentation are
+the only changes authorized for this refresh's fork push.
+
 ## Upstream 0.75 native 0.2 pass — 23 October 2026
 
 Full source review covers 42 commits and 311 changed files through 9e6c491, with per-commit

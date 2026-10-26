@@ -4,6 +4,16 @@ This is the **AI-assisted native iOS port attempt** of [Earshot by HellzYeahh an
 MIT. Preserve [the original licence](../LICENSE), [full credits](../THIRD_PARTY_NOTICES.md),
 the Android source and protocol research when reviewing or adapting future upstream work.
 
+## Latest check — 26 October 2026
+
+The fresh [read-only comparison](UPSTREAM_2026_10_26_CHECK.md) reports **identical: zero ahead,
+zero behind**, with upstream `main` still at reviewed commit
+`9e6c4912531ec6e159eded862d1b6ffa55094199`. Independent live Git and release-API checks also
+confirm that tag and latest published release [v0.75.0](https://github.com/HellzYeahh/earshot/releases/tag/v0.75.0)
+resolve to that reviewed range; no newer tag or published release was found.
+There is no additional upstream code to port. Imported Android 0.4.0 provenance and the
+separate reviewed 0.75.0 boundary remain unchanged. This refresh updates evidence only.
+
 ## Branches and scope
 
 On 23 October 2026, the fork's default branch was changed to `codex/native-ios-port`.
